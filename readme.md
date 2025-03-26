@@ -6,9 +6,9 @@
 
 # Installation
 
-Copy .env.sample into .env and fill in the required fields.
+Copy `.env.sample` into `.env` file and fill in the required fields.
 
-The bingX API should only have real permissions, to can app your IP or leave it empty
+The bingX API should only have read permissions.
 
 ```bash
 npm install
