@@ -1,17 +1,43 @@
-import { app, BrowserWindow } from 'electron'
+import dotenv from 'dotenv'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'node:path'
 import started from 'electron-squirrel-startup'
+import { BingXService } from './server/Bingx.service'
+
+dotenv.config()
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
   app.quit()
 }
 
+// Initialize BingX service
+const bingXService = new BingXService()
+
+// Set up IPC handlers
+ipcMain.handle('get-bingx-transactions', async event => {
+  try {
+    return await bingXService.fetchMyTrades()
+  } catch (error) {
+    console.error('Error fetching BingX transactions:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('get-bingx-balance', async event => {
+  try {
+    return await bingXService.fetchBalance()
+  } catch (error) {
+    console.error('Error fetching BingX balance:', error)
+    throw error
+  }
+})
+
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1920,
+    height: 1080,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
