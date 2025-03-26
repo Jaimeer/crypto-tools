@@ -7,7 +7,9 @@ import Chart from './Chart.vue'
 import Price from './Price.vue'
 import NumTrades from './NumTrades.vue'
 import { useIntervalFn } from '@vueuse/core'
+import { useBingXConfigStore } from '../store/bingxConfig.store'
 
+const bingXConfig = useBingXConfigStore()
 const bingXTransactionsStore = useBingXTransactionsStore()
 const bingXBalanceStore = useBingXBalanceStore()
 const isRefreshing = ref(false)
@@ -174,6 +176,12 @@ onMounted(async () => {
         >
           <span v-if="isRefreshing || bingXTransactionsStore.loading">Refreshing...</span>
           <span v-else>Refresh Transactions</span>
+        </button>
+        <button
+          @click="bingXConfig.toggleViewConfig"
+          class="px-4 py-1 bg-amber-500 text-white rounded hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-opacity-50 transition"
+        >
+          <span>Config</span>
         </button>
       </div>
     </div>

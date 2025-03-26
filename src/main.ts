@@ -1,10 +1,7 @@
-import dotenv from 'dotenv'
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'node:path'
 import started from 'electron-squirrel-startup'
 import { BingXService } from './server/Bingx.service'
-
-dotenv.config()
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -12,11 +9,26 @@ if (started) {
 }
 
 // Initialize BingX service
-const bingXService = new BingXService()
+let bingXService: BingXService | undefined
+
+ipcMain.handle(
+  'set-bingx-credentials',
+  async (event, { apiKey, apiSecret }: { apiKey: string; apiSecret: string }) => {
+    console.log('Setting BingX credentials')
+    if (!bingXService) bingXService = new BingXService(apiKey, apiSecret)
+    else bingXService.setCredentials(apiKey, apiSecret)
+    await bingXService.fetchMyTrades()
+    await bingXService.fetchBalance()
+    return { success: true }
+  }
+)
 
 // Set up IPC handlers
 ipcMain.handle('get-bingx-transactions', async event => {
   try {
+    if (!bingXService) {
+      throw new Error('BingX service not initialized. Please set API credentials first.')
+    }
     return await bingXService.fetchMyTrades()
   } catch (error) {
     console.error('Error fetching BingX transactions:', error)
@@ -26,6 +38,9 @@ ipcMain.handle('get-bingx-transactions', async event => {
 
 ipcMain.handle('get-bingx-balance', async event => {
   try {
+    if (!bingXService) {
+      throw new Error('BingX service not initialized. Please set API credentials first.')
+    }
     return await bingXService.fetchBalance()
   } catch (error) {
     console.error('Error fetching BingX balance:', error)

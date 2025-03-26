@@ -1,7 +1,7 @@
 // eslint-disable-next-line import/no-unresolved
 import axios from 'axios'
 import CryptoJS from 'crypto-js'
-import { subDays } from 'date-fns'
+import { limiter } from '../utils/apiLimiter'
 
 export type Transaction = {
   symbol: string
@@ -50,12 +50,20 @@ export class BingXService {
   private API_SECRET: string
   private HOST: string
 
-  constructor() {
-    this.API_KEY = process.env.BINGX_API_KEY
-    this.API_SECRET = process.env.BINGX_SECRET_KEY
+  constructor(apiKey: string, apiSecret: string) {
+    this.API_KEY = apiKey
+    this.API_SECRET = apiSecret
     this.HOST = 'open-api.bingx.com'
   }
+  setCredentials(apiKey: string, apiSecret: string) {
+    this.API_KEY = apiKey
+    this.API_SECRET = apiSecret
+  }
   async fetchMyTrades(): Promise<Transaction[]> {
+    // console.log('fetchMyTrades', {
+    //   apiKey: this.API_KEY,
+    //   apiSecret: this.API_SECRET,
+    // })
     const allTransactions: Transaction[] = []
 
     // Start with the current time
@@ -67,7 +75,8 @@ export class BingXService {
     do {
       try {
         console.log(
-          `Fetching page ${page}, endTime${endTime} transactions so far: ${allTransactions.length}`
+          `Fetching page ${page}, endTime ${endTime} ` +
+            `${new Date(endTime).toISOString()} transactions so far: ${allTransactions.length}`
         )
 
         const API: IApi = {
@@ -82,8 +91,7 @@ export class BingXService {
 
         const transactions = await this.bingXRequest<Transaction[]>(API)
 
-        if (transactions.length === 0) {
-          // No more data
+        if (!transactions || transactions.length === 0) {
           hasMoreData = false
           continue
         }
@@ -99,9 +107,7 @@ export class BingXService {
 
         page++
 
-        // Safety check - if we're going too far back, stop
         if (transactions.length < limit) {
-          // 90 days
           hasMoreData = false
           continue
         }
@@ -123,7 +129,7 @@ export class BingXService {
       protocol: 'https',
     }
     const balance = await this.bingXRequest<Balance>(API)
-    console.log(`Fetched balance`)
+    console.log(`Fetched balance ${!!balance}`)
     return balance
   }
 
@@ -157,12 +163,20 @@ export class BingXService {
       url,
       headers: { 'X-BX-APIKEY': this.API_KEY },
     }
-    const resp = await axios.request<{
-      code: number
-      msg: string
-      data: T
-    }>(config)
-    const obj = resp.data
-    return obj.data
+    return await limiter.schedule(async () => {
+      const resp = await axios.request<{
+        code: number
+        msg: string
+        data: T
+      }>(config)
+      // console.log({
+      //   status: resp.status,
+      //   code: resp.data.code,
+      //   msg: resp.data.msg,
+      //   data: !!resp.data.data,
+      // })
+      const obj = resp.data
+      return obj.data
+    })
   }
 }
