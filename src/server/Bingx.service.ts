@@ -102,7 +102,6 @@ export class BingXService {
         // Safety check - if we're going too far back, stop
         if (transactions.length < limit) {
           // 90 days
-          console.log('Last page, stopping pagination')
           hasMoreData = false
           continue
         }
@@ -123,8 +122,8 @@ export class BingXService {
       payload: {},
       protocol: 'https',
     }
-    console.log(`Fetched balance`)
     const balance = await this.bingXRequest<Balance>(API)
+    console.log(`Fetched balance`)
     return balance
   }
 
@@ -153,7 +152,6 @@ export class BingXService {
     )
     const params = this.getParameters(API.payload, timestamp, true)
     const url = `${API.protocol}://${this.HOST}${API.path}?${params}&signature=${sign}`
-    console.log(API.method, url)
     const config = {
       method: API.method,
       url,
