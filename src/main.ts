@@ -17,6 +17,7 @@ ipcMain.handle(
     console.log('Setting BingX credentials')
     if (!bingXService) bingXService = new BingXService(apiKey, apiSecret)
     else bingXService.setCredentials(apiKey, apiSecret)
+    await bingXService.fetchMyTransactions()
     await bingXService.fetchMyTrades()
     await bingXService.fetchBalance()
     return { success: true }
@@ -29,9 +30,21 @@ ipcMain.handle('get-bingx-transactions', async event => {
     if (!bingXService) {
       throw new Error('BingX service not initialized. Please set API credentials first.')
     }
-    return await bingXService.fetchMyTrades()
+    return await bingXService.fetchMyTransactions()
   } catch (error) {
     console.error('Error fetching BingX transactions:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('get-bingx-trades', async event => {
+  try {
+    if (!bingXService) {
+      throw new Error('BingX service not initialized. Please set API credentials first.')
+    }
+    return await bingXService.fetchMyTrades()
+  } catch (error) {
+    console.error('Error fetching BingX trades:', error)
     throw error
   }
 })

@@ -37,6 +37,23 @@ export type Balance = {
   shortUid: string
 }
 
+export type Trade = {
+  symbol: string
+  qty: string
+  price: string
+  quoteQty: string
+  commission: string
+  commissionAsset: string
+  orderId: string
+  tradeId: string
+  filledTime: string
+  side: string
+  positionSide: string
+  role: string
+  total: number
+  realisedPNL: string
+}
+
 type IApi = {
   path: string
   method: string
@@ -59,7 +76,8 @@ export class BingXService {
     this.API_KEY = apiKey
     this.API_SECRET = apiSecret
   }
-  async fetchMyTrades(): Promise<Transaction[]> {
+
+  async fetchMyTransactions(): Promise<Transaction[]> {
     // console.log('fetchMyTrades', {
     //   apiKey: this.API_KEY,
     //   apiSecret: this.API_SECRET,
@@ -75,7 +93,7 @@ export class BingXService {
     do {
       try {
         console.log(
-          `Fetching page ${page}, endTime ${endTime} ` +
+          `[fetchMyTransactions] Fetching page ${page}, endTime ${endTime} ` +
             `${new Date(endTime).toISOString()} transactions so far: ${allTransactions.length}`
         )
 
@@ -119,6 +137,59 @@ export class BingXService {
 
     console.log(`Total transactions fetched: ${allTransactions.length}`)
     return allTransactions
+  }
+
+  async fetchMyTrades(): Promise<Trade[]> {
+    // console.log('fetchMyTrades', {
+    //   apiKey: this.API_KEY,
+    //   apiSecret: this.API_SECRET,
+    // })
+    const allTrades: Trade[] = []
+
+    // Start with the current time
+    let hasMoreData = true
+    let page = 1
+    const limit = 1000
+
+    do {
+      try {
+        console.log(`[fetchMyTrades] Fetching page ${page}, trades so far: ${allTrades.length}`)
+
+        const API: IApi = {
+          path: '/openApi/swap/v2/trade/fillHistory',
+          method: 'GET',
+          payload: {
+            pageIndex: page.toString(),
+            pageSize: limit.toString(),
+          },
+          protocol: 'https',
+        }
+
+        const trades = await this.bingXRequest<{ fill_history_orders: Trade[] }>(API)
+
+        if (!trades || trades.fill_history_orders.length === 0) {
+          hasMoreData = false
+          continue
+        }
+
+        // Add to our collection
+        allTrades.push(...trades.fill_history_orders)
+
+        // Set end time to just before the oldest trade time
+        page++
+
+        if (trades.fill_history_orders.length < limit) {
+          hasMoreData = false
+          continue
+        }
+      } catch (error) {
+        console.error('Error during pagination:', error)
+        hasMoreData = false
+      }
+    } while (hasMoreData)
+
+    console.log(`Total trades fetched: ${allTrades.length}`)
+    return allTrades
   }
 
   async fetchBalance(): Promise<Balance> {

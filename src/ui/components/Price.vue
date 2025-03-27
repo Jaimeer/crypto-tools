@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const props = defineProps<{ value: number | string; color?: boolean }>()
+const props = defineProps<{
+  value: number | string
+  color?: 'violet' | 'green' | 'red' | 'amber' | 'orange'
+}>()
 
 const parseValue = computed(() => {
   if (!props.value) return '---'
@@ -13,10 +16,13 @@ const parseValue = computed(() => {
 <template>
   <span
     :class="{
-      'text-green-400': color && typeof parseValue === 'number' && parseValue > 0,
-      'text-red-400': color && typeof parseValue === 'number' && parseValue < 0,
+      'text-violet-400': color === 'violet',
+      'text-orange-400': color === 'orange',
+      'text-green-400': color === 'green' || (typeof parseValue === 'number' && parseValue > 0),
+      'text-red-400': color === 'red' || (typeof parseValue === 'number' && parseValue < 0),
       'text-amber-400':
-        (color && typeof parseValue === 'number' && parseValue == 0) ||
+        color === 'amber' ||
+        (typeof parseValue === 'number' && parseValue == 0) ||
         typeof parseValue === 'string',
     }"
   >
