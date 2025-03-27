@@ -5,15 +5,21 @@ import { useBingXTransactionsStore } from '../store/bingxTransactions.store'
 import { useBingXBalanceStore } from '../store/bingxBalance.store'
 import Chart from './Chart.vue'
 import Price from './Price.vue'
+import Table from './Table.vue'
 import NumTrades from './NumTrades.vue'
 import { useIntervalFn } from '@vueuse/core'
 import { useBingXConfigStore } from '../store/bingxConfig.store'
+import { usePreferencesStore } from '../store/preferences.store'
+import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
 
 const bingXConfig = useBingXConfigStore()
 const bingXTransactionsStore = useBingXTransactionsStore()
 const bingXBalanceStore = useBingXBalanceStore()
+const preferencesStore = usePreferencesStore()
 const isRefreshing = ref(false)
 const autoRefreshEnabled = ref(true)
+
+type PriceData = { num: number; value: number; all: number; charges: number }
 
 const refreshTransactions = async () => {
   if (isRefreshing.value) return
@@ -56,15 +62,17 @@ const totalIncomeTransactions = computed(() => {
 const transactionsBySymbol = computed(() => {
   const data = tradeTransactions.value.reduce((acc, transaction) => {
     if (!acc[transaction.symbol]) {
-      acc[transaction.symbol] = { num: 0, value: 0, all: 0 }
+      acc[transaction.symbol] = { num: 0, value: 0, all: 0, charges: 0 }
     }
     if (transaction.incomeType === 'REALIZED_PNL') {
       acc[transaction.symbol].num++
       acc[transaction.symbol].value += parseFloat(transaction.income)
+    } else {
+      acc[transaction.symbol].charges += parseFloat(transaction.income)
     }
     acc[transaction.symbol].all += parseFloat(transaction.income)
     return acc
-  }, {} as Record<string, { num: number; value: number; all: number }>)
+  }, {} as Record<string, PriceData>)
 
   // return array of objects sorted by value
   return Object.entries(data)
@@ -76,15 +84,17 @@ const transactionsByDay = computed(() => {
   const data = tradeTransactions.value.reduce((acc, transaction) => {
     const date = format(new Date(transaction.time), 'yyyy-MM-dd')
     if (!acc[date]) {
-      acc[date] = { num: 0, value: 0, all: 0 }
+      acc[date] = { num: 0, value: 0, all: 0, charges: 0 }
     }
     if (transaction.incomeType === 'REALIZED_PNL') {
       acc[date].num++
       acc[date].value += parseFloat(transaction.income)
+    } else {
+      acc[date].charges += parseFloat(transaction.income)
     }
     acc[date].all += parseFloat(transaction.income)
     return acc
-  }, {} as Record<string, { num: number; value: number; all: number }>)
+  }, {} as Record<string, PriceData>)
 
   // return array of objects sorted by value
   return Object.entries(data)
@@ -97,14 +107,16 @@ const transactionsBySymbolAndDay = computed(() => {
     const date = format(new Date(transaction.time), 'yyyy-MM-dd')
     const symbol = transaction.symbol
     if (!acc[date]) acc[date] = {}
-    if (!acc[date][symbol]) acc[date][symbol] = { num: 0, value: 0, all: 0 }
+    if (!acc[date][symbol]) acc[date][symbol] = { num: 0, value: 0, all: 0, charges: 0 }
     if (transaction.incomeType === 'REALIZED_PNL') {
       acc[date][symbol].num++
       acc[date][symbol].value += parseFloat(transaction.income)
+    } else {
+      acc[date][symbol].charges += parseFloat(transaction.income)
     }
     acc[date][symbol].all += parseFloat(transaction.income)
     return acc
-  }, {} as Record<string, Record<string, { num: number; value: number; all: number }>>)
+  }, {} as Record<string, Record<string, PriceData>>)
 
   // return array of objects sorted by value
   return Object.entries(data)
@@ -120,14 +132,16 @@ const transactionsBySymbolAndHour = computed(() => {
       const date = format(new Date(transaction.time), 'yyyy-MM-dd HH')
       const symbol = transaction.symbol
       if (!acc[date]) acc[date] = {}
-      if (!acc[date][symbol]) acc[date][symbol] = { num: 0, value: 0, all: 0 }
+      if (!acc[date][symbol]) acc[date][symbol] = { num: 0, value: 0, all: 0, charges: 0 }
       if (transaction.incomeType === 'REALIZED_PNL') {
         acc[date][symbol].num++
         acc[date][symbol].value += parseFloat(transaction.income)
+      } else {
+        acc[date][symbol].charges += parseFloat(transaction.income)
       }
       acc[date][symbol].all += parseFloat(transaction.income)
       return acc
-    }, {} as Record<string, Record<string, { num: number; value: number; all: number }>>)
+    }, {} as Record<string, Record<string, PriceData>>)
 
   // return array of objects sorted by value
   return Object.entries(data)
@@ -136,7 +150,7 @@ const transactionsBySymbolAndHour = computed(() => {
 })
 
 const allSymbols = computed(() => {
-  return [...new Set(tradeTransactions.value.map(x => x.symbol))].sort()
+  return [...new Set(tradeTransactions.value.map(x => x.symbol))]
 })
 
 const balance = computed(() => {
@@ -148,6 +162,12 @@ const parseValue = (value: number | string | undefined) => {
   if (typeof value === 'string') return parseFloat(value).toFixed(4)
   return value.toFixed(4)
 }
+
+const selectedSymbols = ref(preferencesStore.hidedSymbols)
+
+const usedSymbols = computed(() => {
+  return allSymbols.value.filter(x => !selectedSymbols.value.includes(x)).sort()
+})
 
 onMounted(async () => {
   await refreshTransactions()
@@ -162,6 +182,33 @@ onMounted(async () => {
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-xl font-bold">BingX Transactions</h1>
       <div class="flex gap-2">
+        <Listbox v-model="selectedSymbols" multiple>
+          <ListboxButton
+            class="px-4 py-1 bg-violet-500 text-white rounded hover:bg-violet-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition"
+          >
+            Hide Symbols
+          </ListboxButton>
+          <ListboxOptions class="bg-slate-600 text-xs absolute top-14 rounded-md py-2">
+            <ListboxOption
+              v-for="symbol in allSymbols"
+              v-model="selectedSymbols"
+              :key="symbol"
+              :value="symbol"
+              class="px-4 py-0.5 hover:bg-slate-700 cursor-pointer"
+              v-slot="{ selected }"
+            >
+              <li
+                class="relative"
+                :class="{
+                  'font-bold text-slate-800/80 ': selected,
+                  '': !selected,
+                }"
+              >
+                {{ symbol.replace('-USDT', '') }}
+              </li>
+            </ListboxOption>
+          </ListboxOptions>
+        </Listbox>
         <button
           @click="toggleAutoRefresh"
           class="px-4 py-1 rounded transition"
@@ -198,9 +245,9 @@ onMounted(async () => {
       No transactions found.
     </div>
     <div v-else class="flex flex-col gap-4">
-      <div>
+      <!-- <div>
         <Chart :symbols="allSymbols" :data="transactionsBySymbolAndDay" />
-      </div>
+      </div> -->
       <div class="grid grid-cols-3 gap-4">
         <table
           class="w-full text-xs text-left rtl:text-right text-gray-500 dark:text-gray-400 overflow-y-auto"
@@ -237,171 +284,73 @@ onMounted(async () => {
             </tr>
           </tbody>
         </table>
-        <table
-          class="w-full text-xs text-left rtl:text-right text-gray-500 dark:text-gray-400 overflow-y-auto"
+        <Table
+          :headers="['symbol', 'num', 'income', 'charges', 'profit']"
+          :items="transactionsBySymbol"
         >
-          <thead
-            class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
-          >
-            <tr>
-              <th class="px-2 py-2" v-for="header of ['symbol', 'num', 'value', 'all']">
-                {{ header }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="data in transactionsBySymbol"
-              :key="data.key"
-              class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200"
-            >
-              <td class="px-2 py-0.5">{{ data.key }}</td>
-              <td class="px-2 py-0.5">{{ data.num }}</td>
-              <td class="px-2 py-0.5"><Price :value="data.value" color /></td>
-              <td class="px-2 py-0.5"><Price :value="data.all" color /></td>
-            </tr>
-          </tbody>
-        </table>
-        <table
-          class="w-full text-xs text-left rtl:text-right text-gray-500 dark:text-gray-400 overflow-y-auto"
+          <template #default="{ item }">
+            <td class="px-2 py-0.5">{{ item.key }}</td>
+            <td class="px-2 py-0.5">{{ item.num }}</td>
+            <td class="px-2 py-0.5"><Price :value="item.value" color /></td>
+            <td class="px-2 py-0.5"><Price :value="item.charges" color /></td>
+            <td class="px-2 py-0.5"><Price :value="item.all" color /></td>
+          </template>
+        </Table>
+        <Table
+          :headers="['Date', 'num', 'income', 'charges', 'profit', 'USDT/hour']"
+          :items="transactionsByDay"
         >
-          <thead
-            class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
-          >
-            <tr>
-              <th class="px-2 py-2" v-for="header of ['Date', 'num', 'value', 'all', 'USDT/hour']">
-                {{ header }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="data in transactionsByDay"
-              :key="data.key"
-              class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200"
-            >
-              <td class="px-2 py-0.5">{{ data.key }}</td>
-              <td class="px-2 py-0.5">{{ data.num }}</td>
-              <td class="px-2 py-0.5"><Price :value="data.value" color /></td>
-              <td class="px-2 py-0.5"><Price :value="data.all" color /></td>
-              <td class="px-2 py-0.5">
-                <Price
-                  :value="
-                    data.all /
-                    (new Date(data.key).getTime() < startOfDay(new Date()).getTime()
-                      ? 24
-                      : differenceInHours(new Date(), startOfDay(new Date())))
-                  "
-                  color
-                />
-              </td>
-            </tr>
-          </tbody>
-        </table>
+          <template #default="{ item }">
+            <td class="px-2 py-0.5">{{ item.key }}</td>
+            <td class="px-2 py-0.5">{{ item.num }}</td>
+            <td class="px-2 py-0.5"><Price :value="item.value" color /></td>
+            <td class="px-2 py-0.5"><Price :value="item.charges" color /></td>
+            <td class="px-2 py-0.5"><Price :value="item.all" color /></td>
+            <td class="px-2 py-0.5">
+              <Price
+                :value="
+                  item.all /
+                  (new Date(item.key).getTime() < startOfDay(new Date()).getTime()
+                    ? 24
+                    : differenceInHours(new Date(), startOfDay(new Date())))
+                "
+                color
+              />
+            </td>
+          </template>
+        </Table>
       </div>
-      <div>
-        <table class="w-full text-xs text-left rtl:text-right text-gray-500 dark:text-gray-400">
-          <thead
-            class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
-          >
-            <tr>
-              <th class="px-2 py-2">Date</th>
-              <th class="px-2 py-2" v-for="header of allSymbols">
-                {{ header.replace('-USDT', '') }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="data in transactionsBySymbolAndDay"
-              :key="data.key"
-              class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200"
-            >
-              <td class="px-2 py-0.5">{{ data.key }}</td>
-              <td v-for="symbol in allSymbols" :key="symbol" class="px-2 py-0.5">
-                <template v-if="data.symbols[symbol]">
-                  <Price :value="data.symbols[symbol].all" color />
-                  <NumTrades :num="data.symbols[symbol].num" color />
-                </template>
-                <template v-else> - </template>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div>
-        <table class="w-full text-xs text-left rtl:text-right text-gray-500 dark:text-gray-400">
-          <thead
-            class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
-          >
-            <tr>
-              <th class="px-2 py-2">Date</th>
-              <th class="px-2 py-2" v-for="header of allSymbols">
-                {{ header.replace('-USDT', '') }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="data in transactionsBySymbolAndHour"
-              :key="data.key"
-              class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200"
-            >
-              <td class="px-2 py-0.5">{{ data.key }}</td>
-              <td v-for="symbol in allSymbols" :key="symbol" class="px-2 py-0.5">
-                <template v-if="data.symbols[symbol]">
-                  <Price :value="data.symbols[symbol].all" color />
-                  <NumTrades :num="data.symbols[symbol].num" color />
-                </template>
-                <template v-else> - </template>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="relative overflow-x-auto" v-if="false">
-        <table class="w-full text-xs text-left rtl:text-right text-gray-500 dark:text-gray-400">
-          <thead
-            class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
-          >
-            <tr>
-              <th
-                class="px-2 py-2"
-                v-for="header of [
-                  'time',
-                  'Symbol',
-                  'incomeType',
-                  'info',
-                  'income',
-                  // 'asset',
-                  // 'tranId',
-                  // 'tradeId',
-                ]"
-              >
-                {{ header }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="transaction in tradeTransactions"
-              :key="transaction.tranId"
-              class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200"
-            >
-              <td class="px-2 py-0.5">
-                {{ format(new Date(transaction.time), 'yyyy-MM-dd HH:mm:ss') }}
-              </td>
-              <td class="px-2 py-0.5">{{ transaction.symbol }}</td>
-              <td class="px-2 py-0.5">{{ transaction.incomeType }}</td>
-              <td class="px-2 py-0.5">{{ transaction.info }}</td>
-              <td class="px-2 py-0.5">{{ parseValue(parseFloat(transaction.income)) }}</td>
-              <!-- <td class="px-2 py-0.5">{{ transaction.asset }}</td> -->
-              <!-- <td class="px-2 py-0.5">{{ transaction.tranId }}</td>
-            <td class="px-2 py-0.5">{{ transaction.tradeId }}</td> -->
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <Table
+        :headers="['date', ...usedSymbols.map(x => x.replace('-USDT', ''))]"
+        :items="transactionsBySymbolAndDay"
+      >
+        <template #default="{ item }">
+          <td class="px-2 py-0.5">{{ item.key }}</td>
+          <td v-for="symbol in usedSymbols" :key="symbol" class="px-2 py-0.5 whitespace-nowrap">
+            <template v-if="item.symbols[symbol]">
+              <Price :value="item.symbols[symbol].all" color />
+              <NumTrades :num="item.symbols[symbol].num" color />
+            </template>
+            <template v-else> - </template>
+          </td>
+        </template>
+      </Table>
+      <Table
+        :headers="['date', ...usedSymbols.map(x => x.replace('-USDT', ''))]"
+        :items="transactionsBySymbolAndHour"
+        fullHeight
+      >
+        <template #default="{ item }">
+          <td class="px-2 py-0.5">{{ item.key }}</td>
+          <td v-for="symbol in usedSymbols" :key="symbol" class="px-2 py-0.5 whitespace-nowrap">
+            <template v-if="item.symbols[symbol]">
+              <Price :value="item.symbols[symbol].all" color />
+              <NumTrades :num="item.symbols[symbol].num" color />
+            </template>
+            <template v-else> - </template>
+          </td>
+        </template>
+      </Table>
     </div>
   </div>
 </template>

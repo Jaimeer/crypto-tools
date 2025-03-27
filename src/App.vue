@@ -2,11 +2,15 @@
 import BingXTransactions from './ui/components/BingXTransactions.vue'
 import BingXConfig from './ui/components/BingXConfig.vue'
 import { useBingXConfigStore } from './ui/store/bingxConfig.store'
-import { computed, onMounted } from 'vue'
+import { computed, resolveComponent } from 'vue'
 import md5 from 'md5'
+import { useDark } from '@vueuse/core'
+
+const isDark = useDark()
+isDark.value = true
 
 const bingXConfig = useBingXConfigStore()
-
+resolveComponent
 const hashKey = computed(() => {
   const hash = md5(
     JSON.stringify({
@@ -28,7 +32,7 @@ if (bingXConfig.apiKey && bingXConfig.apiSecret) {
 </script>
 
 <template>
-  <div>
+  <div class="bg-slate-900 text-slate-200 w-full min-h-screen">
     <BingXConfig v-if="bingXConfig.viewConfig" />
     <BingXTransactions :key="hashKey" v-else />
   </div>

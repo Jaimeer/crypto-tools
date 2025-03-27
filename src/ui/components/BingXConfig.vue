@@ -19,10 +19,10 @@ const save = async () => {
 </script>
 
 <template>
-  <div class="p-4">
-    <div>BingX Config</div>
+  <div class="p-4 flex flex-col gap-4 justify-center items-center h-screen">
+    <div class="text-4xl">BingX Config</div>
     <form class="">
-      <label for="apiKey" class="text-slate-600">API Key</label>
+      <label for="apiKey" class="text-slate-400">API Key</label>
       <input
         id="apiKey"
         v-model="inputApiKey"
@@ -30,7 +30,7 @@ const save = async () => {
         placeholder="API Key"
         class="w-full p-2 mb-2 border border-gray-300 rounded"
       />
-      <label for="apiSecret" class="text-slate-600">API Secret</label>
+      <label for="apiSecret" class="text-slate-400">API Secret</label>
       <input
         id="apiSecret"
         v-model="inputApiSecret"
@@ -38,6 +38,7 @@ const save = async () => {
         placeholder="API Secret"
         class="w-full p-2 mb-2 border border-gray-300 rounded"
       />
+      <div class="italic my-4 text-slate-500 text-right">Api key only need read permissions</div>
       <button
         type="submit"
         class="w-full p-2 bg-blue-500 text-white rounded hover:cursor-pointer hover:opacity-90"

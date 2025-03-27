@@ -2,13 +2,14 @@
   "name": "crypto-tools",
   "productName": "crypto-tools",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "Crypto tools",
   "main": ".vite/build/main.js",
   "type": "commonjs",
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
+    "make:win": "DEBUG=electron-forge:* electron-forge make --platform win32",
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."
   },
@@ -42,6 +43,7 @@
     "vite": "^5.4.15"
   },
   "dependencies": {
+    "@headlessui/vue": "^1.7.23",
     "@tailwindcss/vite": "^4.0.16",
     "@vueuse/core": "^13.0.0",
     "axios": "^1.8.4",
