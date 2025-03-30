@@ -1,6 +1,9 @@
 # .github/workflows/release.yml
 name: Release app
 on:
+  push:
+    tags-ignore: ["**"]
+    branches: ["main"]
   workflow_dispatch:
 jobs:
   build:
@@ -8,9 +11,9 @@ jobs:
       matrix:
         os:
           [
-            { name: 'linux', image: 'ubuntu-latest' },
-            { name: 'windows', image: 'windows-latest' },
-            { name: 'macos', image: 'macos-latest' },
+            { name: "linux", image: "ubuntu-latest" },
+            { name: "windows", image: "windows-latest" },
+            { name: "macos", image: "macos-latest" },
           ]
     runs-on: ${{ matrix.os.image }}
     steps:
