@@ -1,31 +1,31 @@
-import type { ForgeConfig } from '@electron-forge/shared-types'
-import { MakerSquirrel } from '@electron-forge/maker-squirrel'
-import { MakerZIP } from '@electron-forge/maker-zip'
-import { MakerDeb } from '@electron-forge/maker-deb'
-import { MakerRpm } from '@electron-forge/maker-rpm'
-import { VitePlugin } from '@electron-forge/plugin-vite'
-import { FusesPlugin } from '@electron-forge/plugin-fuses'
-import { FuseV1Options, FuseVersion } from '@electron/fuses'
+import type { ForgeConfig } from "@electron-forge/shared-types";
+import { MakerSquirrel } from "@electron-forge/maker-squirrel";
+import { MakerZIP } from "@electron-forge/maker-zip";
+import { MakerDeb } from "@electron-forge/maker-deb";
+import { MakerRpm } from "@electron-forge/maker-rpm";
+import { VitePlugin } from "@electron-forge/plugin-vite";
+import { FusesPlugin } from "@electron-forge/plugin-fuses";
+import { FuseV1Options, FuseVersion } from "@electron/fuses";
 
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    icon: './assets/icons',
+    icon: "./assets/icons",
   },
   rebuildConfig: {},
   makers: [
     new MakerSquirrel({
-      setupExe: 'crypto-tools-setup.exe',
-      setupMsi: 'crypto-tools-setup.msi',
+      setupExe: "crypto-tools-setup.exe",
+      setupMsi: "crypto-tools-setup.msi",
       noMsi: false, // Ensure MSI generation is enabled
     }),
-    new MakerZIP({}, ['darwin']),
+    new MakerZIP({}, ["darwin"]),
     new MakerRpm({}),
     new MakerDeb({}),
   ],
   plugins: [
     {
-      name: '@electron-forge/plugin-auto-unpack-natives',
+      name: "@electron-forge/plugin-auto-unpack-natives",
       config: {},
     },
     new VitePlugin({
@@ -34,20 +34,20 @@ const config: ForgeConfig = {
       build: [
         {
           // `entry` is just an alias for `build.lib.entry` in the corresponding file of `config`.
-          entry: 'src/main.ts',
-          config: 'vite.main.config.mts',
-          target: 'main',
+          entry: "src/main.ts",
+          config: "vite.main.config.mts",
+          target: "main",
         },
         {
-          entry: 'src/preload.ts',
-          config: 'vite.preload.config.mts',
-          target: 'preload',
+          entry: "src/preload.ts",
+          config: "vite.preload.config.mts",
+          target: "preload",
         },
       ],
       renderer: [
         {
-          name: 'main_window',
-          config: 'vite.renderer.config.mts',
+          name: "main_window",
+          config: "vite.renderer.config.mts",
         },
       ],
     }),
@@ -65,16 +65,16 @@ const config: ForgeConfig = {
   ],
   publishers: [
     {
-      name: '@electron-forge/publisher-github',
+      name: "@electron-forge/publisher-github",
       config: {
         repository: {
-          owner: 'odh',
-          name: 'crypto-tools',
+          owner: "Jaimeer",
+          name: "crypto-tools",
         },
         prerelease: true,
       },
     },
   ],
-}
+};
 
-export default config
+export default config;
