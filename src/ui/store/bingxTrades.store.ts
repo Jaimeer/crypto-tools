@@ -21,7 +21,7 @@ export const useBingXTradesStore = defineStore('bingx-trades', {
 
       try {
         const data = await window.electronAPI.getBingXTrades()
-        console.log('store', { t: data })
+        console.log('fetchTrades', { t: data })
         this.trades = data ?? []
       } catch (error) {
         this.error = error.message || 'Failed to fetch trades'

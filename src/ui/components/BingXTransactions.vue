@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { differenceInDays, differenceInHours, format, startOfDay, subHours } from 'date-fns'
 import { useBingXTransactionsStore } from '../store/bingxTransactions.store'
 import { useBingXBalanceStore } from '../store/bingxBalance.store'
-import Chart from './Chart.vue'
+import { useBingXPositionsStore } from '../store/bingxPositions.store'
 import Price from './Price.vue'
 import Table from './Table.vue'
 import NumTrades from './NumTrades.vue'
@@ -12,11 +12,13 @@ import { useBingXConfigStore } from '../store/bingxConfig.store'
 import { usePreferencesStore } from '../store/preferences.store'
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
 import { useBingXTradesStore } from '../store/bingxTrades.store'
+import { RouterLink } from 'vue-router'
 
 const bingXConfig = useBingXConfigStore()
 const bingXTradesStore = useBingXTradesStore()
 const bingXTransactionsStore = useBingXTransactionsStore()
 const bingXBalanceStore = useBingXBalanceStore()
+const bingXPositionsStore = useBingXPositionsStore()
 const preferencesStore = usePreferencesStore()
 const isRefreshing = ref(false)
 const autoRefreshEnabled = ref(true)
@@ -30,6 +32,7 @@ const refreshTransactions = async () => {
     await bingXTransactionsStore.fetchTransactions()
     await bingXTradesStore.fetchTrades()
     await bingXBalanceStore.fetchBalance()
+    await bingXPositionsStore.fetchPositions()
   } finally {
     isRefreshing.value = false
   }
@@ -96,7 +99,7 @@ const transactionsBySymbol = computed(() => {
   // return array of objects sorted by value
   return Object.entries(data)
     .map(([key, value]) => ({ key, ...value }))
-    .sort((a, b) => b.pnl - a.pnl)
+    .sort((a, b) => b.all - a.all)
 })
 
 const transactionsByDay = computed(() => {
@@ -149,7 +152,16 @@ const transactionsBySymbolAndDay = computed(() => {
 
   // return array of objects sorted by value
   return Object.entries(data)
-    .map(([key, value]) => ({ key, symbols: value }))
+    .map(([key, value]) => ({
+      key,
+      total: Object.values(value).reduce((acc, value) => {
+        return acc + value.all
+      }, 0),
+      num: Object.values(value).reduce((acc, value) => {
+        return acc + value.num
+      }, 0),
+      symbols: value,
+    }))
     .sort((a, b) => b.key.localeCompare(a.key))
 })
 
@@ -174,7 +186,16 @@ const transactionsBySymbolAndHour = computed(() => {
 
   // return array of objects sorted by value
   return Object.entries(data)
-    .map(([key, value]) => ({ key, symbols: value }))
+    .map(([key, value]) => ({
+      key,
+      total: Object.values(value).reduce((acc, value) => {
+        return acc + value.all
+      }, 0),
+      num: Object.values(value).reduce((acc, value) => {
+        return acc + value.num
+      }, 0),
+      symbols: value,
+    }))
     .sort((a, b) => b.key.localeCompare(a.key))
 })
 
@@ -224,11 +245,11 @@ const tradesInfo = computed(() => {
 
   return Object.entries(data)
     .map(([key, value]) => ({ key, ...value }))
-    .sort((a, b) => a.key.localeCompare(b.key))
-})
-
-const allSymbols = computed(() => {
-  return [...new Set(transactions.value.map(x => x.symbol))]
+    .sort(
+      (a, b) =>
+        Math.max(b.currentOpenLong, b.currentOpenShort) -
+        Math.max(a.currentOpenLong, a.currentOpenShort)
+    )
 })
 
 const balance = computed(() => {
@@ -244,7 +265,7 @@ const parseValue = (value: number | string | undefined) => {
 const selectedSymbols = ref(preferencesStore.hidedSymbols)
 
 const usedSymbols = computed(() => {
-  return allSymbols.value.filter(x => !selectedSymbols.value.includes(x)).sort()
+  return bingXTransactionsStore.allSymbols.filter(x => !selectedSymbols.value.includes(x)).sort()
 })
 
 onMounted(async () => {
@@ -258,7 +279,15 @@ onMounted(async () => {
 <template>
   <div class="p-4">
     <div class="flex justify-between items-center mb-4">
-      <h1 class="text-xl font-bold">BingX Transactions</h1>
+      <div class="flex gap-2">
+        <h1 class="text-xl font-bold">BingX Transactions</h1>
+        <RouterLink
+          to="/charts"
+          class="px-4 py-1 bg-slate-500 text-white rounded hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition"
+        >
+          Charts
+        </RouterLink>
+      </div>
       <div class="flex gap-2">
         <Listbox v-model="selectedSymbols" multiple>
           <ListboxButton
@@ -268,7 +297,7 @@ onMounted(async () => {
           </ListboxButton>
           <ListboxOptions class="bg-slate-600 text-xs absolute top-14 rounded-md py-2">
             <ListboxOption
-              v-for="symbol in allSymbols"
+              v-for="symbol in bingXTransactionsStore.allSymbols"
               v-model="selectedSymbols"
               :key="symbol"
               :value="symbol"
@@ -326,7 +355,7 @@ onMounted(async () => {
       <!-- <div>
         <Chart :symbols="allSymbols" :data="transactionsBySymbolAndDay" />
       </div> -->
-      <div class="grid grid-cols-7 gap-4">
+      <div class="grid grid-cols-6 gap-4">
         <Table :headers="['Key', 'Value']" :items="[]">
           <template #tbody>
             <tr
@@ -422,7 +451,7 @@ onMounted(async () => {
         <Table
           :headers="['Date', 'num', 'volume', 'income', 'charges', 'profit', 'prof%', 'USDT/hour']"
           :items="transactionsByDay"
-          class="col-span-3"
+          class="col-span-2"
         >
           <template #default="{ item }">
             <td class="px-2 py-0.5">{{ item.key }}</td>
@@ -447,11 +476,15 @@ onMounted(async () => {
         </Table>
       </div>
       <Table
-        :headers="['date', ...usedSymbols.map(x => x.replace('-USDT', ''))]"
+        :headers="['date', 'total', ...usedSymbols.map(x => x.replace('-USDT', ''))]"
         :items="transactionsBySymbolAndDay"
       >
         <template #default="{ item }">
           <td class="px-2 py-0.5">{{ item.key }}</td>
+          <td class="px-2 py-0.5 bg-slate-900">
+            <Price :value="item.total" />
+            <NumTrades :num="item.num" />
+          </td>
           <td v-for="symbol in usedSymbols" :key="symbol" class="px-2 py-0.5 whitespace-nowrap">
             <template v-if="item.symbols[symbol]">
               <Price :value="item.symbols[symbol].all" />
@@ -462,16 +495,22 @@ onMounted(async () => {
         </template>
       </Table>
       <Table
-        :headers="['date', ...usedSymbols.map(x => x.replace('-USDT', ''))]"
+        :headers="['date', 'total', ...usedSymbols.map(x => x.replace('-USDT', ''))]"
         :items="transactionsBySymbolAndHour"
         fullHeight
       >
         <template #default="{ item }">
           <td class="px-2 py-0.5">{{ item.key }}</td>
+          <td class="px-2 py-0.5 bg-slate-900">
+            <Price :value="item.total" />
+            <NumTrades :num="item.num" />
+          </td>
           <td v-for="symbol in usedSymbols" :key="symbol" class="px-2 py-0.5 whitespace-nowrap">
             <template v-if="item.symbols[symbol]">
-              <Price :value="item.symbols[symbol].all" />
-              <NumTrades :num="item.symbols[symbol].num" />
+              <div>
+                <Price :value="item.symbols[symbol].all" />
+                <NumTrades :num="item.symbols[symbol].num" />
+              </div>
             </template>
             <template v-else> - </template>
           </td>

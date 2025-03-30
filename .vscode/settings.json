@@ -1,4 +1,14 @@
 {
   "editor.formatOnSave": true,
-  "cSpell.words": ["bingx", "chartjs", "headlessui", "realised", "vueuse"]
+  "cSpell.words": [
+    "asar",
+    "bingx",
+    "chartjs",
+    "headlessui",
+    "klinechart",
+    "klinecharts",
+    "klines",
+    "realised",
+    "vueuse"
+  ]
 }

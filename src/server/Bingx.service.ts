@@ -46,12 +46,34 @@ export type Trade = {
   commissionAsset: string
   orderId: string
   tradeId: string
-  filledTime: string
+  filledTime: Date
   side: string
   positionSide: string
   role: string
   total: number
   realisedPNL: string
+}
+
+export type Position = {
+  symbol: string
+  positionId: string
+  positionSide: string
+  isolated: boolean
+  positionAmt: string
+  availableAmt: string
+  unrealizedProfit: string
+  realisedProfit: string
+  initialMargin: string
+  margin: string
+  avgPrice: string
+  liquidationPrice: number
+  leverage: string
+  positionValue: string
+  markPrice: string
+  riskRate: string
+  maxMarginReduction: string
+  pnlRatio: string
+  updateTime: string
 }
 
 type IApi = {
@@ -60,6 +82,31 @@ type IApi = {
   payload: Record<string, string>
   protocol: string
 }
+
+export type KLine = {
+  open: string
+  close: string
+  high: string
+  low: string
+  volume: string
+  time: number
+}
+export type Periods =
+  | '1m'
+  | '3m'
+  | '5m'
+  | '15m'
+  | '30m'
+  | '1h'
+  | '2h'
+  | '4h'
+  | '6h'
+  | '8h'
+  | '12h'
+  | '1d'
+  | '3d'
+  | '1w'
+  | '1M'
 
 export class BingXService {
   //   private bingX: bingx
@@ -77,8 +124,8 @@ export class BingXService {
     this.API_SECRET = apiSecret
   }
 
-  async fetchMyTransactions(): Promise<Transaction[]> {
-    // console.log('fetchMyTrades', {
+  async fetchTransactions(): Promise<Transaction[]> {
+    // console.log('fetchTrades', {
     //   apiKey: this.API_KEY,
     //   apiSecret: this.API_SECRET,
     // })
@@ -93,7 +140,7 @@ export class BingXService {
     do {
       try {
         console.log(
-          `[fetchMyTransactions] Fetching page ${page}, endTime ${endTime} ` +
+          `[fetchTransactions] Fetching page ${page}, endTime ${endTime} ` +
             `${new Date(endTime).toISOString()} transactions so far: ${allTransactions.length}`
         )
 
@@ -139,8 +186,8 @@ export class BingXService {
     return allTransactions
   }
 
-  async fetchMyTrades(): Promise<Trade[]> {
-    // console.log('fetchMyTrades', {
+  async fetchTrades(): Promise<Trade[]> {
+    // console.log('fetchTrades', {
     //   apiKey: this.API_KEY,
     //   apiSecret: this.API_SECRET,
     // })
@@ -153,7 +200,7 @@ export class BingXService {
 
     do {
       try {
-        console.log(`[fetchMyTrades] Fetching page ${page}, trades so far: ${allTrades.length}`)
+        console.log(`[fetchTrades] Fetching page ${page}, trades so far: ${allTrades.length}`)
 
         const API: IApi = {
           path: '/openApi/swap/v2/trade/fillHistory',
@@ -167,7 +214,7 @@ export class BingXService {
 
         const trades = await this.bingXRequest<{ fill_history_orders: Trade[] }>(API)
 
-        if (!trades || trades.fill_history_orders.length === 0) {
+        if (!trades || trades.fill_history_orders?.length === 0) {
           hasMoreData = false
           continue
         }
@@ -192,6 +239,22 @@ export class BingXService {
     return allTrades
   }
 
+  async fetchKLines(symbol: string, periods: Periods): Promise<KLine[]> {
+    const API: IApi = {
+      path: '/openApi/swap/v3/quote/klines',
+      method: 'GET',
+      payload: {
+        symbol,
+        interval: periods,
+        limit: '1000',
+      },
+      protocol: 'https',
+    }
+    const klines = await this.bingXRequest<KLine[]>(API)
+    console.log(`[fetchKlines][${symbol}][${periods}] Fetched klines ${klines.length}`)
+    return klines
+  }
+
   async fetchBalance(): Promise<Balance> {
     const API: IApi = {
       path: '/openApi/swap/v3/user/balance',
@@ -200,8 +263,20 @@ export class BingXService {
       protocol: 'https',
     }
     const balance = await this.bingXRequest<Balance>(API)
-    console.log(`Fetched balance ${!!balance}`)
+    console.log(`[fetchBalance] Fetched balance ${!!balance}`)
     return balance
+  }
+
+  async fetchPositions(): Promise<Position[]> {
+    const API: IApi = {
+      path: '/openApi/swap/v2/user/positions',
+      method: 'GET',
+      payload: {},
+      protocol: 'https',
+    }
+    const positions = await this.bingXRequest<Position[]>(API)
+    console.log(`[fetchPositions] Fetched positions ${!!positions}`)
+    return positions
   }
 
   private getParameters(params: Record<string, string>, timestamp: number, urlEncode = false) {

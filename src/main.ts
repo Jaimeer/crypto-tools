@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'node:path'
 import started from 'electron-squirrel-startup'
-import { BingXService } from './server/Bingx.service'
+import { BingXService, Periods } from './server/Bingx.service'
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -17,9 +17,10 @@ ipcMain.handle(
     console.log('Setting BingX credentials')
     if (!bingXService) bingXService = new BingXService(apiKey, apiSecret)
     else bingXService.setCredentials(apiKey, apiSecret)
-    await bingXService.fetchMyTransactions()
-    await bingXService.fetchMyTrades()
+    await bingXService.fetchTransactions()
+    await bingXService.fetchTrades()
     await bingXService.fetchBalance()
+    await bingXService.fetchPositions()
     return { success: true }
   }
 )
@@ -30,7 +31,7 @@ ipcMain.handle('get-bingx-transactions', async event => {
     if (!bingXService) {
       throw new Error('BingX service not initialized. Please set API credentials first.')
     }
-    return await bingXService.fetchMyTransactions()
+    return await bingXService.fetchTransactions()
   } catch (error) {
     console.error('Error fetching BingX transactions:', error)
     throw error
@@ -42,9 +43,21 @@ ipcMain.handle('get-bingx-trades', async event => {
     if (!bingXService) {
       throw new Error('BingX service not initialized. Please set API credentials first.')
     }
-    return await bingXService.fetchMyTrades()
+    return await bingXService.fetchTrades()
   } catch (error) {
     console.error('Error fetching BingX trades:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('get-bingx-klines', async (event, symbol: string, period: Periods) => {
+  try {
+    if (!bingXService) {
+      throw new Error('BingX service not initialized. Please set API credentials first.')
+    }
+    return await bingXService.fetchKLines(symbol, period)
+  } catch (error) {
+    console.error('Error fetching BingX klines:', error)
     throw error
   }
 })
@@ -61,6 +74,18 @@ ipcMain.handle('get-bingx-balance', async event => {
   }
 })
 
+ipcMain.handle('get-bingx-positions', async event => {
+  try {
+    if (!bingXService) {
+      throw new Error('BingX service not initialized. Please set API credentials first.')
+    }
+    return await bingXService.fetchPositions()
+  } catch (error) {
+    console.error('Error fetching BingX positions:', error)
+    throw error
+  }
+})
+
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -69,6 +94,7 @@ const createWindow = () => {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
+    icon: path.join(__dirname, '../assets/icons/win/icon.png'),
   })
 
   // and load the index.html of the app.

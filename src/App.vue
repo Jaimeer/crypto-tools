@@ -34,6 +34,8 @@ if (bingXConfig.apiKey && bingXConfig.apiSecret) {
 <template>
   <div class="bg-slate-900 text-slate-200 w-full min-h-screen">
     <BingXConfig v-if="bingXConfig.viewConfig" />
-    <BingXTransactions :key="hashKey" v-else />
+    <div v-else :key="hashKey">
+      <RouterView />
+    </div>
   </div>
 </template>

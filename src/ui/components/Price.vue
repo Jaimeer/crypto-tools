@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 
 const props = defineProps<{
-  value: number | string
+  value: number | string | undefined
   color?: 'violet' | 'green' | 'red' | 'amber' | 'orange'
 }>()
 
@@ -30,7 +30,7 @@ const parseValue = computed(() => {
       {{ parseValue }}
     </template>
     <template v-else>
-      {{ parseValue.toFixed(4) }}
+      {{ new Intl.NumberFormat('de-DE', { minimumFractionDigits: 4 }).format(parseValue) }}
     </template>
   </span>
 </template>

@@ -14,6 +14,11 @@ export const useBingXTransactionsStore = defineStore('bingx-transactions', {
     error: null,
   }),
 
+  getters: {
+    allSymbols: state => {
+      return [...new Set(state.transactions.map(x => x.symbol).filter(Boolean))]
+    },
+  },
   actions: {
     async fetchTransactions() {
       this.loading = true
@@ -21,7 +26,7 @@ export const useBingXTransactionsStore = defineStore('bingx-transactions', {
 
       try {
         const data = await window.electronAPI.getBingXTransactions()
-        console.log('store', { t: data })
+        console.log('fetchTransactions', { t: data })
         this.transactions = data ?? []
       } catch (error) {
         this.error = error.message || 'Failed to fetch transactions'

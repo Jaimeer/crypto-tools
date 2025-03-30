@@ -21,7 +21,7 @@ export const useBingXBalanceStore = defineStore('bingx.balance', {
 
       try {
         const data = await window.electronAPI.getBingXBalance()
-        console.log('store', { t: data })
+        console.log('fetchBalance', { t: data })
         this.balance = data
       } catch (error) {
         this.error = error.message || 'Failed to fetch balance'
