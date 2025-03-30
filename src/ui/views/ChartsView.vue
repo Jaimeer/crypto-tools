@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useBingXTransactionsStore } from "../store/bingxTransactions.store";
 import KLineChart from "../components/KLineChart.vue";
-import { Periods } from "src/server/Bingx.service";
 import { useBingXTradesStore } from "../store/bingxTrades.store";
-import { useIntervalFn } from "@vueuse/core";
 import { useBingXPositionsStore } from "../store/bingxPositions.store";
 import { usePreferencesStore } from "../store/preferences.store";
 import { useBingXKLinesStore } from "../store/bingxKLines.store";
+import { Period } from "../../server/BingX.dto";
 
 const bingXTransactionsStore = useBingXTransactionsStore();
 const bingXTradesStore = useBingXTradesStore();
@@ -21,23 +20,22 @@ const fetchData = async () => {
   if (isRefreshing.value) return;
   isRefreshing.value = true;
   try {
-    await bingXTradesStore.fetchTrades();
-    await bingXPositionsStore.fetchPositions();
+    // await bingXTradesStore.fetchTrades();
+    // await bingXPositionsStore.fetchPositions();
 
     await Promise.all(
-      bingXTransactionsStore.allSymbols.map((symbol) =>
-        bingXKLinesStore.fetchKLines(symbol, selectedPeriod.value),
-      ),
+      bingXTransactionsStore.allSymbols
+        // .filter((x) => x === "FORM-USDT")
+        .map((symbol) =>
+          bingXKLinesStore.fetchKLines(symbol, selectedPeriod.value),
+        ),
     );
-    // for (const symbol of bingXTransactionsStore.allSymbols /*.filter(x => x === 'FARTCOIN-USDT')*/) {
-    //   await bingXKLinesStore.fetchKLines(symbol, selectedPeriod.value)
-    // }
   } finally {
     isRefreshing.value = false;
   }
 };
 
-const periodsOptions: Periods[] = [
+const periodsOptions: Period[] = [
   "1m",
   "3m",
   "5m",
@@ -55,14 +53,23 @@ const periodsOptions: Periods[] = [
   "1M",
 ];
 
-const selectedPeriod = ref<Periods>("15m");
+const selectedPeriod = ref<Period>("1m");
 const hideTrades = ref(preferencesStore.hideTrades);
 
-const { resume } = useIntervalFn(fetchData, 1000, { immediate: false });
+const search = ref("");
+
+const filteredFilters = computed(() => {
+  if (!search.value)
+    return bingXTransactionsStore.allSymbols.sort((a, b) => a.localeCompare(b));
+  return bingXTransactionsStore.allSymbols
+    .filter((symbol) =>
+      symbol.toLowerCase().includes(search.value.toLowerCase()),
+    )
+    .sort((a, b) => a.localeCompare(b));
+});
 
 onMounted(async () => {
   await fetchData();
-  resume();
 });
 </script>
 
@@ -77,7 +84,14 @@ onMounted(async () => {
         >
           Dashboard
         </RouterLink>
+        <input
+          type="text"
+          v-model="search"
+          placeholder="Search..."
+          class="rounded border border-gray-600 px-2 py-1 focus:border-blue-500 focus:outline-none"
+        />
       </div>
+
       <div>
         <div class="flex items-center gap-3">
           Hide trade
@@ -111,7 +125,7 @@ onMounted(async () => {
       class="3xl:grid-cols-4 grid grid-cols-1 gap-2 xl:grid-cols-2 2xl:grid-cols-3"
     >
       <div
-        v-for="symbol in bingXTransactionsStore.allSymbols /*.filter(x => x === 'FARTCOIN-USDT')*/"
+        v-for="symbol in filteredFilters"
         class="relative h-96 w-full rounded border border-gray-600 p-4"
         :key="`${selectedPeriod}-${symbol}`"
       >

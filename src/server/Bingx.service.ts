@@ -1,344 +1,160 @@
-// eslint-disable-next-line import/no-unresolved
-import axios from "axios";
-import CryptoJS from "crypto-js";
-import { limiter } from "../utils/apiLimiter";
+import { BrowserWindow } from "electron";
+import {
+  Balance,
+  KLine,
+  NotifyMessage,
+  Period,
+  Position,
+  Trade,
+  Transaction,
+} from "./BingX.dto";
+import { v4 as uuidv4 } from "uuid";
+import { BingXRestClient } from "./BingxRest.client";
+import { BingXWebSocket } from "./BingxWebSocket.client";
+import { KLineDataEvent, WebSocketMessage } from "./BingX.ws.dto";
 
-export type Transaction = {
-  symbol: string;
-  incomeType:
-    | "TRANSFER"
-    | "REALIZED_PNL"
-    | "FUNDING_FEE"
-    | "TRADING_FEE"
-    | "INSURANCE_CLEAR"
-    | "TRIAL_FUND"
-    | "ADL"
-    | "SYSTEM_DEDUCTION"
-    | "GTD_PRICE";
-  income: string;
-  asset: string;
-  info: string;
-  time: number;
-  tranId: string;
-  tradeId: string;
-};
-
-export type Balance = {
-  code: number;
-  msg: string;
-  asset: string;
-  balance: string;
-  equity: string;
-  unrealizedProfit: string;
-  realisedProfit: string;
-  availableMargin: string;
-  usedMargin: string;
-  freezedMargin: string;
-  shortUid: string;
-};
-
-export type Trade = {
-  symbol: string;
-  qty: string;
-  price: string;
-  quoteQty: string;
-  commission: string;
-  commissionAsset: string;
-  orderId: string;
-  tradeId: string;
-  filledTime: Date;
-  side: string;
-  positionSide: string;
-  role: string;
-  total: number;
-  realisedPNL: string;
-};
-
-export type Position = {
-  symbol: string;
-  positionId: string;
-  positionSide: string;
-  isolated: boolean;
-  positionAmt: string;
-  availableAmt: string;
-  unrealizedProfit: string;
-  realisedProfit: string;
-  initialMargin: string;
-  margin: string;
-  avgPrice: string;
-  liquidationPrice: number;
-  leverage: string;
-  positionValue: string;
-  markPrice: string;
-  riskRate: string;
-  maxMarginReduction: string;
-  pnlRatio: string;
-  updateTime: string;
-};
-
-type IApi = {
-  path: string;
-  method: string;
-  payload: Record<string, string>;
-  protocol: string;
-};
-
-export type KLine = {
-  open: string;
-  close: string;
-  high: string;
-  low: string;
-  volume: string;
-  time: number;
-};
-export type Periods =
-  | "1m"
-  | "3m"
-  | "5m"
-  | "15m"
-  | "30m"
-  | "1h"
-  | "2h"
-  | "4h"
-  | "6h"
-  | "8h"
-  | "12h"
-  | "1d"
-  | "3d"
-  | "1w"
-  | "1M";
+const klineRegex = /^([A-Z0-9]*-[A-Z0-9]*)?@kline_([1-9]*[mhdwM]*)?$/;
 
 export class BingXService {
-  //   private bingX: bingx
-  private API_KEY: string;
-  private API_SECRET: string;
-  private HOST: string;
+  private readonly restClient: BingXRestClient;
+  private readonly wsClient: BingXWebSocket;
+  private data: {
+    transactions: Transaction[];
+    trades: Trade[];
+    kLines: Record<
+      string,
+      {
+        socketId: string;
+        data: KLine[];
+      }
+    >;
+    balance: Balance | undefined;
+    positions: Position[];
+  } = {
+    transactions: [],
+    trades: [],
+    kLines: {},
+    balance: undefined,
+    positions: [],
+  };
 
   constructor(apiKey: string, apiSecret: string) {
-    this.API_KEY = apiKey;
-    this.API_SECRET = apiSecret;
-    this.HOST = "open-api.bingx.com";
+    this.restClient = new BingXRestClient(apiKey, apiSecret);
+    console.log("BingXService constructor ");
+    this.wsClient = new BingXWebSocket(
+      this.restClient,
+      this.handleWebSocketMessage.bind(this),
+    );
   }
+
   setCredentials(apiKey: string, apiSecret: string) {
-    this.API_KEY = apiKey;
-    this.API_SECRET = apiSecret;
+    this.restClient.setCredentials(apiKey, apiSecret);
+    this.wsClient.updateListenKey();
   }
 
-  async fetchTransactions(): Promise<Transaction[]> {
-    // console.log('fetchTrades', {
-    //   apiKey: this.API_KEY,
-    //   apiSecret: this.API_SECRET,
-    // })
-    const allTransactions: Transaction[] = [];
+  async loadInitDate() {
+    console.log("loadInitDate");
+    this.data.transactions = await this.restClient.fetchTransactions();
+    this.data.trades = await this.restClient.fetchTrades();
+    this.data.balance = await this.restClient.fetchBalance();
+    this.data.positions = await this.restClient.fetchPositions();
 
-    // Start with the current time
-    let endTime = Date.now();
-    let hasMoreData = true;
-    let page = 1;
-    const limit = 1000;
-
-    do {
-      try {
-        console.log(
-          `[fetchTransactions] Fetching page ${page}, endTime ${endTime} ` +
-            `${new Date(endTime).toISOString()} transactions so far: ${allTransactions.length}`,
-        );
-
-        const API: IApi = {
-          path: "/openApi/swap/v2/user/income",
-          method: "GET",
-          payload: {
-            limit: limit.toString(),
-            endTime: endTime.toString(),
-          },
-          protocol: "https",
-        };
-
-        const transactions = await this.bingXRequest<Transaction[]>(API);
-
-        if (!transactions || transactions.length === 0) {
-          hasMoreData = false;
-          continue;
-        }
-
-        // Add to our collection
-        allTransactions.push(...transactions);
-
-        // Find the oldest transaction timestamp for next pagination request
-        const oldestTransaction = Math.min(...transactions.map((t) => t.time));
-
-        // Set end time to just before the oldest transaction time
-        endTime = oldestTransaction - 1;
-
-        page++;
-
-        if (transactions.length < limit) {
-          hasMoreData = false;
-          continue;
-        }
-      } catch (error) {
-        console.error("Error during pagination:", error);
-        hasMoreData = false;
-      }
-    } while (hasMoreData);
-
-    console.log(`Total transactions fetched: ${allTransactions.length}`);
-    return allTransactions;
+    this.notifyClients({
+      store: "transactions",
+      transactions: this.data.transactions,
+    });
+    this.notifyClients({ store: "trades", trades: this.data.trades });
+    this.notifyClients({ store: "balance", balance: this.data.balance });
+    this.notifyClients({ store: "positions", positions: this.data.positions });
   }
 
-  async fetchTrades(): Promise<Trade[]> {
-    // console.log('fetchTrades', {
-    //   apiKey: this.API_KEY,
-    //   apiSecret: this.API_SECRET,
-    // })
-    const allTrades: Trade[] = [];
+  async loadSymbolKLines(symbol: string, period: Period) {
+    if (!this.data.kLines[symbol])
+      this.data.kLines[symbol] = { socketId: uuidv4(), data: [] };
+    const kLines = await this.restClient.fetchKLines(symbol, period);
+    this.data.kLines[symbol].data = kLines;
 
-    // Start with the current time
-    let hasMoreData = true;
-    let page = 1;
-    const limit = 1000;
-
-    do {
-      try {
-        console.log(
-          `[fetchTrades] Fetching page ${page}, trades so far: ${allTrades.length}`,
-        );
-
-        const API: IApi = {
-          path: "/openApi/swap/v2/trade/fillHistory",
-          method: "GET",
-          payload: {
-            pageIndex: page.toString(),
-            pageSize: limit.toString(),
-          },
-          protocol: "https",
-        };
-
-        const trades = await this.bingXRequest<{
-          fill_history_orders: Trade[];
-        }>(API);
-
-        if (!trades || trades.fill_history_orders?.length === 0) {
-          hasMoreData = false;
-          continue;
-        }
-
-        // Add to our collection
-        allTrades.push(...trades.fill_history_orders);
-
-        // Set end time to just before the oldest trade time
-        page++;
-
-        if (trades.fill_history_orders.length < limit) {
-          hasMoreData = false;
-          continue;
-        }
-      } catch (error) {
-        console.error("Error during pagination:", error);
-        hasMoreData = false;
-      }
-    } while (hasMoreData);
-
-    console.log(`Total trades fetched: ${allTrades.length}`);
-    return allTrades;
-  }
-
-  async fetchKLines(symbol: string, periods: Periods): Promise<KLine[]> {
-    const API: IApi = {
-      path: "/openApi/swap/v3/quote/klines",
-      method: "GET",
-      payload: {
-        symbol,
-        interval: periods,
-        limit: "1000",
-      },
-      protocol: "https",
-    };
-    const klines = await this.bingXRequest<KLine[]>(API);
-    console.log(
-      `[fetchKlines][${symbol}][${periods}] Fetched klines ${klines.length}`,
+    this.notifyClients({
+      store: "klines",
+      symbol,
+      period,
+      klines: this.data.kLines[symbol].data,
+    });
+    this.wsClient.subscribe(
+      this.data.kLines[symbol].socketId,
+      `${symbol}@kline_${period}`,
     );
-    return klines;
   }
 
-  async fetchBalance(): Promise<Balance> {
-    const API: IApi = {
-      path: "/openApi/swap/v3/user/balance",
-      method: "GET",
-      payload: {},
-      protocol: "https",
-    };
-    const balance = await this.bingXRequest<Balance>(API);
-    console.log(`[fetchBalance] Fetched balance ${!!balance}`);
-    return balance;
-  }
+  private processWSEventKline(message: KLineDataEvent) {
+    const match = message.dataType.match(klineRegex);
+    if (match) {
+      const symbol = match[1];
+      const period = match[2] as Period;
+      if (symbol && period) {
+        const klineData = this.data.kLines[symbol].data;
 
-  async fetchPositions(): Promise<Position[]> {
-    const API: IApi = {
-      path: "/openApi/swap/v2/user/positions",
-      method: "GET",
-      payload: {},
-      protocol: "https",
-    };
-    const positions = await this.bingXRequest<Position[]>(API);
-    console.log(`[fetchPositions] Fetched positions ${!!positions}`);
-    return positions;
-  }
+        message.data.forEach((kline) => {
+          if (klineData[0].time === kline.T) {
+            klineData[0].close = kline.c;
+            klineData[0].high = kline.h;
+            klineData[0].low = kline.l;
+            klineData[0].open = kline.o;
+            klineData[0].volume = kline.v;
+          } else {
+            klineData.unshift({
+              time: kline.T,
+              open: kline.o,
+              high: kline.h,
+              low: kline.l,
+              close: kline.c,
+              volume: kline.v,
+            });
+          }
+        });
 
-  private getParameters(
-    params: Record<string, string>,
-    timestamp: number,
-    urlEncode = false,
-  ) {
-    let parameters = "";
-    for (const key in params) {
-      if (urlEncode) {
-        parameters += key + "=" + encodeURIComponent(params[key]) + "&";
-      } else {
-        parameters += key + "=" + params[key] + "&";
+        this.notifyClients({
+          store: "klines",
+          symbol,
+          period,
+          klines: this.data.kLines[symbol].data,
+        });
       }
     }
-    if (parameters) {
-      parameters = parameters.substring(0, parameters.length - 1);
-      parameters = parameters + "&timestamp=" + timestamp;
-    } else {
-      parameters = "timestamp=" + timestamp;
-    }
-    return parameters;
   }
 
-  private async bingXRequest<T>(API: IApi) {
-    const timestamp = new Date().getTime();
-    const sign = CryptoJS.enc.Hex.stringify(
-      CryptoJS.HmacSHA256(
-        this.getParameters(API.payload, timestamp),
-        this.API_SECRET,
-      ),
-    );
-    const params = this.getParameters(API.payload, timestamp, true);
-    const url = `${API.protocol}://${this.HOST}${API.path}?${params}&signature=${sign}`;
-    const config = {
-      method: API.method,
-      url,
-      headers: { "X-BX-APIKEY": this.API_KEY },
-    };
-    return await limiter.schedule(async () => {
-      const resp = await axios.request<{
-        code: number;
-        msg: string;
-        data: T;
-      }>(config);
-      // console.log({
-      //   status: resp.status,
-      //   code: resp.data.code,
-      //   msg: resp.data.msg,
-      //   data: !!resp.data.data,
-      // })
-      const obj = resp.data;
-      if (obj.code !== 0)
-        console.error(`BingX API error: ${obj.msg} (${obj.code})`);
+  private handleWebSocketMessage(message: WebSocketMessage) {
+    if ("e" in message) {
+      if (message.e === "SNAPSHOT") {
+        //console.log("TODO", message.e);
+        return;
+      }
+      if (message.e === "TRADE_UPDATE") {
+        console.log("TODO", message.e);
+        return;
+      }
+      if (message.e === "ORDER_TRADE_UPDATE") {
+        console.log("TODO", message.e);
+        return;
+      }
+      if (message.e === "ACCOUNT_UPDATE") {
+        console.log("TODO", message.e);
+        return;
+      }
+    }
+    if ("dataType" in message) {
+      if (message.dataType === "") return;
+      if (klineRegex.test(message.dataType)) {
+        return this.processWSEventKline(message as KLineDataEvent);
+      }
+    }
+    console.log("handleWebSocketMessage", message);
+  }
 
-      return obj.data;
+  private notifyClients(message: NotifyMessage) {
+    // console.log("notifyClients", message.store);
+    BrowserWindow.getAllWindows().forEach((window) => {
+      window.webContents.send(`update-data`, message);
     });
   }
 }

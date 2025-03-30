@@ -1,7 +1,8 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
-import { BingXService, Periods } from "./server/Bingx.service";
+import { BingXService } from "./server/Bingx.service";
+import { Period } from "./server/BingX.dto";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -20,89 +21,83 @@ ipcMain.handle(
     { apiKey, apiSecret }: { apiKey: string; apiSecret: string },
   ) => {
     console.log("Setting BingX credentials");
+
     if (!bingXService) bingXService = new BingXService(apiKey, apiSecret);
     else bingXService.setCredentials(apiKey, apiSecret);
-    await bingXService.fetchTransactions();
-    await bingXService.fetchTrades();
-    await bingXService.fetchBalance();
-    await bingXService.fetchPositions();
+
+    await bingXService.loadInitDate();
     return { success: true };
   },
 );
 
 // Set up IPC handlers
-ipcMain.handle("get-bingx-transactions", async (event) => {
-  try {
-    if (!bingXService) {
-      throw new Error(
-        "BingX service not initialized. Please set API credentials first.",
-      );
-    }
-    return await bingXService.fetchTransactions();
-  } catch (error) {
-    console.error("Error fetching BingX transactions:", error);
-    throw error;
-  }
-});
+// ipcMain.handle("get-bingx-transactions", async (event) => {
+//   try {
+//     if (!bingXService) {
+//       throw new Error(
+//         "BingX service not initialized. Please set API credentials first.",
+//       );
+//     }
+//     return await bingXService.fetchTransactions();
+//   } catch (error) {
+//     console.error("Error fetching BingX transactions:", error);
+//     throw error;
+//   }
+// });
 
-ipcMain.handle("get-bingx-trades", async (event) => {
-  try {
-    if (!bingXService) {
-      throw new Error(
-        "BingX service not initialized. Please set API credentials first.",
-      );
-    }
-    return await bingXService.fetchTrades();
-  } catch (error) {
-    console.error("Error fetching BingX trades:", error);
-    throw error;
-  }
-});
+// ipcMain.handle("get-bingx-trades", async (event) => {
+//   try {
+//     if (!bingXService) {
+//       throw new Error(
+//         "BingX service not initialized. Please set API credentials first.",
+//       );
+//     }
+//     return await bingXService.fetchTrades();
+//   } catch (error) {
+//     console.error("Error fetching BingX trades:", error);
+//     throw error;
+//   }
+// });
 
 ipcMain.handle(
   "get-bingx-klines",
-  async (event, symbol: string, period: Periods) => {
-    try {
-      if (!bingXService) {
-        throw new Error(
-          "BingX service not initialized. Please set API credentials first.",
-        );
-      }
-      return await bingXService.fetchKLines(symbol, period);
-    } catch (error) {
-      console.error("Error fetching BingX klines:", error);
-      throw error;
+  async (event, symbol: string, period: Period) => {
+    if (!bingXService) {
+      throw new Error(
+        "BingX service not initialized. Please set API credentials first.",
+      );
     }
+    bingXService.loadSymbolKLines(symbol, period);
   },
 );
 
-ipcMain.handle("get-bingx-balance", async (event) => {
-  try {
-    if (!bingXService) {
-      throw new Error(
-        "BingX service not initialized. Please set API credentials first.",
-      );
-    }
-    return await bingXService.fetchBalance();
-  } catch (error) {
-    console.error("Error fetching BingX balance:", error);
-    throw error;
-  }
-});
+// ipcMain.handle("get-bingx-balance", async (event) => {
+//   try {
+//     if (!bingXService) {
+//       throw new Error(
+//         "BingX service not initialized. Please set API credentials first.",
+//       );
+//     }
+//     return await bingXService.fetchBalance();
+//   } catch (error) {
+//     console.error("Error fetching BingX balance:", error);
+//     throw error;
+//   }
+// });
 
-ipcMain.handle("get-bingx-positions", async (event) => {
-  try {
-    if (!bingXService) {
-      throw new Error(
-        "BingX service not initialized. Please set API credentials first.",
-      );
-    }
-    return await bingXService.fetchPositions();
-  } catch (error) {
-    console.error("Error fetching BingX positions:", error);
-    throw error;
-  }
-});
+// ipcMain.handle("get-bingx-positions", async (event) => {
+//   try {
+//     if (!bingXService) {
+//       throw new Error(
+//         "BingX service not initialized. Please set API credentials first.",
+//       );
+//     }
+//     return await bingXService.fetchPositions();
+//   } catch (error) {
+//     console.error("Error fetching BingX positions:", error);
+//     throw error;
+//   }
+// });
 
 const createWindow = () => {
   // Create the browser window.

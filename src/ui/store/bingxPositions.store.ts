@@ -1,13 +1,13 @@
-import { defineStore } from 'pinia'
-import { Position } from '../../server/Bingx.service'
+import { defineStore } from "pinia";
+import { Position } from "../../server/BingX.dto";
 
 type State = {
-  positions: Position[]
-  loading: boolean
-  error: string | null
-}
+  positions: Position[];
+  loading: boolean;
+  error: string | null;
+};
 
-export const useBingXPositionsStore = defineStore('bingx.positions', {
+export const useBingXPositionsStore = defineStore("bingx.positions", {
   state: (): State => ({
     positions: [],
     loading: false,
@@ -16,19 +16,21 @@ export const useBingXPositionsStore = defineStore('bingx.positions', {
 
   actions: {
     async fetchPositions() {
-      this.loading = true
-      this.error = null
-
-      try {
-        const data = await window.electronAPI.getBingXPositions()
-        console.log('fetchPositions', { t: data })
-        this.positions = data
-      } catch (error) {
-        this.error = error.message || 'Failed to fetch positions'
-        console.error('Error in store:', error)
-      } finally {
-        this.loading = false
-      }
+      // this.loading = true;
+      // this.error = null;
+      // try {
+      //   const data = await window.electronAPI.getBingXPositions();
+      //   console.log("fetchPositions", { t: data });
+      //   this.positions = data;
+      // } catch (error) {
+      //   this.error = error.message || "Failed to fetch positions";
+      //   console.error("Error in store:", error);
+      // } finally {
+      //   this.loading = false;
+      // }
+    },
+    processMessage(positions: Position[]) {
+      this.positions = positions;
     },
   },
-})
+});

@@ -1,6 +1,7 @@
 {
   "editor.formatOnSave": true,
   "cSpell.words": [
+    "APIKEY",
     "asar",
     "bingx",
     "chartjs",
@@ -9,7 +10,9 @@
     "klinechart",
     "klinecharts",
     "klines",
+    "mhdw",
     "realised",
+    "uuidv",
     "vueuse"
   ]
 }
