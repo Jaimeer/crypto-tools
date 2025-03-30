@@ -460,7 +460,12 @@ onMounted(async () => {
             <td class="px-2 py-0.5"><Price :value="item.pnl" /></td>
             <td class="px-2 py-0.5"><Price :value="item.charges" /></td>
             <td class="px-2 py-0.5"><Price :value="item.all" /></td>
-            <td class="px-2 py-0.5">{{ ((item.all * 100) / item.volume).toFixed(2) }}%</td>
+            <td class="px-2 py-0.5">
+              <template v-if="item.volume !== 0">
+                {{ ((item.all * 100) / item.volume).toFixed(2) }}%
+              </template>
+              <template v-else> - </template>
+            </td>
             <td class="px-2 py-0.5">
               <Price
                 :value="

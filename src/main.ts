@@ -8,6 +8,8 @@ if (started) {
   app.quit()
 }
 
+if (require('electron-squirrel-startup') === true) app.quit()
+
 // Initialize BingX service
 let bingXService: BingXService | undefined
 
