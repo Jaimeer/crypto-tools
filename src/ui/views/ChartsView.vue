@@ -53,7 +53,7 @@ const periodsOptions: Period[] = [
   "1M",
 ];
 
-const selectedPeriod = ref<Period>("1m");
+const selectedPeriod = ref<Period>("15m");
 const hideTrades = ref(preferencesStore.hideTrades);
 
 const search = ref("");
