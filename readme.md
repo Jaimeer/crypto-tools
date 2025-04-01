@@ -6,8 +6,6 @@
 
 # Installation
 
-Copy `.env.sample` into `.env` file and fill in the required fields.
-
 The bingX API should only have read permissions.
 
 ```bash
