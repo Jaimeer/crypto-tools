@@ -18,6 +18,7 @@ const klineRegex = /^([A-Z0-9]*-[A-Z0-9]*)?@kline_([1-9]*[mhdwM]*)?$/;
 export class BingXService {
   private readonly restClient: BingXRestClient;
   private readonly wsClient: BingXWebSocket;
+  private refreshInterval: NodeJS.Timeout | null = null;
   private data: {
     transactions: Transaction[];
     trades: Trade[];
@@ -52,7 +53,30 @@ export class BingXService {
     this.wsClient.updateListenKey();
   }
 
-  async loadInitDate() {
+  startAutoRefresh(intervalMs = 60000) {
+    this.stopAutoRefresh();
+    this.loadInitDate();
+
+    this.refreshInterval = setInterval(async () => {
+      try {
+        await this.loadInitDate();
+      } catch (error) {
+        console.error("Auto-refresh failed:", error);
+      }
+    }, intervalMs);
+
+    console.log(`Auto-refresh started: every ${intervalMs / 1000} seconds`);
+  }
+
+  stopAutoRefresh() {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+      this.refreshInterval = null;
+      console.log("Auto-refresh stopped");
+    }
+  }
+
+  private async loadInitDate() {
     console.log("loadInitDate");
     this.data.transactions = await this.restClient.fetchTransactions();
     this.data.trades = await this.restClient.fetchTrades();

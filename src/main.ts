@@ -25,7 +25,7 @@ ipcMain.handle(
     if (!bingXService) bingXService = new BingXService(apiKey, apiSecret);
     else bingXService.setCredentials(apiKey, apiSecret);
 
-    await bingXService.loadInitDate();
+    await bingXService.startAutoRefresh();
     return { success: true };
   },
 );
@@ -133,6 +133,7 @@ app.on("ready", createWindow);
 // explicitly with Cmd + Q.
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
+    bingXService.stopAutoRefresh();
     app.quit();
   }
 });

@@ -2,10 +2,10 @@
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { init, dispose, registerOverlay } from "klinecharts";
 import { vElementSize } from "@vueuse/components";
-import { KLine, Periods, Position, Trade } from "../../server/Bingx.service";
 import { addMonths, subHours } from "date-fns";
 import { simpleAnnotationDown } from "./klinechart/simpleAnnotationDown.overlay";
 import { rectangle } from "./klinechart/rectangle.overlay";
+import { KLine, Period, Position, Trade } from "../../server/BingX.dto";
 
 registerOverlay(rectangle);
 registerOverlay(simpleAnnotationDown);
@@ -14,7 +14,7 @@ const chart = ref();
 
 const props = defineProps<{
   symbol: string;
-  periods: Periods;
+  period: Period;
   hideTrades: boolean;
   klines: KLine[];
   trades: Trade[];
@@ -79,7 +79,7 @@ const draw = () => {
     filteredTrades.value.forEach((trade) => {
       const tradeTime = new Date(trade.filledTime).getTime();
       const tradePrice = parseFloat(trade.price);
-
+      const isProfit = parseFloat(trade.realisedPNL) > 0;
       const color = trade.side === "BUY" ? "#20aa93" : "#FF0000";
       const overlayName =
         trade.side === "BUY" ? "simpleAnnotationDown" : "simpleAnnotation";
@@ -88,7 +88,9 @@ const draw = () => {
         groupId: "trades",
         points: [{ timestamp: tradeTime, value: tradePrice }],
         lock: true,
-        extendData: trade.side.charAt(0),
+        extendData: isProfit
+          ? parseFloat(trade.realisedPNL).toFixed(2)
+          : trade.side.charAt(0),
         styles: {
           text: {
             color: "#FFFFFF",
@@ -213,8 +215,13 @@ watch(
 <template>
   <div class="relative" v-element-size="updateChartSize">
     <!-- {{ trades.length }} - {{ filteredTrades.length }} -->
-    <div class="absolute bottom-10 text-xl font-bold text-slate-700 uppercase">
-      {{ symbol }} - {{ periods }}
+    <div class="absolute bottom-10 text-lg font-bold text-slate-700 uppercase">
+      {{ symbol }} - {{ period }}
+    </div>
+    <div
+      class="absolute top-10 right-16 text-lg font-bold text-slate-700 uppercase"
+    >
+      {{ symbol }} - {{ period }}
     </div>
     <div :id="`chart-${symbol}`" class="h-[370px] w-full" />
     <!-- {{ trades }} -->

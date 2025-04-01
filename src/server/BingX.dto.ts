@@ -40,9 +40,9 @@ export type Trade = {
   commission: string;
   commissionAsset: string;
   orderId: string;
-  tradeId: string;
+  tradeId: "LONG" | "SHORT";
   filledTime: Date;
-  side: string;
+  side: "BUY" | "SELL";
   positionSide: string;
   role: string;
   total: number;

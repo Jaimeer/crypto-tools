@@ -122,7 +122,7 @@ onMounted(async () => {
       </div>
     </div>
     <div
-      class="3xl:grid-cols-4 grid grid-cols-1 gap-2 xl:grid-cols-2 2xl:grid-cols-3"
+      class="3xl:grid-cols-4 4xl:grid-cols-5 grid grid-cols-1 gap-2 xl:grid-cols-2 2xl:grid-cols-3"
     >
       <div
         v-for="symbol in filteredFilters"
@@ -138,7 +138,7 @@ onMounted(async () => {
         <KLineChart
           v-else
           :symbol="symbol"
-          :periods="selectedPeriod"
+          :period="selectedPeriod"
           :hideTrades="hideTrades"
           :klines="bingXKLinesStore.kLine(symbol, selectedPeriod) ?? []"
           :trades="bingXTradesStore.trades.filter((x) => x.symbol === symbol)"

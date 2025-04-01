@@ -24,12 +24,12 @@ const positionsStore = useBingXPositionsStore();
 const klineStore = useBingXKLinesStore();
 
 const updateDataHandler = (message: NotifyMessage) => {
-  console.log(message);
   switch (message.store) {
     case "transactions":
       transactionsStore.processMessage(message.transactions);
       break;
     case "trades":
+      //   console.log("trades", message.trades);
       tradesStore.processMessage(message.trades);
       break;
     case "balance":
