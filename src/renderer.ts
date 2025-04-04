@@ -9,6 +9,7 @@ import { useBingXTradesStore } from "./ui/store/bingxTrades.store";
 import { useBingXBalanceStore } from "./ui/store/bingxBalance.store";
 import { useBingXPositionsStore } from "./ui/store/bingxPositions.store";
 import { useBingXKLinesStore } from "./ui/store/bingxKLines.store";
+import { useBitkuaBotsStore } from "./ui/store/bitkuaBots.store";
 
 const pinia = createPinia();
 
@@ -22,6 +23,7 @@ const tradesStore = useBingXTradesStore();
 const balanceStore = useBingXBalanceStore();
 const positionsStore = useBingXPositionsStore();
 const klineStore = useBingXKLinesStore();
+const botsStore = useBitkuaBotsStore();
 
 const updateDataHandler = (message: NotifyMessage) => {
   switch (message.store) {
@@ -40,6 +42,9 @@ const updateDataHandler = (message: NotifyMessage) => {
       break;
     case "klines":
       klineStore.processMessage(message.symbol, message.period, message.klines);
+      break;
+    case "bots":
+      botsStore.processMessage(message.bots);
       break;
     default:
       console.log(message);

@@ -2,7 +2,9 @@ import { app, BrowserWindow, ipcMain } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
 import { BingXService } from "./server/Bingx.service";
+import { BitkuaService } from "./server/Bitkua.service";
 import { Period } from "./server/BingX.dto";
+import { BitkuaAction } from "./server/Bitkua.dto";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -13,6 +15,7 @@ if (started) {
 
 // Initialize BingX service
 let bingXService: BingXService | undefined;
+let bitkuaService: BitkuaService | undefined;
 
 ipcMain.handle(
   "set-bingx-credentials",
@@ -29,6 +32,34 @@ ipcMain.handle(
     return { success: true };
   },
 );
+
+ipcMain.handle(
+  "set-bitkua-credentials",
+  async (
+    event,
+    {
+      email,
+      password,
+      secret,
+    }: { email: string; password: string; secret: string },
+  ) => {
+    console.log("Setting Bitkua credentials");
+
+    if (!bitkuaService)
+      bitkuaService = new BitkuaService(email, password, secret);
+    else bitkuaService.setCredentials(email, password, secret);
+
+    await bitkuaService.startAutoRefresh();
+    return { success: true };
+  },
+);
+
+ipcMain.handle("send-bitkua-action", async (event, message: BitkuaAction) => {
+  if (bitkuaService) {
+    await bitkuaService.processAction(message);
+    return { success: true };
+  }
+});
 
 // Set up IPC handlers
 // ipcMain.handle("get-bingx-transactions", async (event) => {
@@ -134,6 +165,8 @@ app.on("ready", createWindow);
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     bingXService.stopAutoRefresh();
+    bitkuaService.stopAutoRefresh();
+
     app.quit();
   }
 });

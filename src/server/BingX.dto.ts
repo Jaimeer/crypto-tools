@@ -100,9 +100,21 @@ export type ListenKey = {
   listenKey: string;
 };
 
+export type Bot = {
+  id: string;
+  orders: string;
+  symbol: string;
+  amount: string;
+  strategy: string;
+  status: string;
+  delete: string;
+  reset: string;
+};
+
 export type NotifyMessage =
   | { store: "trades"; trades: Trade[] }
   | { store: "transactions"; transactions: Transaction[] }
   | { store: "balance"; balance: Balance }
   | { store: "positions"; positions: Position[] }
-  | { store: "klines"; symbol: string; period: Period; klines: KLine[] };
+  | { store: "klines"; symbol: string; period: Period; klines: KLine[] }
+  | { store: "bots"; bots: Bot };

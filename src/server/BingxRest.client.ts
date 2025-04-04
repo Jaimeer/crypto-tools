@@ -14,7 +14,7 @@ import {
 
 export type BingXApiRequest = {
   path: string;
-  method: "GET" | "POST";
+  method: "GET" | "POST" | "PUT";
   payload: Record<string, string>;
   protocol: "https";
 };
@@ -96,7 +96,17 @@ export class BingXRestClient {
         if (API.method === "POST") {
           if (resp.status !== 200) {
             console.error(
-              `BingX API error: ${resp.status}) - ${API.method} ${url}`,
+              `BingX API POST error: ${resp.status}) - ${API.method} ${url}`,
+            );
+            return;
+          }
+          return resp.data as T;
+        }
+
+        if (API.method === "PUT") {
+          if (resp.status !== 200) {
+            console.error(
+              `BingX API PUT error: ${resp.status}) - ${API.method} ${url}`,
             );
             return;
           }
@@ -292,5 +302,18 @@ export class BingXRestClient {
       `[fetchBalance] Fetched getWSListenKey ${listenKeyData?.listenKey}`,
     );
     return listenKeyData.listenKey;
+  }
+
+  async extendWSListenKey(listenKey: string): Promise<void> {
+    const API: BingXApiRequest = {
+      path: "/openApi/user/auth/userDataStream",
+      method: "PUT",
+      payload: {
+        listenKey,
+      },
+      protocol: "https",
+    };
+    await this.bingXRequest<ListenKey>(API);
+    console.log(`[fetchBalance] Extended listenKey`);
   }
 }

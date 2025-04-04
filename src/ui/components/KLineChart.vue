@@ -2,13 +2,23 @@
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { init, dispose, registerOverlay } from "klinecharts";
 import { vElementSize } from "@vueuse/components";
-import { addMonths, subHours } from "date-fns";
+import { addMonths, format, subDays, subHours } from "date-fns";
 import { simpleAnnotationDown } from "./klinechart/simpleAnnotationDown.overlay";
 import { rectangle } from "./klinechart/rectangle.overlay";
 import { KLine, Period, Position, Trade } from "../../server/BingX.dto";
+import { useBingXTransactionsStore } from "../store/bingxTransactions.store";
+import { useBingXTradesStore } from "../store/bingxTrades.store";
+import Price from "./Price.vue";
+import NumTrades from "./NumTrades.vue";
+import { BitkuaActionUpdateStatus } from "../../server/Bitkua.dto";
+import { useBitkuaBotsStore } from "../store/bitkuaBots.store";
 
 registerOverlay(rectangle);
 registerOverlay(simpleAnnotationDown);
+
+const bingXTradesStore = useBingXTradesStore();
+const bingXTransactionsStore = useBingXTransactionsStore();
+const bitkuaBotsStore = useBitkuaBotsStore();
 
 const chart = ref();
 
@@ -193,6 +203,94 @@ const updateChartSize = () => {
   }
 };
 
+const transactions = computed(() => {
+  return bingXTransactionsStore.transactions.filter((x) => x.symbol);
+});
+
+const trades = computed(() => {
+  return bingXTradesStore.trades;
+});
+
+type PriceData = {
+  num: number;
+  pnl: number;
+  all: number;
+  charges: number;
+  volume: number;
+};
+
+const symbolData = computed(() => {
+  const initDate = subDays(new Date(), 1).getTime();
+  const data = transactions.value.reduce(
+    (acc, transaction) => {
+      if (transaction.symbol !== props.symbol) return acc;
+      const transactionDate = new Date(transaction.time);
+      if (transactionDate.getTime() < initDate) return acc;
+
+      if (!acc) {
+        acc = { num: 0, pnl: 0, all: 0, charges: 0, volume: 0 };
+      }
+      if (transaction.incomeType === "REALIZED_PNL") {
+        acc.num++;
+        acc.pnl += parseFloat(transaction.income);
+      } else {
+        acc.charges += parseFloat(transaction.income);
+      }
+      acc.all += parseFloat(transaction.income);
+      return acc;
+    },
+    { num: 0, pnl: 0, all: 0, charges: 0, volume: 0 } as PriceData,
+  );
+
+  trades.value.reduce((acc, trade) => {
+    const tradeDate = new Date(trade.filledTime);
+    if (trade.symbol !== props.symbol) return acc;
+    if (tradeDate.getTime() < initDate) return acc;
+
+    if (!acc) {
+      acc = { num: 0, pnl: 0, all: 0, charges: 0, volume: 0 };
+    }
+    if (parseFloat(trade.realisedPNL) !== 0) return acc;
+    acc.volume += parseFloat(trade.quoteQty);
+    return acc;
+  }, data);
+
+  return data;
+});
+
+const sides = ["long", "short"] as const;
+const status = ["active", "stop", "onlysell"] as const;
+
+const sendAction = (
+  botId: string,
+  status: "active" | "stop" | "onlysell",
+  amount?: number,
+) => {
+  const message: BitkuaActionUpdateStatus = {
+    action: "updateStatus",
+    botId,
+    status,
+  };
+  window.electronAPI.sendBitkuaAction(message);
+};
+
+const bot = computed(() => {
+  return {
+    long: bitkuaBotsStore.bots.find(
+      (x) =>
+        x.symbol.toLowerCase() ===
+          props.symbol.toLowerCase().replace("-", "") &&
+        !x.strategy.includes("short"),
+    ),
+    short: bitkuaBotsStore.bots.find(
+      (x) =>
+        x.symbol.toLowerCase() ===
+          props.symbol.toLowerCase().replace("-", "") &&
+        x.strategy.includes("short"),
+    ),
+  };
+});
+
 onUnmounted(() => {
   dispose(`chart-${props.symbol}`);
 });
@@ -213,7 +311,18 @@ watch(
 </script>
 
 <template>
-  <div class="relative" v-element-size="updateChartSize">
+  <div
+    class="relative flex flex-col rounded border border-gray-600 p-4"
+    v-element-size="updateChartSize"
+    :class="{
+      'border-t-green-600 border-l-green-600': bot.long.status === 'active',
+      'border-t-red-600 border-l-red-600': bot.long.status === 'stop',
+      'border-t-amber-600 border-l-amber-600': bot.long.status === 'onlysell',
+      'border-r-green-600 border-b-green-600': bot.short.status === 'active',
+      'border-r-red-600 border-b-red-600': bot.short.status === 'stop',
+      'border-r-amber-600 border-b-amber-600': bot.short.status === 'onlysell',
+    }"
+  >
     <!-- {{ trades.length }} - {{ filteredTrades.length }} -->
     <div class="absolute bottom-10 text-lg font-bold text-slate-700 uppercase">
       {{ symbol }} - {{ period }}
@@ -223,7 +332,68 @@ watch(
     >
       {{ symbol }} - {{ period }}
     </div>
-    <div :id="`chart-${symbol}`" class="h-[370px] w-full" />
+    <div class="flex items-center justify-between text-xs">
+      <div>{{ symbol }} - {{ period }}</div>
+      <div class="mr-12 flex justify-end gap-2">
+        <span class="text-slate-400">Last24h</span>
+        <NumTrades :num="symbolData.num" />
+        <Price :value="symbolData.volume" color="orange" />
+        <Price :value="symbolData.all" />
+        <div>
+          <template v-if="symbolData.volume !== 0">
+            {{ ((symbolData.all * 100) / symbolData.volume).toFixed(2) }}%
+          </template>
+          <template v-else> - </template>
+        </div>
+        <Price :value="symbolData.all / 24" color="violet" />
+      </div>
+    </div>
+    <div :id="`chart-${symbol}`" class="h-[320px] w-full" />
+    <div class="flex items-center justify-between">
+      <div class="flex w-full items-center justify-between">
+        <div v-for="side in sides" class="flex items-center gap-1 text-xs">
+          <div>
+            <span
+              class="font-bold uppercase"
+              :class="{
+                'text-[#6666ff]': side === 'long',
+                'text-[#ff33cc]': side === 'short',
+              }"
+            >
+              {{ side }}
+            </span>
+            <span class="text-blue-400">[{{ bot[side].amount }}]</span>
+            <span
+              :class="{
+                'text-slate-400': parseInt(bot[side].orders) === 0,
+                'text-lime-400':
+                  parseInt(bot[side].orders) > 0 &&
+                  parseInt(bot[side].orders) < 14,
+                'text-red-400': parseInt(bot[side].orders) >= 13,
+              }"
+            >
+              [{{ bot[side].orders }}]
+            </span>
+          </div>
+          <button
+            v-for="status in status"
+            class="cursor-pointer rounded text-xs transition disabled:cursor-default"
+            :class="{
+              'px-1 text-green-600 hover:text-green-400 disabled:bg-green-900 disabled:text-green-200':
+                status === 'active',
+              'px-1 text-red-600 hover:text-red-400 disabled:bg-red-900 disabled:text-red-200':
+                status === 'stop',
+              'px-1 text-amber-600 hover:text-amber-400 disabled:bg-amber-900 disabled:text-amber-200':
+                status === 'onlysell',
+            }"
+            :disabled="bot[side].status === status"
+            @click="sendAction(bot[side].id, status)"
+          >
+            {{ status }}
+          </button>
+        </div>
+      </div>
+    </div>
     <!-- {{ trades }} -->
     <!-- <pre>{{ positions }}</pre> -->
   </div>

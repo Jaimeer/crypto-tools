@@ -1,14 +1,19 @@
-import { RemovableRef, useStorage } from '@vueuse/core'
-import { defineStore } from 'pinia'
+import { RemovableRef, useStorage } from "@vueuse/core";
+import { defineStore } from "pinia";
 
 type State = {
-  hidedSymbols: RemovableRef<string[]>
-  hideTrades: RemovableRef<boolean>
-}
+  hidedSymbols: RemovableRef<string[]>;
+  hideTrades: RemovableRef<boolean>;
+};
 
-export const usePreferencesStore = defineStore('preferences', {
+export const usePreferencesStore = defineStore("preferences", {
   state: (): State => ({
-    hidedSymbols: useStorage('preferences.hidedSymbols', []),
-    hideTrades: useStorage('preferences.hideTrades', false),
+    hidedSymbols: useStorage("preferences.hidedSymbols", []),
+    hideTrades: useStorage("preferences.hideTrades", false),
   }),
-})
+  actions: {
+    toggleHideTrades() {
+      this.hideTrades = !this.hideTrades;
+    },
+  },
+});

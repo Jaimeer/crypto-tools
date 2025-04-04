@@ -61,18 +61,21 @@ export class BingXService {
       try {
         await this.loadInitDate();
       } catch (error) {
-        console.error("Auto-refresh failed:", error);
+        console.error("BingxService auto-refresh failed:", error);
       }
     }, intervalMs);
 
-    console.log(`Auto-refresh started: every ${intervalMs / 1000} seconds`);
+    console.log(
+      `BingxService auto-refresh started: every ${intervalMs / 1000} seconds`,
+    );
   }
 
   stopAutoRefresh() {
+    this.wsClient.stop();
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
       this.refreshInterval = null;
-      console.log("Auto-refresh stopped");
+      console.log("BingxService auto-refresh stopped");
     }
   }
 

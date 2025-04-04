@@ -1,19 +1,25 @@
 <script setup lang="ts" generic="T">
-const props = defineProps<{ headers: string[]; items: T[]; fullHeight?: boolean }>()
+const props = defineProps<{
+  headers: string[];
+  items: T[];
+  fullHeight?: boolean;
+}>();
 </script>
 
 <template>
   <div
-    class="overflow-y-auto overflow-x-auto"
+    class="overflow-x-auto overflow-y-auto"
     :class="{
-      ' max-h-96': !props.fullHeight,
-      ' max-h-fit': props.fullHeight,
+      'max-h-96': !props.fullHeight,
+      'max-h-fit': props.fullHeight,
     }"
   >
-    <table class="w-full text-xs text-left rtl:text-right text-gray-500 dark:text-gray-400">
+    <table
+      class="w-full text-left text-xs text-gray-500 rtl:text-right dark:text-gray-400"
+    >
       <thead
         v-if="headers.length"
-        class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
+        class="bg-gray-50 text-xs text-gray-700 uppercase dark:bg-gray-700 dark:text-gray-400"
       >
         <tr>
           <th class="px-2 py-2" v-for="header of headers">
@@ -25,7 +31,7 @@ const props = defineProps<{ headers: string[]; items: T[]; fullHeight?: boolean 
         <slot name="tbody">
           <tr
             v-for="item in items"
-            class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200"
+            class="border-b border-gray-200 bg-white text-nowrap dark:border-gray-700 dark:bg-gray-800"
           >
             <slot :item="item" />
           </tr>
