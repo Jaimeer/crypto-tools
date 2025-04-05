@@ -117,4 +117,4 @@ export type NotifyMessage =
   | { store: "balance"; balance: Balance }
   | { store: "positions"; positions: Position[] }
   | { store: "klines"; symbol: string; period: Period; klines: KLine[] }
-  | { store: "bots"; bots: Bot };
+  | { store: "bots"; bots: Bot[] };

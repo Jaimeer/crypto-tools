@@ -2,7 +2,6 @@
 import { computed } from "vue";
 import { useBingXTransactionsStore } from "../store/bingxTransactions.store";
 
-import SymbolRanking from "./tables/SymbolRanking.vue";
 import ProfitByDay from "./tables/ProfitByDay.vue";
 import Balance from "./tables/Balance.vue";
 import SymbolTrades from "./tables/SymbolTrades.vue";
@@ -37,16 +36,15 @@ const transactions = computed(() => {
     >
       No transactions found.
     </div>
-    <div v-else class="flex flex-col gap-4">
+    <div v-else class="flex flex-col gap-2">
       <!-- <div>
         <Chart :symbols="allSymbols" :data="transactionsBySymbolAndDay" />
       </div> -->
-      <div class="grid grid-cols-4 gap-4">
-        <SymbolRanking />
-        <ProfitByDay />
-      </div>
-      <div class="grid grid-cols-4 gap-4">
+      <div class="grid grid-cols-4 gap-2">
         <Balance />
+        <ProfitByDay class="col-span-3" />
+      </div>
+      <div class="">
         <SymbolTrades />
       </div>
       <SymbolTransactions date-format="yyyy-MM-dd" />

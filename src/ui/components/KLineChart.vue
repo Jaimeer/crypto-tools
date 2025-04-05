@@ -291,6 +291,24 @@ const bot = computed(() => {
   };
 });
 
+const strategyName = (strategy: string) => {
+  if (!strategy) return "---";
+  return (
+    {
+      ladominantkongbingxactive: "DOM",
+      shortladominantkongbingxactive: "DOM",
+      shortalashitcoinbingxactive: "LSH",
+      longalashitcoinbingxactive: "LSH",
+      liquiditypoolbingxactive: "LLP",
+      shortliquiditypoolbingxactive: "LLP",
+      aiexpertavgbingxactive: "AIE",
+      shortaiexpertavgbingxactive: "AIE",
+      lamilagrosa: "LMG",
+      shortlamilagrosa: "LMG",
+    }[strategy] ?? strategy
+  );
+};
+
 onUnmounted(() => {
   dispose(`chart-${props.symbol}`);
 });
@@ -374,6 +392,9 @@ watch(
             >
               [{{ bot[side].orders }}]
             </span>
+          </div>
+          <div>
+            {{ strategyName(bot[side].strategy) }}
           </div>
           <button
             v-for="status in status"

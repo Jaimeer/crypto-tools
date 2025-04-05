@@ -10,7 +10,7 @@ const props = defineProps<{
   <div
     class="overflow-x-auto overflow-y-auto"
     :class="{
-      'max-h-96': !props.fullHeight,
+      'max-h-98': !props.fullHeight,
       'max-h-fit': props.fullHeight,
     }"
   >
@@ -31,7 +31,7 @@ const props = defineProps<{
         <slot name="tbody">
           <tr
             v-for="item in items"
-            class="border-b border-gray-200 bg-white text-nowrap dark:border-gray-700 dark:bg-gray-800"
+            class="border-b border-gray-200 bg-white text-nowrap hover:bg-slate-700 dark:border-gray-700 dark:bg-gray-800"
           >
             <slot :item="item" />
           </tr>

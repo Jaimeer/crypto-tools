@@ -2,15 +2,22 @@
 import { computed, ref } from "vue";
 import { useBingXTransactionsStore } from "../../store/bingxTransactions.store";
 import Table from "../Table.vue";
+import Price from "../Price.vue";
 import { usePreferencesStore } from "../../store/preferences.store";
 import { useBingXTradesStore } from "../../store/bingxTrades.store";
 import { useBitkuaBotsStore } from "../../store/bitkuaBots.store";
 import { BitkuaActionUpdateStatus } from "../../../server/Bitkua.dto";
+import { useBingXPositionsStore } from "../../../ui/store/bingxPositions.store";
 
 const bingXTradesStore = useBingXTradesStore();
 const bingXTransactionsStore = useBingXTransactionsStore();
+const bingXPositionsStore = useBingXPositionsStore();
 const bitkuaBotsStore = useBitkuaBotsStore();
 const preferencesStore = usePreferencesStore();
+
+const transactions = computed(() => {
+  return bingXTransactionsStore.transactions.filter((x) => x.symbol);
+});
 
 const trades = computed(() => {
   return bingXTradesStore.trades;
@@ -27,6 +34,11 @@ type TradesInfoSide = {
   orders: number;
 };
 type TradesInfo = {
+  num: number;
+  pnl: number;
+  all: number;
+  charges: number;
+  volume: number;
   long: TradesInfoSide;
   short: TradesInfoSide;
 };
@@ -34,14 +46,20 @@ type TradesInfo = {
 const tradesInfo = computed(() => {
   let closeLongDetected: Record<string, boolean> = {};
   let closeShortDetected: Record<string, boolean> = {};
-  const data: Record<string, TradesInfo> = trades.value.reduce(
-    (acc, trade) => {
-      if (!usedSymbols.value.includes(trade.symbol)) {
+
+  const data = transactions.value.reduce(
+    (acc, transaction) => {
+      if (!usedSymbols.value.includes(transaction.symbol)) {
         return acc;
       }
-      const symbol = trade.symbol;
-      if (!acc[symbol]) {
+      const symbol = transaction.symbol;
+      if (!acc[transaction.symbol]) {
         acc[symbol] = {
+          num: 0,
+          pnl: 0,
+          all: 0,
+          charges: 0,
+          volume: 0,
           long: {
             open: 0,
             close: 0,
@@ -64,47 +82,92 @@ const tradesInfo = computed(() => {
           },
         };
       }
-      if (trade.positionSide === "LONG") {
-        if (!closeLongDetected[symbol] && parseFloat(trade.realisedPNL) !== 0)
-          closeLongDetected[symbol] = true;
-        if (!closeLongDetected[symbol]) acc[symbol].long.currentOpen++;
-
-        if (parseFloat(trade.realisedPNL) === 0) acc[symbol].long.open++;
-        else acc[symbol].long.close++;
-
-        const bot = bitkuaBotsStore.bots.find(
-          (x) =>
-            x.symbol.toLowerCase() === symbol.toLowerCase().replace("-", "") &&
-            !x.strategy.includes("short"),
-        );
-        acc[symbol].long.amount = parseInt(bot?.amount || "0");
-        acc[symbol].long.botId = bot?.id || "";
-        acc[symbol].long.strategy = bot?.strategy || "";
-        acc[symbol].long.status = bot?.status || "";
-        acc[symbol].long.orders = parseInt(bot?.orders || "0");
+      if (transaction.incomeType === "REALIZED_PNL") {
+        acc[transaction.symbol].num++;
+        acc[transaction.symbol].pnl += parseFloat(transaction.income);
       } else {
-        if (!closeShortDetected[symbol] && parseFloat(trade.realisedPNL) !== 0)
-          closeShortDetected[symbol] = true;
-        if (!closeShortDetected[symbol]) acc[symbol].short.currentOpen++;
-
-        if (parseFloat(trade.realisedPNL) === 0) acc[symbol].short.open++;
-        else acc[symbol].short.close++;
-
-        const bot = bitkuaBotsStore.bots.find(
-          (x) =>
-            x.symbol.toLowerCase() === symbol.toLowerCase().replace("-", "") &&
-            x.strategy.includes("short"),
-        );
-        acc[symbol].short.amount = parseInt(bot?.amount || "0");
-        acc[symbol].short.botId = bot?.id || "";
-        acc[symbol].short.strategy = bot?.strategy || "";
-        acc[symbol].short.status = bot?.status || "";
-        acc[symbol].short.orders = parseInt(bot?.orders || "0");
+        acc[transaction.symbol].charges += parseFloat(transaction.income);
       }
+      acc[transaction.symbol].all += parseFloat(transaction.income);
       return acc;
     },
     {} as Record<string, TradesInfo>,
   );
+
+  trades.value.reduce((acc, trade) => {
+    if (!usedSymbols.value.includes(trade.symbol)) {
+      return acc;
+    }
+    const symbol = trade.symbol;
+    if (!acc[symbol]) {
+      acc[symbol] = {
+        num: 0,
+        pnl: 0,
+        all: 0,
+        charges: 0,
+        volume: 0,
+        long: {
+          open: 0,
+          close: 0,
+          currentOpen: 0,
+          amount: 0,
+          botId: "",
+          strategy: "",
+          status: "",
+          orders: 0,
+        },
+        short: {
+          open: 0,
+          close: 0,
+          currentOpen: 0,
+          amount: 0,
+          botId: "",
+          strategy: "",
+          status: "",
+          orders: 0,
+        },
+      };
+    }
+
+    if (trade.positionSide === "LONG") {
+      if (!closeLongDetected[symbol] && parseFloat(trade.realisedPNL) !== 0)
+        closeLongDetected[symbol] = true;
+      if (!closeLongDetected[symbol]) acc[symbol].long.currentOpen++;
+
+      if (parseFloat(trade.realisedPNL) === 0) acc[symbol].long.open++;
+      else acc[symbol].long.close++;
+
+      const bot = bitkuaBotsStore.bots.find(
+        (x) =>
+          x.symbol.toLowerCase() === symbol.toLowerCase().replace("-", "") &&
+          !x.strategy.includes("short"),
+      );
+      acc[symbol].long.amount = parseInt(bot?.amount || "0");
+      acc[symbol].long.botId = bot?.id || "";
+      acc[symbol].long.strategy = bot?.strategy || "";
+      acc[symbol].long.status = bot?.status || "";
+      acc[symbol].long.orders = parseInt(bot?.orders || "0");
+    } else {
+      if (!closeShortDetected[symbol] && parseFloat(trade.realisedPNL) !== 0)
+        closeShortDetected[symbol] = true;
+      if (!closeShortDetected[symbol]) acc[symbol].short.currentOpen++;
+
+      if (parseFloat(trade.realisedPNL) === 0) acc[symbol].short.open++;
+      else acc[symbol].short.close++;
+
+      const bot = bitkuaBotsStore.bots.find(
+        (x) =>
+          x.symbol.toLowerCase() === symbol.toLowerCase().replace("-", "") &&
+          x.strategy.includes("short"),
+      );
+      acc[symbol].short.amount = parseInt(bot?.amount || "0");
+      acc[symbol].short.botId = bot?.id || "";
+      acc[symbol].short.strategy = bot?.strategy || "";
+      acc[symbol].short.status = bot?.status || "";
+      acc[symbol].short.orders = parseInt(bot?.orders || "0");
+    }
+    return acc;
+  }, data);
 
   return Object.entries(data)
     .map(([key, value]) => ({ key, ...value }))
@@ -133,6 +196,26 @@ const strategyName = (strategy: string) => {
       shortliquiditypoolbingxactive: "HFT Short Liquidity Pool F-120",
       aiexpertavgbingxactive: "HFT Long AI Expert F-14",
       shortaiexpertavgbingxactive: "HFT Short AI Expert F-12",
+      lamilagrosa: "HFT Long La Mialagrosa F-15",
+      shortlamilagrosa: "HFT Short La Mialagrosa F-15",
+    }[strategy] ?? strategy
+  );
+};
+
+const strategyNameShort = (strategy: string) => {
+  if (!strategy) return "---";
+  return (
+    {
+      ladominantkongbingxactive: "DOM",
+      shortladominantkongbingxactive: "DOM",
+      shortalashitcoinbingxactive: "LSH",
+      longalashitcoinbingxactive: "LSH",
+      liquiditypoolbingxactive: "LLP",
+      shortliquiditypoolbingxactive: "LLP",
+      aiexpertavgbingxactive: "AIE",
+      shortaiexpertavgbingxactive: "AIE",
+      lamilagrosa: "LMG",
+      shortlamilagrosa: "LMG",
     }[strategy] ?? strategy
   );
 };
@@ -156,12 +239,27 @@ const sendAction = (
 
 <template>
   <Table
-    :headers="['symbol', 'Long', 'DK Bot (Long)', 'Short', 'DK Bot (Short)']"
+    :headers="[
+      'symbol',
+      'num_RPNL',
+      'RPNL',
+      'charges',
+      'profit',
+      'Long',
+      'U_PNL',
+      'DK Bot (Long)',
+      'Short',
+      'U_PNL',
+      'DK Bot (Short)',
+    ]"
     :items="tradesInfo"
-    class="col-span-3"
   >
     <template #default="{ item }">
       <td class="px-2 py-0.5">{{ item.key.replace("-USDT", "") }}</td>
+      <td class="px-2 py-0.5">{{ item.num }}</td>
+      <td class="px-2 py-0.5"><Price :value="item.pnl" :decimals="2" /></td>
+      <td class="px-2 py-0.5"><Price :value="item.charges" :decimals="2" /></td>
+      <td class="px-2 py-0.5"><Price :value="item.all" :decimals="2" /></td>
       <template v-for="side in sides" :key="side">
         <td class="px-2 py-0.5">
           <div class="flex gap-0.5">
@@ -180,9 +278,50 @@ const sendAction = (
             </span>
           </div>
         </td>
+        <td class="px-2 py-0.5">
+          <div class="flex gap-1">
+            <Price
+              :value="
+                parseFloat(
+                  bingXPositionsStore.positions.filter((position) => {
+                    return (
+                      position.symbol === item.key &&
+                      position.positionSide === side.toUpperCase()
+                    );
+                  })[0]?.unrealizedProfit,
+                )
+              "
+              :decimals="2"
+            />
+
+            <Price
+              :value="
+                100 *
+                parseFloat(
+                  bingXPositionsStore.positions.filter((position) => {
+                    return (
+                      position.symbol === item.key &&
+                      position.positionSide === side.toUpperCase()
+                    );
+                  })[0]?.pnlRatio ?? '0',
+                )
+              "
+              :decimals="2"
+              suffix="%"
+            />
+          </div>
+        </td>
         <td class="flex items-center gap-1">
           <span class="text-slate-600">{{ item[side].botId }}</span>
-          <span>{{ strategyName(item[side].strategy) }}</span>
+          <span
+            :class="{
+              'text-slate-400': item[side].status === 'active',
+              'text-slate-600 line-through': item[side].status === 'stop',
+              'text-amber-600': item[side].status === 'onlysell',
+            }"
+            v-tooltip="strategyName(item[side].strategy)"
+            >{{ strategyNameShort(item[side].strategy) }}</span
+          >
           <span class="text-blue-400">[{{ item[side].amount }}]</span>
           <span
             :class="{
@@ -213,5 +352,4 @@ const sendAction = (
       </template>
     </template>
   </Table>
-  <div></div>
 </template>

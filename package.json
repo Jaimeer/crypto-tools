@@ -61,6 +61,7 @@
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
     "electron-squirrel-startup": "^1.0.1",
+    "floating-vue": "^5.2.2",
     "klinecharts": "^10.0.0-alpha5",
     "md5": "^2.3.0",
     "otplib": "^12.0.1",

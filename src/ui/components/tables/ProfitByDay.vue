@@ -74,17 +74,17 @@ const transactionsByDay = computed(() => {
       'USDT/hour',
     ]"
     :items="transactionsByDay"
-    class="col-span-2"
+    class="col-span-3"
   >
     <template #default="{ item }">
       <td class="px-2 py-0.5">{{ item.key }}</td>
       <td class="px-2 py-0.5">{{ item.num }}</td>
       <td class="px-2 py-0.5">
-        <Price :value="item.volume" color="orange" />
+        <Price :value="item.volume" color="orange" :decimals="2" />
       </td>
-      <td class="px-2 py-0.5"><Price :value="item.pnl" /></td>
-      <td class="px-2 py-0.5"><Price :value="item.charges" /></td>
-      <td class="px-2 py-0.5"><Price :value="item.all" /></td>
+      <td class="px-2 py-0.5"><Price :value="item.pnl" :decimals="2" /></td>
+      <td class="px-2 py-0.5"><Price :value="item.charges" :decimals="2" /></td>
+      <td class="px-2 py-0.5"><Price :value="item.all" :decimals="2" /></td>
       <td class="px-2 py-0.5">
         <template v-if="item.volume !== 0">
           {{ ((item.all * 100) / item.volume).toFixed(2) }}%
@@ -100,6 +100,7 @@ const transactionsByDay = computed(() => {
               : differenceInHours(new Date(), startOfDay(new Date())))
           "
           color="violet"
+          :decimals="2"
         />
       </td>
     </template>
