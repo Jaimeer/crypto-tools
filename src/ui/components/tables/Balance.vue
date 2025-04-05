@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { differenceInDays, startOfDay } from "date-fns";
+import { Icon } from "@iconify/vue";
 import { useBingXTransactionsStore } from "../../store/bingxTransactions.store";
 import { useBingXBalanceStore } from "../../store/bingxBalance.store";
 import Price from "../Price.vue";
@@ -48,12 +49,50 @@ const parseValue = (value: number | string | undefined) => {
   <Table :headers="['Key', 'Value']" :items="[]">
     <template #tbody>
       <tr
+        class="border-b border-gray-200 bg-white hover:bg-slate-700 dark:border-gray-700 dark:bg-gray-800"
+      >
+        <td class="px-2 py-0.5">balance</td>
+        <td class="px-2 py-0.5">
+          <Price :value="balance?.balance" :decimals="2" />
+        </td>
+      </tr>
+      <tr
+        class="border-b border-gray-200 bg-white hover:bg-slate-700 dark:border-gray-700 dark:bg-gray-800"
+      >
+        <td class="px-2 py-0.5">riskRate</td>
+        <td class="flex items-center gap-1 px-2 py-0.5">
+          <span
+            :class="{
+              'text-green-400': riskRate < 1,
+              'text-amber-400': riskRate > 1 && riskRate < 75,
+              'text-red-400': riskRate > 75,
+            }"
+          >
+            {{ riskRate.toFixed(2) }}%
+          </span>
+          <Icon
+            v-if="riskRate > 1"
+            class="text-yellow-400"
+            icon="ic:round-warning"
+          />
+        </td>
+      </tr>
+      <tr
+        class="border-b border-gray-200 bg-white hover:bg-slate-700 dark:border-gray-700 dark:bg-gray-800"
+      >
+        <td class="px-2 py-0.5">unrealizedProfit</td>
+        <td class="px-2 py-0.5">
+          <Price :value="balance?.unrealizedProfit" :decimals="2" />
+          ({{
+            (
+              (-1 * parseFloat(balance?.unrealizedProfit) * 100) /
+              parseFloat(balance?.balance)
+            ).toFixed(2)
+          }}%)
+        </td>
+      </tr>
+      <tr
         v-for="[key, value] in Object.entries({
-          numDays: differenceInDays(
-            new Date(),
-            startOfDay(new Date(transactions[transactions.length - 1].time)),
-          ),
-          transfer: parseValue(totalIncomeTransactions),
           profit: balance
             ? parseFloat(balance.balance) - totalIncomeTransactions
             : '---',
@@ -66,9 +105,12 @@ const parseValue = (value: number | string | undefined) => {
                 ),
               )
             : '---',
-          balance: balance?.balance,
+          numDays: differenceInDays(
+            new Date(),
+            startOfDay(new Date(transactions[transactions.length - 1].time)),
+          ),
+          transfer: parseValue(totalIncomeTransactions),
           equity: balance?.equity,
-          unrealizedProfit: balance?.unrealizedProfit,
           realisedProfit: balance?.realisedProfit,
           availableMargin: balance?.availableMargin,
           usedMargin: balance?.usedMargin,
@@ -88,26 +130,11 @@ const parseValue = (value: number | string | undefined) => {
                   ? 'orange'
                   : undefined
             "
-            :decimals="2"
+            :decimals="key === 'numDays' ? 0 : 2"
           />
         </td>
       </tr>
-      <tr
-        class="border-b border-gray-200 bg-white hover:bg-slate-700 dark:border-gray-700 dark:bg-gray-800"
-      >
-        <td class="px-2 py-0.5">riskRate</td>
-        <td class="flex gap-1 px-2 py-0.5">
-          <span
-            :class="{
-              'text-green-400': riskRate < 1,
-              'text-amber-400': riskRate > 1 && riskRate < 75,
-              'text-red-400': riskRate > 75,
-            }"
-          >
-            {{ riskRate.toFixed(2) }}%
-          </span>
-        </td>
-      </tr>
+
       <tr
         class="border-b border-gray-200 bg-white hover:bg-slate-700 dark:border-gray-700 dark:bg-gray-800"
       >
@@ -181,7 +208,7 @@ const parseValue = (value: number | string | undefined) => {
         class="border-b border-gray-200 bg-white hover:bg-slate-700 dark:border-gray-700 dark:bg-gray-800"
       >
         <td class="px-2 py-0.5">DKBots - If coverage (0.75)</td>
-        <td class="flex gap-1 px-2 py-0.5">
+        <td class="flex items-center gap-1 px-2 py-0.5">
           ~
           <Price
             :value="
@@ -192,7 +219,31 @@ const parseValue = (value: number | string | undefined) => {
               10 *
               0.75
             "
+            :color="
+              bitkuaBotsStore.bots.reduce((acc, bot) => {
+                if (bot.status === 'stop') return acc;
+                return acc + parseFloat(bot.amount);
+              }, 0) *
+                10 *
+                0.75 >
+              parseFloat(balance?.balance ?? '0')
+                ? 'red'
+                : undefined
+            "
             :decimals="2"
+          />
+          <Icon
+            v-if="
+              bitkuaBotsStore.bots.reduce((acc, bot) => {
+                if (bot.status === 'stop') return acc;
+                return acc + parseFloat(bot.amount);
+              }, 0) *
+                10 *
+                0.75 >
+              parseFloat(balance?.balance ?? '0')
+            "
+            class="text-yellow-400"
+            icon="ic:round-warning"
           />
         </td>
       </tr>

@@ -31,6 +31,7 @@
     "@electron-forge/plugin-vite": "^7.8.0",
     "@electron-forge/publisher-github": "^7.8.0",
     "@electron/fuses": "^1.8.0",
+    "@iconify/vue": "^4.3.0",
     "@types/crypto-js": "^4.2.2",
     "@types/electron-squirrel-startup": "^1.0.2",
     "@types/md5": "^2.3.5",

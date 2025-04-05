@@ -293,7 +293,7 @@ const sendAction = (
               "
               :decimals="2"
             />
-
+            <span class="text-slate-600">/</span>
             <Price
               :value="
                 100 *
