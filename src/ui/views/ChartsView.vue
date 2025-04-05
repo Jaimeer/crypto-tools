@@ -8,12 +8,20 @@ import { useBingXPositionsStore } from "../store/bingxPositions.store";
 import { usePreferencesStore } from "../store/preferences.store";
 import { useBingXKLinesStore } from "../store/bingxKLines.store";
 import { Period } from "../../server/BingX.dto";
+import { useRouter } from "vue-router";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOptions,
+  ListboxOption,
+} from "@headlessui/vue";
 
 const bingXTransactionsStore = useBingXTransactionsStore();
 const bingXTradesStore = useBingXTradesStore();
 const bingXPositionsStore = useBingXPositionsStore();
 const preferencesStore = usePreferencesStore();
 const bingXKLinesStore = useBingXKLinesStore();
+const router = useRouter();
 
 const periodsOptions: Period[] = [
   "1m",
@@ -69,6 +77,11 @@ const usedSymbols = computed(() => {
     .sort();
 });
 
+const openChartsWindow = () => {
+  window.electronAPI.openChartsWindow();
+  router.push("/");
+};
+
 onMounted(async () => {
   await fetchData();
 });
@@ -86,29 +99,54 @@ onMounted(async () => {
         />
       </template>
       <template #right>
-        Period
-        <button
-          v-for="option in periodsOptions"
-          @click="selectedPeriod = option"
-          :key="option"
-          :class="{
-            'text-slate-200': selectedPeriod === option,
-            'text-slate-600': selectedPeriod !== option,
-          }"
-        >
-          {{ option }}
-        </button>
+        <Listbox v-model="selectedPeriod">
+          <ListboxButton
+            class="flex rounded bg-violet-500 px-4 py-1 text-white transition hover:bg-violet-600"
+          >
+            {{ selectedPeriod }}
+          </ListboxButton>
+          <ListboxOptions
+            class="absolute top-14 z-10 rounded bg-slate-600 p-1 text-xs"
+          >
+            <div class="x">
+              <ListboxOption
+                v-for="period in periodsOptions"
+                v-model="selectedPeriod"
+                :key="period"
+                :value="period"
+                class="relative cursor-pointer border border-slate-500 bg-slate-600 hover:bg-slate-700"
+                v-slot="{ selected }"
+              >
+                <li
+                  class="px-4 py-0.5"
+                  :class="{
+                    'bg-slate-700 font-bold text-slate-400': selected,
+                    'bg-slate-600': !selected,
+                  }"
+                >
+                  {{ period }}
+                </li>
+              </ListboxOption>
+            </div>
+          </ListboxOptions>
+        </Listbox>
         <button
           @click="preferencesStore.hideTrades = !preferencesStore.hideTrades"
-          class="rounded px-4 py-1 text-white transition hover:bg-emerald-600"
+          class="cursor-pointer rounded px-4 py-1 text-white transition hover:bg-emerald-700"
           :class="{
             'bg-emerald-400': preferencesStore.hideTrades,
             'bg-emerald-600': !preferencesStore.hideTrades,
           }"
         >
-          <span
-            >{{ preferencesStore.hideTrades ? "Hided" : "Hide" }} trades
+          <span>
+            {{ preferencesStore.hideTrades ? "Hided" : "Hide" }} trades
           </span>
+        </button>
+        <button
+          class="cursor-pointer rounded bg-blue-400 px-4 py-1 text-white transition hover:bg-blue-600"
+          @click="openChartsWindow"
+        >
+          New Windows
         </button>
       </template>
     </TheHeader>
@@ -117,7 +155,7 @@ onMounted(async () => {
     >
       <div
         v-for="symbol in filteredFilters"
-        class="relative h-96 w-full"
+        class="relative h-[25rem] w-full"
         :key="`${selectedPeriod}-${symbol}`"
       >
         <div

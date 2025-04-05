@@ -12,11 +12,20 @@ export class BingXWebSocket {
   private socket: WebSocket;
   private extendKeyInterval: NodeJS.Timeout | undefined;
   private listenKey: string;
+  private date = new Date();
 
   constructor(restClient: BingXRestClient, handleMessageFn: HandleMessageFn) {
     this.restClient = restClient;
     this.handleMessageFn = handleMessageFn;
     this.startSocket();
+    // this.test();
+  }
+
+  test() {
+    console.log("test", this.date.toISOString());
+    setTimeout(() => {
+      this.test();
+    }, 1000);
   }
 
   updateListenKey() {
@@ -35,15 +44,11 @@ export class BingXWebSocket {
     this.socket.send(JSON.stringify(CHANNEL));
   }
 
-  private onOpen() {
-    console.log("WebSocket connected");
-  }
-
-  private onError(error: Error) {
-    console.log("WebSocket error:", error);
-  }
-
   private onMessage(message: string) {
+    if (!this.socket) {
+      this.startSocket();
+      return;
+    }
     const buf = Buffer.from(message);
     const decodedMsg = zlib.gunzipSync(buf).toString("utf-8");
     // console.log("onMessage", decodedMsg);
@@ -52,15 +57,22 @@ export class BingXWebSocket {
       console.log("Pong");
       return;
     }
-    this.handleMessageFn(JSON.parse(decodedMsg) as WebSocketMessage);
+    const messageData = JSON.parse(decodedMsg) as WebSocketMessage;
+    // console.log(
+    //   "WS MSG: ",
+    //   "dataType" in messageData
+    //     ? messageData.dataType
+    //     : "e" in messageData
+    //       ? messageData.e
+    //       : "unknown",
+    //   new Date().toISOString(),
+    // );
+    this.handleMessageFn(messageData);
   }
 
   private onClose() {
     console.log("WebSocket closed");
-    if (this.socket) {
-      this.socket.close();
-      this.socket = undefined;
-    }
+    this.stop();
   }
 
   private startExtendKeyInterval() {
@@ -94,20 +106,36 @@ export class BingXWebSocket {
 
   stop() {
     this.stopExtendKeyInterval();
+    if (this.socket) {
+      this.socket.close();
+      this.socket = undefined;
+    }
   }
 
   private async startSocket(force = false) {
     // console.log("startSocket", { force });
     if (!this.socket || force) {
+      this.stop();
       console.log("starting socket");
-      this.listenKey = await this.restClient.getWSListenKey();
+      if (!this.listenKey || force)
+        this.listenKey = await this.restClient.getWSListenKey();
       const path = `wss://open-api-swap.bingx.com/swap-market?listenKey=${this.listenKey}`;
-      this.socket = new WebSocket(path);
-      this.socket.on("open", () => this.onOpen());
-      this.socket.on("message", (message: string) => this.onMessage(message));
-      this.socket.on("error", (error: Error) => this.onError(error));
-      this.socket.on("close", () => this.onClose());
 
+      const startWS = new Promise((resolve, reject) => {
+        this.socket = new WebSocket(path);
+        this.socket.on("open", () => {
+          console.log("WebSocket open");
+          resolve(undefined);
+        });
+        this.socket.on("message", (message: string) => this.onMessage(message));
+        this.socket.on("error", (error: Error) => {
+          console.log("WebSocket error:", error);
+          reject(error);
+        });
+        this.socket.on("close", () => this.onClose());
+      });
+
+      await startWS;
       this.startExtendKeyInterval();
     }
   }

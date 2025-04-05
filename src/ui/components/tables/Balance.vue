@@ -80,13 +80,41 @@ const parseValue = (value: number | string | undefined) => {
       <tr
         class="border-b border-gray-200 bg-white hover:bg-slate-700 dark:border-gray-700 dark:bg-gray-800"
       >
-        <td class="px-2 py-0.5">unrealizedProfit</td>
+        <td class="px-2 py-0.5">unrealizedProfit (bal vs eq)</td>
         <td class="px-2 py-0.5">
           <Price :value="balance?.unrealizedProfit" :decimals="2" />
           ({{
             (
               (-1 * parseFloat(balance?.unrealizedProfit) * 100) /
               parseFloat(balance?.balance)
+            ).toFixed(2)
+          }}%)
+        </td>
+      </tr>
+      <tr
+        class="border-b border-gray-200 bg-white hover:bg-slate-700 dark:border-gray-700 dark:bg-gray-800"
+      >
+        <td class="px-2 py-0.5">availableMargin (equity)</td>
+        <td class="px-2 py-0.5">
+          <Price :value="balance?.availableMargin" :decimals="2" />
+          ({{
+            (
+              (parseFloat(balance?.availableMargin) * 100) /
+              parseFloat(balance?.equity)
+            ).toFixed(2)
+          }}%)
+        </td>
+      </tr>
+      <tr
+        class="border-b border-gray-200 bg-white hover:bg-slate-700 dark:border-gray-700 dark:bg-gray-800"
+      >
+        <td class="px-2 py-0.5">usedMargin (equity)</td>
+        <td class="px-2 py-0.5">
+          <Price :value="balance?.usedMargin" color="orange" :decimals="2" />
+          ({{
+            (
+              (parseFloat(balance?.usedMargin) * 100) /
+              parseFloat(balance?.equity)
             ).toFixed(2)
           }}%)
         </td>
@@ -112,8 +140,6 @@ const parseValue = (value: number | string | undefined) => {
           transfer: parseValue(totalIncomeTransactions),
           equity: balance?.equity,
           realisedProfit: balance?.realisedProfit,
-          availableMargin: balance?.availableMargin,
-          usedMargin: balance?.usedMargin,
           freezedMargin: balance?.freezedMargin,
         })"
         :key="key"
@@ -127,7 +153,7 @@ const parseValue = (value: number | string | undefined) => {
               key === 'profitByDay'
                 ? 'violet'
                 : key === 'profit'
-                  ? 'orange'
+                  ? 'violet'
                   : undefined
             "
             :decimals="key === 'numDays' ? 0 : 2"
@@ -176,13 +202,13 @@ const parseValue = (value: number | string | undefined) => {
       >
         <td class="px-2 py-0.5">DKBots - Amount invest</td>
         <td class="flex gap-1 px-2 py-0.5">
-          ~
           <Price
             :value="
               bitkuaBotsStore.bots.reduce((acc, bot) => {
                 return acc + parseFloat(bot.amount) * parseInt(bot.orders);
               }, 0)
             "
+            prefix="~"
             :decimals="2"
           />
         </td>
@@ -192,7 +218,6 @@ const parseValue = (value: number | string | undefined) => {
       >
         <td class="px-2 py-0.5">DKBots - Capital needed</td>
         <td class="flex gap-1 px-2 py-0.5">
-          ~
           <Price
             :value="
               bitkuaBotsStore.bots.reduce((acc, bot) => {
@@ -200,6 +225,7 @@ const parseValue = (value: number | string | undefined) => {
                 return acc + parseFloat(bot.amount);
               }, 0) * 10
             "
+            prefix="~"
             :decimals="2"
           />
         </td>
@@ -209,7 +235,6 @@ const parseValue = (value: number | string | undefined) => {
       >
         <td class="px-2 py-0.5">DKBots - If coverage (0.75)</td>
         <td class="flex items-center gap-1 px-2 py-0.5">
-          ~
           <Price
             :value="
               bitkuaBotsStore.bots.reduce((acc, bot) => {
@@ -230,6 +255,7 @@ const parseValue = (value: number | string | undefined) => {
                 ? 'red'
                 : undefined
             "
+            prefix="~"
             :decimals="2"
           />
           <Icon

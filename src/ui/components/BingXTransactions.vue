@@ -6,6 +6,7 @@ import ProfitByDay from "./tables/ProfitByDay.vue";
 import Balance from "./tables/Balance.vue";
 import SymbolTrades from "./tables/SymbolTrades.vue";
 import SymbolTransactions from "./tables/SymbolTransactions.vue";
+import LastTrades from "./tables/LastTrades.vue";
 import TheHeader from "./TheHeader.vue";
 
 const bingXTransactionsStore = useBingXTransactionsStore();
@@ -42,7 +43,8 @@ const transactions = computed(() => {
       </div> -->
       <div class="grid grid-cols-4 gap-2">
         <Balance />
-        <ProfitByDay class="col-span-3" />
+        <ProfitByDay class="col-span-2" />
+        <LastTrades />
       </div>
       <div class="">
         <SymbolTrades />

@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 import { useBingXTransactionsStore } from "../../store/bingxTransactions.store";
 import Table from "../Table.vue";
 import Price from "../Price.vue";
+import { Icon } from "@iconify/vue";
 import { usePreferencesStore } from "../../store/preferences.store";
 import { useBingXTradesStore } from "../../store/bingxTrades.store";
 import { useBitkuaBotsStore } from "../../store/bitkuaBots.store";
@@ -188,16 +189,18 @@ const strategyName = (strategy: string) => {
   if (!strategy) return "---";
   return (
     {
-      ladominantkongbingxactive: "HFT Long Dominant Kong Infinity F-∞",
-      shortladominantkongbingxactive: "HFT Short Dominant Kong F-12",
-      shortalashitcoinbingxactive: "HFT Short A La Shitcoin F-12",
-      longalashitcoinbingxactive: "HFT Long A La Shitcoin F-13",
-      liquiditypoolbingxactive: "HFT Long Liquidity Pool F-120",
-      shortliquiditypoolbingxactive: "HFT Short Liquidity Pool F-120",
-      aiexpertavgbingxactive: "HFT Long AI Expert F-14",
-      shortaiexpertavgbingxactive: "HFT Short AI Expert F-12",
+      ladominantkong: "HFT Long Dominant Kong Infinity F-∞",
+      shortladominantkong: "HFT Short Dominant Kong F-12",
+      shortalashitcoin: "HFT Short A La Shitcoin F-12",
+      longalashitcoin: "HFT Long A La Shitcoin F-13",
+      liquiditypool: "HFT Long Liquidity Pool F-120",
+      shortliquiditypool: "HFT Short Liquidity Pool F-120",
+      aiexpertavg: "HFT Long AI Expert F-14",
+      shortaiexpertavg: "HFT Short AI Expert F-12",
       lamilagrosa: "HFT Long La Mialagrosa F-15",
       shortlamilagrosa: "HFT Short La Mialagrosa F-15",
+      pmd: "HFT Short PMD F-15",
+      shortpmd: "HFT Long La Mialagrosa F-15",
     }[strategy] ?? strategy
   );
 };
@@ -206,16 +209,18 @@ const strategyNameShort = (strategy: string) => {
   if (!strategy) return "---";
   return (
     {
-      ladominantkongbingxactive: "DOM",
-      shortladominantkongbingxactive: "DOM",
-      shortalashitcoinbingxactive: "LSH",
-      longalashitcoinbingxactive: "LSH",
-      liquiditypoolbingxactive: "LLP",
-      shortliquiditypoolbingxactive: "LLP",
-      aiexpertavgbingxactive: "AIE",
-      shortaiexpertavgbingxactive: "AIE",
+      ladominantkong: "DOM",
+      shortladominantkong: "DOM",
+      shortalashitcoin: "LSH",
+      longalashitcoin: "LSH",
+      liquiditypool: "LLP",
+      shortliquiditypool: "LLP",
+      aiexpertavg: "AIE",
+      shortaiexpertavg: "AIE",
       lamilagrosa: "LMG",
       shortlamilagrosa: "LMG",
+      pmd: "PMD",
+      shortpmd: "PMD",
     }[strategy] ?? strategy
   );
 };
@@ -309,6 +314,45 @@ const sendAction = (
               :decimals="2"
               suffix="%"
             />
+
+            <div class="flex items-center gap-0.5">
+              <Icon
+                v-for="i in Math.floor(
+                  Math.abs(
+                    (100 *
+                      parseFloat(
+                        bingXPositionsStore.positions.find(
+                          (position) =>
+                            position.symbol === item.key &&
+                            position.positionSide === side.toUpperCase(),
+                        )?.pnlRatio ?? '0',
+                      )) /
+                      100,
+                  ),
+                )"
+                :key="i"
+                class="text-red-500"
+                icon="ic:round-warning"
+              />
+              <Icon
+                v-for="i in Math.floor(
+                  Math.abs(
+                    (100 *
+                      parseFloat(
+                        bingXPositionsStore.positions.find(
+                          (position) =>
+                            position.symbol === item.key &&
+                            position.positionSide === side.toUpperCase(),
+                        )?.pnlRatio ?? '0',
+                      )) %
+                      100,
+                  ) / 10,
+                )"
+                :key="i"
+                class="text-yellow-400"
+                icon="ic:round-warning"
+              />
+            </div>
           </div>
         </td>
         <td class="flex items-center gap-1">

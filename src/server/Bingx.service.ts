@@ -40,12 +40,14 @@ export class BingXService {
   };
 
   constructor(apiKey: string, apiSecret: string) {
-    this.restClient = new BingXRestClient(apiKey, apiSecret);
     console.log("BingXService constructor ");
-    this.wsClient = new BingXWebSocket(
-      this.restClient,
-      this.handleWebSocketMessage.bind(this),
-    );
+    if (!this.restClient)
+      this.restClient = new BingXRestClient(apiKey, apiSecret);
+    if (!this.wsClient)
+      this.wsClient = new BingXWebSocket(
+        this.restClient,
+        this.handleWebSocketMessage.bind(this),
+      );
   }
 
   setCredentials(apiKey: string, apiSecret: string) {
@@ -70,8 +72,11 @@ export class BingXService {
     );
   }
 
-  stopAutoRefresh() {
+  stopWebSocket() {
     this.wsClient.stop();
+  }
+  stopAutoRefresh() {
+    this.stopWebSocket();
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
       this.refreshInterval = null;
@@ -181,7 +186,9 @@ export class BingXService {
   private notifyClients(message: NotifyMessage) {
     // console.log("notifyClients", message.store);
     BrowserWindow.getAllWindows().forEach((window) => {
-      window.webContents.send(`update-data`, message);
+      if (!window.isDestroyed()) {
+        window.webContents.send(`update-data`, message);
+      }
     });
   }
 }

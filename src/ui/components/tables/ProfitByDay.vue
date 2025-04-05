@@ -74,7 +74,6 @@ const transactionsByDay = computed(() => {
       'USDT/hour',
     ]"
     :items="transactionsByDay"
-    class="col-span-3"
   >
     <template #default="{ item }">
       <td class="px-2 py-0.5">{{ item.key }}</td>

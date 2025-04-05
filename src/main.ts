@@ -11,7 +11,43 @@ if (started) {
   app.quit();
 }
 
-// if (require('electron-squirrel-startup') === true) app.quit()
+let chartsWindow: BrowserWindow | null = null;
+
+function createChartsWindow() {
+  // If window already exists, just focus it
+  if (chartsWindow) {
+    chartsWindow.focus();
+    return;
+  }
+
+  // Create the charts window
+  chartsWindow = new BrowserWindow({
+    width: 1920 * 0.75,
+    height: 1080 * 0.75,
+    title: "Crypto Charts",
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+    },
+    icon: path.join(__dirname, "../assets/icons/win/icon.png"),
+  });
+
+  // Load the app with charts route
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    chartsWindow.loadURL(
+      `${MAIN_WINDOW_VITE_DEV_SERVER_URL}#/charts?standalone=true`,
+    );
+  } else {
+    chartsWindow.loadFile(
+      path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
+      { hash: "/charts?standalone=true" },
+    );
+  }
+
+  // Handle window closing
+  chartsWindow.on("closed", () => {
+    chartsWindow = null;
+  });
+}
 
 // Initialize BingX service
 let bingXService: BingXService | undefined;
@@ -59,6 +95,13 @@ ipcMain.handle("send-bitkua-action", async (event, message: BitkuaAction) => {
     await bitkuaService.processAction(message);
     return { success: true };
   }
+});
+
+// Add IPC handler for opening charts window
+ipcMain.handle("open-charts-window", () => {
+  if (bingXService) bingXService.stopWebSocket();
+  createChartsWindow();
+  return { success: true };
 });
 
 // Set up IPC handlers

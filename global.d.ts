@@ -19,6 +19,7 @@ interface ElectronAPI {
   sendBitkuaAction: (message: BitkuaAction) => Promise<{ success: boolean }>;
 
   onUpdateData: (callback: (message: NotifyMessage) => void) => void;
+  openChartsWindow: () => void;
 }
 
 declare global {

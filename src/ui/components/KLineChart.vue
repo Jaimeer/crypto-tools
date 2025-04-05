@@ -2,12 +2,14 @@
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { init, dispose, registerOverlay } from "klinecharts";
 import { vElementSize } from "@vueuse/components";
-import { addMonths, format, subDays, subHours } from "date-fns";
+import { addMonths, subDays, subHours } from "date-fns";
+import { Icon } from "@iconify/vue";
 import { simpleAnnotationDown } from "./klinechart/simpleAnnotationDown.overlay";
 import { rectangle } from "./klinechart/rectangle.overlay";
 import { KLine, Period, Position, Trade } from "../../server/BingX.dto";
 import { useBingXTransactionsStore } from "../store/bingxTransactions.store";
 import { useBingXTradesStore } from "../store/bingxTrades.store";
+import { useBingXPositionsStore } from "../store/bingxPositions.store";
 import Price from "./Price.vue";
 import NumTrades from "./NumTrades.vue";
 import { BitkuaActionUpdateStatus } from "../../server/Bitkua.dto";
@@ -18,6 +20,7 @@ registerOverlay(simpleAnnotationDown);
 
 const bingXTradesStore = useBingXTradesStore();
 const bingXTransactionsStore = useBingXTransactionsStore();
+const bingXPositionsStore = useBingXPositionsStore();
 const bitkuaBotsStore = useBitkuaBotsStore();
 
 const chart = ref();
@@ -295,16 +298,18 @@ const strategyName = (strategy: string) => {
   if (!strategy) return "---";
   return (
     {
-      ladominantkongbingxactive: "DOM",
-      shortladominantkongbingxactive: "DOM",
-      shortalashitcoinbingxactive: "LSH",
-      longalashitcoinbingxactive: "LSH",
-      liquiditypoolbingxactive: "LLP",
-      shortliquiditypoolbingxactive: "LLP",
-      aiexpertavgbingxactive: "AIE",
-      shortaiexpertavgbingxactive: "AIE",
+      ladominantkong: "DOM",
+      shortladominantkong: "DOM",
+      shortalashitcoin: "LSH",
+      longalashitcoin: "LSH",
+      liquiditypool: "LLP",
+      shortliquiditypool: "LLP",
+      aiexpertavg: "AIE",
+      shortaiexpertavg: "AIE",
       lamilagrosa: "LMG",
       shortlamilagrosa: "LMG",
+      pmd: "PMD",
+      shortpmd: "PMD",
     }[strategy] ?? strategy
   );
 };
@@ -342,7 +347,7 @@ watch(
     }"
   >
     <!-- {{ trades.length }} - {{ filteredTrades.length }} -->
-    <div class="absolute bottom-10 text-lg font-bold text-slate-700 uppercase">
+    <div class="absolute bottom-20 text-lg font-bold text-slate-700 uppercase">
       {{ symbol }} - {{ period }}
     </div>
     <div
@@ -366,52 +371,140 @@ watch(
         <Price :value="symbolData.all / 24" color="violet" />
       </div>
     </div>
-    <div :id="`chart-${symbol}`" class="h-[320px] w-full" />
-    <div class="flex items-center justify-between">
-      <div class="flex w-full items-center justify-between">
-        <div v-for="side in sides" class="flex items-center gap-1 text-xs">
-          <div>
-            <span
-              class="font-bold uppercase"
-              :class="{
-                'text-[#6666ff]': side === 'long',
-                'text-[#ff33cc]': side === 'short',
-              }"
-            >
-              {{ side }}
-            </span>
-            <span class="text-blue-400">[{{ bot[side].amount }}]</span>
-            <span
-              :class="{
-                'text-slate-400': parseInt(bot[side].orders) === 0,
-                'text-lime-400':
-                  parseInt(bot[side].orders) > 0 &&
-                  parseInt(bot[side].orders) < 14,
-                'text-red-400': parseInt(bot[side].orders) >= 13,
-              }"
-            >
-              [{{ bot[side].orders }}]
-            </span>
-          </div>
-          <div>
-            {{ strategyName(bot[side].strategy) }}
-          </div>
-          <button
-            v-for="status in status"
-            class="cursor-pointer rounded text-xs transition disabled:cursor-default"
+    <div :id="`chart-${symbol}`" class="h-[20rem] w-full" />
+    <div class="t-2 flex items-center justify-between">
+      <div class="grid w-full grid-cols-2 items-center justify-between">
+        <div v-for="side in sides" class="flex flex-col">
+          <div
+            class="flex items-center gap-1 text-xs"
             :class="{
-              'px-1 text-green-600 hover:text-green-400 disabled:bg-green-900 disabled:text-green-200':
-                status === 'active',
-              'px-1 text-red-600 hover:text-red-400 disabled:bg-red-900 disabled:text-red-200':
-                status === 'stop',
-              'px-1 text-amber-600 hover:text-amber-400 disabled:bg-amber-900 disabled:text-amber-200':
-                status === 'onlysell',
+              'justify-end': side === 'short',
             }"
-            :disabled="bot[side].status === status"
-            @click="sendAction(bot[side].id, status)"
           >
-            {{ status }}
-          </button>
+            <div>
+              <span
+                class="font-bold uppercase"
+                :class="{
+                  'text-[#6666ff]': side === 'long',
+                  'text-[#ff33cc]': side === 'short',
+                }"
+              >
+                {{ side }}
+              </span>
+              <span class="text-blue-400">[{{ bot[side].amount }}]</span>
+              <span
+                :class="{
+                  'text-slate-400': parseInt(bot[side].orders) === 0,
+                  'text-lime-400':
+                    parseInt(bot[side].orders) > 0 &&
+                    parseInt(bot[side].orders) < 14,
+                  'text-red-400': parseInt(bot[side].orders) >= 13,
+                }"
+              >
+                [{{ bot[side].orders }}]
+              </span>
+            </div>
+            <div>
+              {{ strategyName(bot[side].strategy) }}
+            </div>
+            <div>
+              <button
+                v-for="status in status"
+                class="cursor-pointer rounded text-xs transition disabled:cursor-default"
+                :class="{
+                  'px-1 text-green-600 hover:text-green-400 disabled:bg-green-900 disabled:text-green-200':
+                    status === 'active',
+                  'px-1 text-red-600 hover:text-red-400 disabled:bg-red-900 disabled:text-red-200':
+                    status === 'stop',
+                  'px-1 text-amber-600 hover:text-amber-400 disabled:bg-amber-900 disabled:text-amber-200':
+                    status === 'onlysell',
+                }"
+                :disabled="bot[side].status === status"
+                @click="sendAction(bot[side].id, status)"
+              >
+                {{ status.slice(0, 1).toUpperCase() }}
+              </button>
+            </div>
+          </div>
+          <div
+            class="text-[10px]"
+            :class="{
+              'justify-end text-end': side === 'short',
+            }"
+          >
+            <div
+              class="flex items-center gap-1"
+              :class="{ 'justify-end': side === 'short' }"
+            >
+              <Price
+                :value="
+                  parseFloat(
+                    bingXPositionsStore.positions.filter((position) => {
+                      return (
+                        position.symbol === symbol &&
+                        position.positionSide === side.toUpperCase()
+                      );
+                    })[0]?.unrealizedProfit,
+                  )
+                "
+                :decimals="2"
+              />
+              <span class="text-slate-600">/</span>
+              <Price
+                :value="
+                  100 *
+                  parseFloat(
+                    bingXPositionsStore.positions.filter((position) => {
+                      return (
+                        position.symbol === symbol &&
+                        position.positionSide === side.toUpperCase()
+                      );
+                    })[0]?.pnlRatio ?? '0',
+                  )
+                "
+                :decimals="2"
+                suffix="%"
+              />
+              <div class="flex items-center justify-end gap-0.5">
+                <Icon
+                  v-for="i in Math.floor(
+                    Math.abs(
+                      (100 *
+                        parseFloat(
+                          bingXPositionsStore.positions.find(
+                            (position) =>
+                              position.symbol === symbol &&
+                              position.positionSide === side.toUpperCase(),
+                          )?.pnlRatio ?? '0',
+                        )) /
+                        100,
+                    ),
+                  )"
+                  :key="i"
+                  class="text-red-500"
+                  icon="ic:round-warning"
+                />
+                <Icon
+                  v-for="i in Math.floor(
+                    Math.abs(
+                      (100 *
+                        parseFloat(
+                          bingXPositionsStore.positions.find(
+                            (position) =>
+                              position.symbol === symbol &&
+                              position.positionSide === side.toUpperCase(),
+                          )?.pnlRatio ?? '0',
+                        )) %
+                        100,
+                    ) / 10,
+                  )"
+                  :key="i"
+                  class="text-yellow-400"
+                  icon="ic:round-warning"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

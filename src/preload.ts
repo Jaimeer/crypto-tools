@@ -16,8 +16,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.invoke("set-bitkua-credentials", { email, password, secret }),
   sendBitkuaAction: (message: BitkuaAction) =>
     ipcRenderer.invoke("send-bitkua-action", message),
-
   onUpdateData: (callback: (message: NotifyMessage) => void) => {
     ipcRenderer.on("update-data", (event, data) => callback(data));
   },
+  openChartsWindow: () => ipcRenderer.invoke("open-charts-window"),
 });

@@ -405,7 +405,9 @@ export class BitkuaService {
   private notifyClients(message: NotifyMessage) {
     // console.log("notifyClients", message.store);
     BrowserWindow.getAllWindows().forEach((window) => {
-      window.webContents.send(`update-data`, message);
+      if (!window.isDestroyed()) {
+        window.webContents.send(`update-data`, message);
+      }
     });
   }
 }
