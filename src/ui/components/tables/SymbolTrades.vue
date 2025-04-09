@@ -9,6 +9,7 @@ import { useBingXTradesStore } from "../../store/bingxTrades.store";
 import { useBitkuaBotsStore } from "../../store/bitkuaBots.store";
 import { BitkuaActionUpdateStatus } from "../../../server/Bitkua.dto";
 import { useBingXPositionsStore } from "../../../ui/store/bingxPositions.store";
+import { watch } from "original-fs";
 
 const bingXTradesStore = useBingXTradesStore();
 const bingXTransactionsStore = useBingXTransactionsStore();
@@ -83,6 +84,7 @@ const tradesInfo = computed(() => {
           },
         };
       }
+
       if (transaction.incomeType === "REALIZED_PNL") {
         acc[transaction.symbol].num++;
         acc[transaction.symbol].pnl += parseFloat(transaction.income);
@@ -137,17 +139,6 @@ const tradesInfo = computed(() => {
 
       if (parseFloat(trade.realisedPNL) === 0) acc[symbol].long.open++;
       else acc[symbol].long.close++;
-
-      const bot = bitkuaBotsStore.bots.find(
-        (x) =>
-          x.symbol.toLowerCase() === symbol.toLowerCase().replace("-", "") &&
-          !x.strategy.includes("short"),
-      );
-      acc[symbol].long.amount = parseInt(bot?.amount || "0");
-      acc[symbol].long.botId = bot?.id || "";
-      acc[symbol].long.strategy = bot?.strategy || "";
-      acc[symbol].long.status = bot?.status || "";
-      acc[symbol].long.orders = parseInt(bot?.orders || "0");
     } else {
       if (!closeShortDetected[symbol] && parseFloat(trade.realisedPNL) !== 0)
         closeShortDetected[symbol] = true;
@@ -156,19 +147,66 @@ const tradesInfo = computed(() => {
       if (parseFloat(trade.realisedPNL) === 0) acc[symbol].short.open++;
       else acc[symbol].short.close++;
 
-      const bot = bitkuaBotsStore.bots.find(
-        (x) =>
-          x.symbol.toLowerCase() === symbol.toLowerCase().replace("-", "") &&
-          x.strategy.includes("short"),
-      );
-      acc[symbol].short.amount = parseInt(bot?.amount || "0");
-      acc[symbol].short.botId = bot?.id || "";
-      acc[symbol].short.strategy = bot?.strategy || "";
-      acc[symbol].short.status = bot?.status || "";
-      acc[symbol].short.orders = parseInt(bot?.orders || "0");
+      if (!acc[symbol].long.botId) {
+        const bot = bitkuaBotsStore.bots.find(
+          (x) =>
+            x.symbol.toLowerCase() === symbol.toLowerCase().replace("-", "") &&
+            x.strategy.includes("short"),
+        );
+
+        acc[symbol].short.amount = parseInt(bot?.amount || "0");
+        acc[symbol].short.botId = bot?.id || "";
+        acc[symbol].short.strategy = bot?.strategy || "";
+        acc[symbol].short.status = bot?.status || "";
+        acc[symbol].short.orders = parseInt(bot?.orders || "0");
+      }
     }
     return acc;
   }, data);
+
+  bitkuaBotsStore.bots.forEach((bot) => {
+    const symbol = bot.symbol.replace("USDT", "-USDT");
+    const isShort = bot.strategy.includes("short");
+
+    if (!data[symbol]) {
+      data[symbol] = {
+        num: 0,
+        pnl: 0,
+        all: 0,
+        charges: 0,
+        volume: 0,
+        long: {
+          open: 0,
+          close: 0,
+          currentOpen: 0,
+          amount: 0,
+          botId: "",
+          strategy: "",
+          status: "",
+          orders: 0,
+        },
+        short: {
+          open: 0,
+          close: 0,
+          currentOpen: 0,
+          amount: 0,
+          botId: "",
+          strategy: "",
+          status: "",
+          orders: 0,
+        },
+      };
+    }
+    data[symbol][isShort ? "short" : "long"].amount = parseInt(
+      bot?.amount || "0",
+    );
+    data[symbol][isShort ? "short" : "long"].botId = bot?.id || "";
+    data[symbol][isShort ? "short" : "long"].strategy = bot?.strategy || "";
+    data[symbol][isShort ? "short" : "long"].status = bot?.status || "";
+    data[symbol][isShort ? "short" : "long"].orders = parseInt(
+      bot?.orders || "0",
+    );
+  });
 
   return Object.entries(data)
     .map(([key, value]) => ({ key, ...value }))
@@ -263,7 +301,12 @@ const sendAction = (
       <td class="px-2 py-0.5">{{ item.key.replace("-USDT", "") }}</td>
       <td class="px-2 py-0.5">{{ item.num }}</td>
       <td class="px-2 py-0.5"><Price :value="item.pnl" :decimals="2" /></td>
-      <td class="px-2 py-0.5"><Price :value="item.charges" :decimals="2" /></td>
+      <td class="px-2 py-0.5">
+        <Price :value="item.charges" :decimals="2" />
+        <span class="text-[9px]">
+          {{ ((Math.abs(item.charges) * 100) / item.pnl).toFixed(2) }}%
+        </span>
+      </td>
       <td class="px-2 py-0.5"><Price :value="item.all" :decimals="2" /></td>
       <template v-for="side in sides" :key="side">
         <td class="px-2 py-0.5">

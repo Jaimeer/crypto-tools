@@ -82,7 +82,12 @@ const transactionsByDay = computed(() => {
         <Price :value="item.volume" color="orange" :decimals="2" />
       </td>
       <td class="px-2 py-0.5"><Price :value="item.pnl" :decimals="2" /></td>
-      <td class="px-2 py-0.5"><Price :value="item.charges" :decimals="2" /></td>
+      <td class="px-2 py-0.5">
+        <Price :value="item.charges" :decimals="2" />
+        <span class="text-[9px]">
+          {{ ((Math.abs(item.charges) * 100) / item.pnl).toFixed(2) }}%
+        </span>
+      </td>
       <td class="px-2 py-0.5"><Price :value="item.all" :decimals="2" /></td>
       <td class="px-2 py-0.5">
         <template v-if="item.volume !== 0">

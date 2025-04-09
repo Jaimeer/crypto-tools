@@ -22,7 +22,7 @@ const props = defineProps<{
         class="bg-gray-50 text-xs text-gray-700 uppercase dark:bg-gray-700 dark:text-gray-400"
       >
         <tr>
-          <th class="px-2 py-2" v-for="header of headers">
+          <th class="px-2 py-0.5" v-for="header of headers">
             {{ header }}
           </th>
         </tr>

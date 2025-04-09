@@ -9,16 +9,22 @@ import {
   ListboxOptions,
   ListboxOption,
 } from "@headlessui/vue";
-import { RouterLink } from "vue-router";
+import { RouterLink, useRouter } from "vue-router";
 
 const bingXConfig = useBingXConfigStore();
 const bingXTransactionsStore = useBingXTransactionsStore();
 const preferencesStore = usePreferencesStore();
+const router = useRouter();
 
 const selectedSymbols = ref(preferencesStore.hidedSymbols);
 
 const cleanHidedSymbols = () => {
   selectedSymbols.value = [];
+};
+
+const openChartsWindow = () => {
+  window.electronAPI.openChartsWindow();
+  router.push("/");
 };
 
 watch(selectedSymbols, () => {
@@ -42,6 +48,12 @@ watch(selectedSymbols, () => {
       >
         Charts
       </RouterLink>
+      <button
+        class="cursor-pointer rounded bg-blue-400 px-4 py-1 text-white transition hover:bg-blue-600"
+        @click="openChartsWindow"
+      >
+        New Window
+      </button>
       <slot name="left" />
     </div>
     <div class="flex items-center gap-2">

@@ -8,7 +8,6 @@ import { useBingXPositionsStore } from "../store/bingxPositions.store";
 import { usePreferencesStore } from "../store/preferences.store";
 import { useBingXKLinesStore } from "../store/bingxKLines.store";
 import { Period } from "../../server/BingX.dto";
-import { useRouter } from "vue-router";
 import {
   Listbox,
   ListboxButton,
@@ -21,7 +20,6 @@ const bingXTradesStore = useBingXTradesStore();
 const bingXPositionsStore = useBingXPositionsStore();
 const preferencesStore = usePreferencesStore();
 const bingXKLinesStore = useBingXKLinesStore();
-const router = useRouter();
 
 const periodsOptions: Period[] = [
   "1m",
@@ -76,11 +74,6 @@ const usedSymbols = computed(() => {
     .filter((x) => !preferencesStore.hidedSymbols.includes(x))
     .sort();
 });
-
-const openChartsWindow = () => {
-  window.electronAPI.openChartsWindow();
-  router.push("/");
-};
 
 onMounted(async () => {
   await fetchData();
@@ -141,12 +134,6 @@ onMounted(async () => {
           <span>
             {{ preferencesStore.hideTrades ? "Hided" : "Hide" }} trades
           </span>
-        </button>
-        <button
-          class="cursor-pointer rounded bg-blue-400 px-4 py-1 text-white transition hover:bg-blue-600"
-          @click="openChartsWindow"
-        >
-          New Windows
         </button>
       </template>
     </TheHeader>

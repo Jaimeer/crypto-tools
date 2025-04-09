@@ -4,8 +4,10 @@ import { format } from "date-fns";
 import { useBingXTransactionsStore } from "../../store/bingxTransactions.store";
 import Price from "../Price.vue";
 import Table from "../Table.vue";
+import DateTime from "../DateTime.vue";
 import NumTrades from "../NumTrades.vue";
 import { usePreferencesStore } from "../../store/preferences.store";
+import { Transaction } from "../../../server/BingX.dto";
 
 const bingXTransactionsStore = useBingXTransactionsStore();
 const preferencesStore = usePreferencesStore();
@@ -18,6 +20,7 @@ type PriceData = {
   all: number;
   charges: number;
   volume: number;
+  transactions: Transaction[];
 };
 
 const transactions = computed(() => {
@@ -31,13 +34,21 @@ const transactionsBySymbol = computed(() => {
       const symbol = transaction.symbol;
       if (!acc[date]) acc[date] = {};
       if (!acc[date][symbol])
-        acc[date][symbol] = { num: 0, pnl: 0, all: 0, charges: 0, volume: 0 };
+        acc[date][symbol] = {
+          num: 0,
+          pnl: 0,
+          all: 0,
+          charges: 0,
+          volume: 0,
+          transactions: [],
+        };
       if (transaction.incomeType === "REALIZED_PNL") {
         acc[date][symbol].num++;
         acc[date][symbol].pnl += parseFloat(transaction.income);
       } else {
         acc[date][symbol].charges += parseFloat(transaction.income);
       }
+      acc[date][symbol].transactions.push(transaction);
       acc[date][symbol].all += parseFloat(transaction.income);
       return acc;
     },
@@ -87,8 +98,31 @@ const usedSymbols = computed(() => {
         class="px-2 py-0.5 whitespace-nowrap"
       >
         <template v-if="item.symbols[symbol]">
-          <Price :value="item.symbols[symbol].all" />
-          <NumTrades :num="item.symbols[symbol].num" />
+          <VDropdown>
+            <Price :value="item.symbols[symbol].all" />
+            <NumTrades :num="item.symbols[symbol].num" />
+            <span class="text-[10px] text-slate-600">
+              {{ item.symbols[symbol].transactions.length }}
+            </span>
+            <template #popper>
+              <div v-close-popper>
+                <Table
+                  :headers="['date', 'incomeType', 'income']"
+                  :items="item.symbols[symbol].transactions"
+                >
+                  <template #default="{ item: transaction }">
+                    <td class="px-2 py-0.5">
+                      <DateTime :value="new Date(transaction.time)" />
+                    </td>
+                    <td class="px-2 py-0.5">{{ transaction.info }}</td>
+                    <td class="px-2 py-0.5">
+                      <Price :value="transaction.income" :decimals="2" />
+                    </td>
+                  </template>
+                </Table>
+              </div>
+            </template>
+          </VDropdown>
         </template>
         <template v-else> - </template>
       </td>

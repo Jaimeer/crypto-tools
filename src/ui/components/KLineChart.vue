@@ -360,8 +360,8 @@ watch(
       <div class="mr-12 flex justify-end gap-2">
         <span class="text-slate-400">Last24h</span>
         <NumTrades :num="symbolData.num" />
-        <Price :value="symbolData.volume" color="orange" />
-        <Price :value="symbolData.all" />
+        <Price :value="symbolData.volume" color="orange" :decimals="2" />
+        <Price :value="symbolData.all" :decimals="2" />
         <div>
           <template v-if="symbolData.volume !== 0">
             {{ ((symbolData.all * 100) / symbolData.volume).toFixed(2) }}%
