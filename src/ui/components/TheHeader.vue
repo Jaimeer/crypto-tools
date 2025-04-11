@@ -79,7 +79,7 @@ watch(selectedSymbols, () => {
 
           <div class="grid grid-cols-2 gap-1">
             <ListboxOption
-              v-for="symbol in bingXTransactionsStore.allSymbols"
+              v-for="symbol in bingXTransactionsStore.allSymbols.sort()"
               v-model="selectedSymbols"
               :key="symbol"
               :value="symbol"

@@ -120,12 +120,31 @@ const parseValue = (value: number | string | undefined) => {
         </td>
       </tr>
       <tr
+        class="border-b border-gray-200 bg-white hover:bg-slate-700 dark:border-gray-700 dark:bg-gray-800"
+      >
+        <td class="px-2 py-0.5">profit</td>
+        <td class="px-2 py-0.5">
+          <Price
+            v-if="balance"
+            :value="parseFloat(balance?.balance) - totalIncomeTransactions"
+            color="violet"
+            :decimals="2"
+          />
+          <Price
+            v-if="balance"
+            class="text-[10px]"
+            :value="
+              parseFloat(balance?.balance) -
+              totalIncomeTransactions +
+              parseFloat(balance?.unrealizedProfit)
+            "
+          />
+        </td>
+      </tr>
+      <tr
         v-for="[key, value] in Object.entries({
-          profit: balance
-            ? parseFloat(balance.balance) - totalIncomeTransactions
-            : '---',
           profitByDay: balance
-            ? (parseFloat(balance.balance) - totalIncomeTransactions) /
+            ? (parseFloat(balance?.balance) - totalIncomeTransactions) /
               differenceInDays(
                 new Date(),
                 startOfDay(

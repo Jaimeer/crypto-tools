@@ -146,26 +146,14 @@ const tradesInfo = computed(() => {
 
       if (parseFloat(trade.realisedPNL) === 0) acc[symbol].short.open++;
       else acc[symbol].short.close++;
-
-      if (!acc[symbol].long.botId) {
-        const bot = bitkuaBotsStore.bots.find(
-          (x) =>
-            x.symbol.toLowerCase() === symbol.toLowerCase().replace("-", "") &&
-            x.strategy.includes("short"),
-        );
-
-        acc[symbol].short.amount = parseInt(bot?.amount || "0");
-        acc[symbol].short.botId = bot?.id || "";
-        acc[symbol].short.strategy = bot?.strategy || "";
-        acc[symbol].short.status = bot?.status || "";
-        acc[symbol].short.orders = parseInt(bot?.orders || "0");
-      }
     }
     return acc;
   }, data);
 
   bitkuaBotsStore.bots.forEach((bot) => {
     const symbol = bot.symbol.replace("USDT", "-USDT");
+    if (!usedSymbols.value.includes(symbol)) return;
+
     const isShort = bot.strategy.includes("short");
 
     if (!data[symbol]) {
@@ -197,15 +185,12 @@ const tradesInfo = computed(() => {
         },
       };
     }
-    data[symbol][isShort ? "short" : "long"].amount = parseInt(
-      bot?.amount || "0",
-    );
-    data[symbol][isShort ? "short" : "long"].botId = bot?.id || "";
-    data[symbol][isShort ? "short" : "long"].strategy = bot?.strategy || "";
-    data[symbol][isShort ? "short" : "long"].status = bot?.status || "";
-    data[symbol][isShort ? "short" : "long"].orders = parseInt(
-      bot?.orders || "0",
-    );
+    const side = isShort ? "short" : "long";
+    data[symbol][side].amount = parseInt(bot?.amount || "0");
+    data[symbol][side].botId = bot?.id || "";
+    data[symbol][side].strategy = bot?.strategy || "";
+    data[symbol][side].status = bot?.status || "";
+    data[symbol][side].orders = parseInt(bot?.orders || "0");
   });
 
   return Object.entries(data)
