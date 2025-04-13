@@ -307,6 +307,8 @@ const strategyName = (strategy: string) => {
       shortliquiditypool: "LLP",
       aiexpertavg: "AIE",
       shortaiexpertavg: "AIE",
+      aiexpertavgplus: "AIP",
+      shortaiexpertavgplus: "AIP",
       lamilagrosa: "LMG",
       shortlamilagrosa: "LMG",
       pmd: "PMD",
