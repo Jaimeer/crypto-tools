@@ -33,9 +33,9 @@ export class BingXWebSocket {
     this.startSocket(true);
   }
 
-  subscribe(socketId: string, channel: string) {
+  async subscribe(socketId: string, channel: string) {
     console.log("Subscribing to", channel);
-    this.startSocket();
+    await this.startSocket();
     const CHANNEL = {
       id: socketId,
       reqType: "sub",

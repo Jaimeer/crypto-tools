@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { useBingXTransactionsStore } from "../../store/bingxTransactions.store";
 import Price from "../Price.vue";
 import Table from "../Table.vue";
+import Symbol from "../Symbol.vue";
 import DateTime from "../DateTime.vue";
 import NumTrades from "../NumTrades.vue";
 import { usePreferencesStore } from "../../store/preferences.store";
@@ -78,14 +79,18 @@ const usedSymbols = computed(() => {
 </script>
 
 <template>
-  <Table
-    :headers="[
-      'date',
-      'total',
-      ...usedSymbols.map((x) => x.replace('-USDT', '')),
-    ]"
-    :items="transactionsBySymbol"
-  >
+  <Table :headers="[]" :items="transactionsBySymbol">
+    <template #headers>
+      <th class="px-2 py-0.5" v-for="header of ['date', 'total']">
+        {{ header }}
+      </th>
+      <th
+        class="px-2 py-0.5"
+        v-for="header of usedSymbols.map((x) => x.replace('-USDT', ''))"
+      >
+        <Symbol :value="header" />
+      </th>
+    </template>
     <template #default="{ item }">
       <td class="px-2 py-0.5">{{ item.key }}</td>
       <td class="bg-slate-900 px-2 py-0.5">

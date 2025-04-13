@@ -11,6 +11,7 @@ import {
   Trade,
   Transaction,
 } from "./BingX.dto";
+import { subYears } from "date-fns";
 
 export type BingXApiRequest = {
   path: string;
@@ -129,23 +130,37 @@ export class BingXRestClient {
     });
   }
 
-  async fetchTransactions(): Promise<Transaction[]> {
+  async fetchTransactions(
+    currentTransactions: Transaction[],
+  ): Promise<Transaction[]> {
     // console.log('fetchTrades', {
     //   apiKey: this.API_KEY,
     //   apiSecret: this.API_SECRET,
     // })
-    const allTransactions: Transaction[] = [];
+    const allTransactions: Transaction[] = currentTransactions;
 
     // Start with the current time
+    const newestTransaction = allTransactions.length
+      ? Math.max(...allTransactions.map((t) => t.time))
+      : undefined;
     let endTime = Date.now();
+    const startTime = newestTransaction ?? subYears(new Date(), 10).getTime();
     let hasMoreData = true;
     let page = 1;
     const limit = 1000;
 
+    // console.log({
+    //   page,
+    //   startTime,
+    //   endTime,
+    //   newestTransaction,
+    //   allTransactions: allTransactions.length,
+    // });
     do {
       try {
         console.log(
-          `[fetchTransactions] Fetching page ${page}, endTime ${endTime} ` +
+          `[fetchTransactions] Fetching page ${page}, startTime ${startTime} ` +
+            `${new Date(startTime).toISOString()}, endTime ${endTime} ` +
             `${new Date(endTime).toISOString()} transactions so far: ${allTransactions.length}`,
         );
 
@@ -154,6 +169,7 @@ export class BingXRestClient {
           method: "GET",
           payload: {
             limit: limit.toString(),
+            startTime: startTime.toString(),
             endTime: endTime.toString(),
           },
           protocol: "https",
@@ -188,17 +204,22 @@ export class BingXRestClient {
     } while (hasMoreData);
 
     console.log(`Total transactions fetched: ${allTransactions.length}`);
-    return allTransactions;
+    return allTransactions.toSorted((a, b) => b.time - a.time);
   }
 
-  async fetchTrades(): Promise<Trade[]> {
+  async fetchTrades(currentTrades: Trade[]): Promise<Trade[]> {
     // console.log('fetchTrades', {
     //   apiKey: this.API_KEY,
     //   apiSecret: this.API_SECRET,
     // })
-    const allTrades: Trade[] = [];
+    const allTrades: Trade[] = currentTrades;
 
     // Start with the current time
+    const newestTransaction = allTrades.length
+      ? Math.max(...allTrades.map((t) => new Date(t.filledTime).getTime()))
+      : undefined;
+    let endTime = Date.now();
+    const startTime = newestTransaction ?? subYears(new Date(), 10).getTime();
     let hasMoreData = true;
     let page = 1;
     const limit = 1000;
@@ -206,15 +227,18 @@ export class BingXRestClient {
     do {
       try {
         console.log(
-          `[fetchTrades] Fetching page ${page}, trades so far: ${allTrades.length}`,
+          `[fetchTrades] Fetching page ${page}, startTime ${startTime} ` +
+            `${new Date(startTime).toISOString()}, endTime ${endTime} ` +
+            `${new Date(endTime).toISOString()} transactions so far: ${allTrades.length}`,
         );
 
         const API: BingXApiRequest = {
           path: "/openApi/swap/v2/trade/fillHistory",
           method: "GET",
           payload: {
-            pageIndex: page.toString(),
             pageSize: limit.toString(),
+            startTs: startTime.toString(),
+            endTs: endTime.toString(),
           },
           protocol: "https",
         };
@@ -231,7 +255,16 @@ export class BingXRestClient {
         // Add to our collection
         allTrades.push(...trades.fill_history_orders);
 
-        // Set end time to just before the oldest trade time
+        // Find the oldest transaction timestamp for next pagination request
+        const oldestTransaction = Math.min(
+          ...trades.fill_history_orders.map((t) =>
+            new Date(t.filledTime).getTime(),
+          ),
+        );
+
+        // Set end time to just before the oldest transaction time
+        endTime = oldestTransaction - 1;
+
         page++;
 
         if (trades.fill_history_orders.length < limit) {
@@ -244,8 +277,11 @@ export class BingXRestClient {
       }
     } while (hasMoreData);
 
-    console.log(`Total trades fetched: ${allTrades.length}`);
-    return allTrades;
+    console.log(`Total trades fetched: ${allTrades?.length ?? "ERROR"}`);
+    return allTrades.toSorted(
+      (a, b) =>
+        new Date(b.filledTime).getTime() - new Date(a.filledTime).getTime(),
+    );
   }
 
   async fetchBalance(): Promise<Balance> {
@@ -285,8 +321,10 @@ export class BingXRestClient {
     };
     const klines = await this.bingXRequest<KLine[]>(API);
     console.log(
-      `[fetchKlines][${symbol}][${period}] Fetched klines ${klines.length}`,
+      `[fetchKlines][${symbol}][${period}] Fetched klines ${klines?.length ?? "ERROR"}`,
     );
+    if (!klines) return [];
+
     return klines;
   }
 

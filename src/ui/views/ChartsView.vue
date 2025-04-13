@@ -161,6 +161,7 @@ onMounted(async () => {
           :positions="
             bingXPositionsStore.positions.filter((x) => x.symbol === symbol)
           "
+          size="small"
         />
       </div>
     </div>

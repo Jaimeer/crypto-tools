@@ -3,13 +3,13 @@ import { computed, ref } from "vue";
 import { useBingXTransactionsStore } from "../../store/bingxTransactions.store";
 import Table from "../Table.vue";
 import Price from "../Price.vue";
+import Symbol from "../Symbol.vue";
 import { Icon } from "@iconify/vue";
 import { usePreferencesStore } from "../../store/preferences.store";
 import { useBingXTradesStore } from "../../store/bingxTrades.store";
 import { useBitkuaBotsStore } from "../../store/bitkuaBots.store";
 import { BitkuaActionUpdateStatus } from "../../../server/Bitkua.dto";
 import { useBingXPositionsStore } from "../../../ui/store/bingxPositions.store";
-import { watch } from "original-fs";
 
 const bingXTradesStore = useBingXTradesStore();
 const bingXTransactionsStore = useBingXTransactionsStore();
@@ -283,7 +283,9 @@ const sendAction = (
     :items="tradesInfo"
   >
     <template #default="{ item }">
-      <td class="px-2 py-0.5">{{ item.key.replace("-USDT", "") }}</td>
+      <td class="px-2 py-0.5">
+        <Symbol :value="item.key.replace('-USDT', '')" />
+      </td>
       <td class="px-2 py-0.5">{{ item.num }}</td>
       <td class="px-2 py-0.5"><Price :value="item.pnl" :decimals="2" /></td>
       <td class="px-2 py-0.5">

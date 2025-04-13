@@ -32,6 +32,7 @@ const props = defineProps<{
   klines: KLine[];
   trades: Trade[];
   positions: Position[];
+  size: "small" | "large";
 }>();
 
 const printData = (start: boolean) => {
@@ -334,6 +335,7 @@ watch(
 </script>
 
 <template>
+  - {{ size }} -
   <div
     class="relative flex flex-col rounded border border-gray-600 p-4"
     v-element-size="updateChartSize"
@@ -348,7 +350,7 @@ watch(
   >
     <!-- {{ trades.length }} - {{ filteredTrades.length }} -->
     <div class="absolute bottom-20 text-lg font-bold text-slate-700 uppercase">
-      {{ symbol }} - {{ period }}
+      {{ symbol }} - {{ period }} - {{ size }}
     </div>
     <div
       class="absolute top-10 right-16 text-lg font-bold text-slate-700 uppercase"
@@ -371,7 +373,15 @@ watch(
         <Price :value="symbolData.all / 24" color="violet" />
       </div>
     </div>
-    <div :id="`chart-${symbol}`" class="h-[20rem] w-full" />
+
+    <div
+      :id="`chart-${symbol}`"
+      class="w-full"
+      :class="{
+        'h-[20rem]': size === 'small',
+        'h-[40rem]': size === 'large',
+      }"
+    />
     <div class="t-2 flex items-center justify-between">
       <div class="grid w-full grid-cols-2 items-center justify-between">
         <div v-for="side in sides" class="flex flex-col">

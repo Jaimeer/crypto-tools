@@ -86,8 +86,10 @@ export class BingXService {
 
   private async loadInitDate() {
     console.log("loadInitDate");
-    this.data.transactions = await this.restClient.fetchTransactions();
-    this.data.trades = await this.restClient.fetchTrades();
+    this.data.transactions = await this.restClient.fetchTransactions(
+      this.data.transactions,
+    );
+    this.data.trades = await this.restClient.fetchTrades(this.data.trades);
     this.data.balance = await this.restClient.fetchBalance();
     this.data.positions = await this.restClient.fetchPositions();
 
@@ -112,7 +114,7 @@ export class BingXService {
       period,
       klines: this.data.kLines[symbol].data,
     });
-    this.wsClient.subscribe(
+    await this.wsClient.subscribe(
       this.data.kLines[symbol].socketId,
       `${symbol}@kline_${period}`,
     );
@@ -170,7 +172,7 @@ export class BingXService {
         return;
       }
       if (message.e === "ACCOUNT_UPDATE") {
-        console.log("TODO", message.e);
+        console.log("TODO", message);
         return;
       }
     }

@@ -4,6 +4,7 @@ import { useBingXTransactionsStore } from "../../store/bingxTransactions.store";
 import { useBingXTradesStore } from "../../store/bingxTrades.store";
 import Price from "../Price.vue";
 import Table from "../Table.vue";
+import Symbol from "../Symbol.vue";
 import DateTime from "../DateTime.vue";
 
 const bingXTradesStore = useBingXTradesStore();
@@ -34,7 +35,7 @@ const lastClosedTransactions = computed(() => {
   <Table :headers="['Date', 'symbol', 'pnl']" :items="lastClosedTransactions">
     <template #default="{ item }">
       <td class="px-2 py-0.5"><DateTime :value="new Date(item.time)" /></td>
-      <td class="px-2 py-0.5">{{ item.symbol }}</td>
+      <td class="px-2 py-0.5"><Symbol :value="item.symbol" /></td>
       <td class="px-2 py-0.5">
         <Price :value="item.income" :decimals="2" />
       </td>

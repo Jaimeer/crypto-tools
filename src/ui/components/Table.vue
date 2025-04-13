@@ -18,13 +18,15 @@ const props = defineProps<{
       class="w-full text-left text-xs text-gray-500 rtl:text-right dark:text-gray-400"
     >
       <thead
-        v-if="headers.length"
+        v-if="headers.length || $slots.headers"
         class="bg-gray-50 text-xs text-gray-700 uppercase dark:bg-gray-700 dark:text-gray-400"
       >
         <tr>
-          <th class="px-2 py-0.5" v-for="header of headers">
-            {{ header }}
-          </th>
+          <slot name="headers">
+            <th class="px-2 py-0.5" v-for="header of headers" :key="header">
+              {{ header }}
+            </th>
+          </slot>
         </tr>
       </thead>
       <tbody>
