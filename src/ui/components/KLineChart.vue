@@ -336,7 +336,7 @@ watch(
 
 <template>
   <div
-    class="relative flex flex-col rounded border border-gray-600 p-4"
+    class="relative flex flex-col rounded border border-gray-600 p-4 text-slate-400"
     v-element-size="updateChartSize"
     :class="{
       'border-t-green-600 border-l-green-600': bot.long.status === 'active',
