@@ -414,7 +414,7 @@ watch(
                 [{{ bot[side].orders }}]
               </span>
             </div>
-            <div>
+            <div class="text-slate-400">
               {{ strategyName(bot[side].strategy) }}
             </div>
             <div>
