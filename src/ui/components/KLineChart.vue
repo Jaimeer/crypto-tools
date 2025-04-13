@@ -335,7 +335,6 @@ watch(
 </script>
 
 <template>
-  - {{ size }} -
   <div
     class="relative flex flex-col rounded border border-gray-600 p-4"
     v-element-size="updateChartSize"
