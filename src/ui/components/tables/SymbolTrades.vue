@@ -10,6 +10,7 @@ import { useBingXTradesStore } from "../../store/bingxTrades.store";
 import { useBitkuaBotsStore } from "../../store/bitkuaBots.store";
 import { BitkuaActionUpdateStatus } from "../../../server/Bitkua.dto";
 import { useBingXPositionsStore } from "../../../ui/store/bingxPositions.store";
+import { Position } from "../../../server/BingX.dto";
 
 const bingXTradesStore = useBingXTradesStore();
 const bingXTransactionsStore = useBingXTransactionsStore();
@@ -208,6 +209,31 @@ const usedSymbols = computed(() => {
     .sort();
 });
 
+const investToToGap = (position: Position, desiredGap: number) => {
+  if (!position) return 0;
+  const markPrice = parseFloat(position.markPrice);
+  const avgOpenPrice = parseFloat(position.avgPrice);
+  const positionValue = parseFloat(position.positionValue);
+  const leverage = parseFloat(position.leverage);
+
+  const offset = (avgOpenPrice - markPrice) * (desiredGap / 100);
+  const newAvgOpenPrice = markPrice + offset;
+
+  const currentTokens = positionValue / markPrice;
+  const q =
+    (currentTokens * (avgOpenPrice - newAvgOpenPrice)) /
+    (newAvgOpenPrice / markPrice - 1);
+  return q / leverage;
+};
+
+const position = (symbol: string, side: string) => {
+  return bingXPositionsStore.positions.find(
+    (position) =>
+      position.symbol === symbol &&
+      position.positionSide === side.toUpperCase(),
+  );
+};
+
 const strategyName = (strategy: string) => {
   if (!strategy) return "---";
   return (
@@ -279,9 +305,11 @@ const sendAction = (
       'profit',
       'Long',
       'U_PNL',
+      'Rescue (leverage included)',
       'DK Bot (Long)',
       'Short',
       'U_PNL',
+      'Rescue',
       'DK Bot (Short)',
     ]"
     :items="tradesInfo"
@@ -320,30 +348,18 @@ const sendAction = (
         <td class="px-2 py-0.5">
           <div class="flex gap-1">
             <Price
-              :value="
-                parseFloat(
-                  bingXPositionsStore.positions.filter((position) => {
-                    return (
-                      position.symbol === item.key &&
-                      position.positionSide === side.toUpperCase()
-                    );
-                  })[0]?.unrealizedProfit,
-                )
-              "
+              :value="parseFloat(position(item.key, side)?.positionValue)"
+              :decimals="2"
+              color="violet"
+            />
+            <Price
+              :value="parseFloat(position(item.key, side)?.unrealizedProfit)"
               :decimals="2"
             />
             <span class="text-slate-600">/</span>
             <Price
               :value="
-                100 *
-                parseFloat(
-                  bingXPositionsStore.positions.filter((position) => {
-                    return (
-                      position.symbol === item.key &&
-                      position.positionSide === side.toUpperCase()
-                    );
-                  })[0]?.pnlRatio ?? '0',
-                )
+                100 * parseFloat(position(item.key, side)?.pnlRatio ?? '0')
               "
               :decimals="2"
               suffix="%"
@@ -354,13 +370,7 @@ const sendAction = (
                 v-for="i in Math.floor(
                   Math.abs(
                     (100 *
-                      parseFloat(
-                        bingXPositionsStore.positions.find(
-                          (position) =>
-                            position.symbol === item.key &&
-                            position.positionSide === side.toUpperCase(),
-                        )?.pnlRatio ?? '0',
-                      )) /
+                      parseFloat(position(item.key, side)?.pnlRatio ?? '0')) /
                       100,
                   ),
                 )"
@@ -372,13 +382,7 @@ const sendAction = (
                 v-for="i in Math.floor(
                   Math.abs(
                     (100 *
-                      parseFloat(
-                        bingXPositionsStore.positions.find(
-                          (position) =>
-                            position.symbol === item.key &&
-                            position.positionSide === side.toUpperCase(),
-                        )?.pnlRatio ?? '0',
-                      )) %
+                      parseFloat(position(item.key, side)?.pnlRatio ?? '0')) %
                       100,
                   ) / 10,
                 )"
@@ -387,6 +391,20 @@ const sendAction = (
                 icon="ic:round-warning"
               />
             </div>
+          </div>
+        </td>
+        <td class="px-2 py-0.5">
+          <div class="flex gap-1">
+            <template v-for="gap in [5, 10, 50]" :key="gap">
+              <div v-if="investToToGap(position(item.key, side), gap) > 0">
+                {{ gap }}%[
+                <Price
+                  :value="investToToGap(position(item.key, side), gap)"
+                  :decimals="2"
+                  color="orange"
+                />]
+              </div>
+            </template>
           </div>
         </td>
         <td class="flex items-center gap-1">

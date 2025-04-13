@@ -181,6 +181,76 @@ const draw = () => {
       },
     });
   });
+
+  // rescue lines
+  const currentPrice = parseFloat(props.klines[0]?.close);
+  const lineColor = "#FFFFFF";
+
+  props.positions.forEach((position) => {
+    if (currentPrice) {
+      const isLong = position.positionSide === "LONG";
+      const lineColor = color(90, isLong);
+      const fillColor = color(20, isLong);
+
+      for (const percentage of [5, 10, 50]) {
+        const price = calculateNewAvgOpenPrice(position, percentage);
+
+        chart.value.createOverlay({
+          name: "priceLine",
+          groupId: "positions",
+          points: [{ value: price }],
+          lock: true,
+          styles: {
+            text: {
+              color: "#FFFFFF",
+              backgroundColor: lineColor,
+            },
+            polygon: { color: lineColor },
+            line: {
+              style: "dashed",
+              color: lineColor,
+              dashedValue: [2, 2],
+            },
+          },
+        });
+      }
+    }
+  });
+};
+
+const calculateNewAvgOpenPrice = (position: Position, desiredGap: number) => {
+  if (!position) return 0;
+  const markPrice = parseFloat(position.markPrice);
+  const avgOpenPrice = parseFloat(position.avgPrice);
+
+  const offset = (avgOpenPrice - markPrice) * (desiredGap / 100);
+  const newAvgOpenPrice = markPrice + offset;
+  return newAvgOpenPrice;
+};
+
+const investToToGap = (position: Position, desiredGap: number) => {
+  if (!position) return 0;
+  const markPrice = parseFloat(position.markPrice);
+  const avgOpenPrice = parseFloat(position.avgPrice);
+  const positionValue = parseFloat(position.positionValue);
+  const leverage = parseFloat(position.leverage);
+
+  const offset = (avgOpenPrice - markPrice) * (desiredGap / 100);
+  const newAvgOpenPrice = markPrice + offset;
+
+  const currentTokens = positionValue / markPrice;
+  const q =
+    (currentTokens * (avgOpenPrice - newAvgOpenPrice)) /
+    (newAvgOpenPrice / markPrice - 1);
+  return q / leverage;
+};
+
+const position = (symbol: string, side: string) => {
+  return bingXPositionsStore.positions.find(
+    (position) =>
+      position.symbol === symbol &&
+      position.positionSide === side.toUpperCase(),
+  );
 };
 
 onMounted(async () => {
@@ -455,6 +525,20 @@ watch(
                         position.symbol === symbol &&
                         position.positionSide === side.toUpperCase()
                       );
+                    })[0]?.positionValue,
+                  )
+                "
+                :decimals="2"
+                color="violet"
+              />
+              <Price
+                :value="
+                  parseFloat(
+                    bingXPositionsStore.positions.filter((position) => {
+                      return (
+                        position.symbol === symbol &&
+                        position.positionSide === side.toUpperCase()
+                      );
                     })[0]?.unrealizedProfit,
                   )
                 "
@@ -513,6 +597,40 @@ watch(
                   class="text-yellow-400"
                   icon="ic:round-warning"
                 />
+              </div>
+              <div class="flex gap-1">
+                <template v-for="gap in [5, 10, 50]" :key="gap">
+                  <div
+                    v-if="
+                      investToToGap(
+                        bingXPositionsStore.positions.filter((position) => {
+                          return (
+                            position.symbol === symbol &&
+                            position.positionSide === side.toUpperCase()
+                          );
+                        })[0],
+                        gap,
+                      ) > 0
+                    "
+                  >
+                    {{ gap }}%[
+                    <Price
+                      :value="
+                        investToToGap(
+                          bingXPositionsStore.positions.filter((position) => {
+                            return (
+                              position.symbol === symbol &&
+                              position.positionSide === side.toUpperCase()
+                            );
+                          })[0],
+                          gap,
+                        )
+                      "
+                      :decimals="2"
+                      color="orange"
+                    />]
+                  </div>
+                </template>
               </div>
             </div>
           </div>
