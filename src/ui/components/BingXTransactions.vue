@@ -8,6 +8,7 @@ import SymbolTrades from "./tables/SymbolTrades.vue";
 import SymbolTransactions from "./tables/SymbolTransactions.vue";
 import LastTrades from "./tables/LastTrades.vue";
 import TheHeader from "./TheHeader.vue";
+import ProfitRanking from "./tables/ProfitRanking.vue";
 
 const bingXTransactionsStore = useBingXTransactionsStore();
 
@@ -41,10 +42,11 @@ const transactions = computed(() => {
       <!-- <div>
         <Chart :symbols="allSymbols" :data="transactionsBySymbolAndDay" />
       </div> -->
-      <div class="grid grid-cols-4 gap-2">
+      <div class="grid grid-cols-5 gap-2">
         <Balance />
         <ProfitByDay class="col-span-2" />
         <LastTrades />
+        <ProfitRanking />
       </div>
       <div class="">
         <SymbolTrades />

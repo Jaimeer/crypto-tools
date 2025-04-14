@@ -14,7 +14,10 @@ import { useBingXTradesStore } from "../store/bingxTrades.store";
 
 const props = defineProps<{ value: string }>();
 
-const symbol = computed(() => props.value + "-USDT");
+const symbol = computed(() => {
+  if (props.value.includes("USDT")) return props.value;
+  return props.value + "-USDT";
+});
 
 const bingXTradesStore = useBingXTradesStore();
 const bingXPositionsStore = useBingXPositionsStore();

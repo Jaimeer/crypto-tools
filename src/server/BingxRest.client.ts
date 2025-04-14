@@ -144,7 +144,9 @@ export class BingXRestClient {
       ? Math.max(...allTransactions.map((t) => t.time))
       : undefined;
     let endTime = Date.now();
-    const startTime = newestTransaction ?? subYears(new Date(), 10).getTime();
+    const startTime = newestTransaction
+      ? newestTransaction + 1
+      : subYears(new Date(), 10).getTime();
     let hasMoreData = true;
     let page = 1;
     const limit = 1000;
