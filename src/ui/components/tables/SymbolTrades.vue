@@ -252,6 +252,8 @@ const strategyName = (strategy: string) => {
       shortlamilagrosa: "HFT Short La Mialagrosa F-15",
       pmd: "HFT Short PMD F-15",
       shortpmd: "HFT Long La Mialagrosa F-15",
+      degen: "HFT Long Degen F-15",
+      shortdegen: "HFT Short Degen F-15",
     }[strategy] ?? strategy
   );
 };
@@ -274,6 +276,8 @@ const strategyNameShort = (strategy: string) => {
       shortlamilagrosa: "LMG",
       pmd: "PMD",
       shortpmd: "PMD",
+      degen: "DGN",
+      shortdegen: "DGN",
     }[strategy] ?? strategy
   );
 };

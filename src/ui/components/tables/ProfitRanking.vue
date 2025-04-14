@@ -5,25 +5,28 @@ import { useBingXTransactionsStore } from "../../store/bingxTransactions.store";
 import Table from "../Table.vue";
 import Price from "../Price.vue";
 import Symbol from "../Symbol.vue";
-import { Icon } from "@iconify/vue";
+import { usePreferencesStore } from "../../../ui/store/preferences.store";
 
 const bingXTransactionsStore = useBingXTransactionsStore();
+const preferencesStore = usePreferencesStore();
 
 type RankingData = {
-  profit7h: number;
+  profit4h: number;
   profit24h: number;
   profit1w: number;
 };
 
 const transactions = computed(() => {
-  return bingXTransactionsStore.transactions.filter((x) => x.symbol);
+  return bingXTransactionsStore.transactions.filter(
+    (x) => x.symbol && !preferencesStore.hidedSymbols.includes(x.symbol),
+  );
 });
 
-const sortBy = ref<"7h" | "24h" | "1w">("7h");
+const sortBy = ref<"4h" | "24h" | "1w">("4h");
 
 const symbolRanking = computed(() => {
   const now = new Date();
-  const date7h = subHours(now, 7).getTime();
+  const date4h = subHours(now, 4).getTime();
   const date24h = subDays(now, 1).getTime();
   const date1w = subWeeks(now, 1).getTime();
   const data = transactions.value.reduce(
@@ -31,7 +34,7 @@ const symbolRanking = computed(() => {
       const symbol = transaction.symbol.replace("-USDT", "");
 
       if (!acc[symbol]) {
-        acc[symbol] = { profit7h: 0, profit24h: 0, profit1w: 0 };
+        acc[symbol] = { profit4h: 0, profit24h: 0, profit1w: 0 };
       }
 
       if (transaction.time > date1w)
@@ -40,8 +43,8 @@ const symbolRanking = computed(() => {
       if (transaction.time > date24h)
         acc[symbol].profit24h += parseFloat(transaction.income);
 
-      if (transaction.time > date7h)
-        acc[symbol].profit7h += parseFloat(transaction.income);
+      if (transaction.time > date4h)
+        acc[symbol].profit4h += parseFloat(transaction.income);
 
       return acc;
     },
@@ -52,7 +55,7 @@ const symbolRanking = computed(() => {
   return Object.entries(data)
     .map(([key, value]) => ({ key, ...value }))
     .sort((a, b) => {
-      if (sortBy.value === "7h") return b.profit7h - a.profit7h;
+      if (sortBy.value === "4h") return b.profit4h - a.profit4h;
       if (sortBy.value === "24h") return b.profit24h - a.profit24h;
       if (sortBy.value === "1w") return b.profit1w - a.profit1w;
       return 0;
@@ -66,10 +69,10 @@ const symbolRanking = computed(() => {
       <th class="px-2 py-0.5">Symbol</th>
       <th
         class="px-2 py-0.5"
-        :class="{ 'cursor-pointer font-light': sortBy !== '7h' }"
-        @click="sortBy = '7h'"
+        :class="{ 'cursor-pointer font-light': sortBy !== '4h' }"
+        @click="sortBy = '4h'"
       >
-        <span @click="sortBy = '7h'">P_7H</span>
+        <span @click="sortBy = '4h'">P_4H</span>
       </th>
       <th
         class="px-2 py-0.5"
@@ -91,7 +94,7 @@ const symbolRanking = computed(() => {
         <Symbol :value="item.key" />
       </td>
       <td class="px-2 py-0.5">
-        <Price :value="item.profit7h" :decimals="2" />
+        <Price :value="item.profit4h" :decimals="2" />
       </td>
       <td class="px-2 py-0.5">
         <Price :value="item.profit24h" :decimals="2" />

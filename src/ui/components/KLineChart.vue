@@ -383,6 +383,8 @@ const strategyName = (strategy: string) => {
       shortlamilagrosa: "LMG",
       pmd: "PMD",
       shortpmd: "PMD",
+      degen: "DGN",
+      shortdegen: "DGN",
     }[strategy] ?? strategy
   );
 };
