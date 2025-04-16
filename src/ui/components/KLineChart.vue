@@ -329,13 +329,13 @@ const bot = computed(() => {
     long: bitkuaBotsStore.bots.find(
       (x) =>
         x.symbol.toLowerCase() ===
-          props.symbol.toLowerCase().replace("-", "") &&
+          props.symbol.replace("-USDT", "").toLowerCase() &&
         !x.strategy.includes("short"),
     ),
     short: bitkuaBotsStore.bots.find(
       (x) =>
         x.symbol.toLowerCase() ===
-          props.symbol.toLowerCase().replace("-", "") &&
+          props.symbol.replace("-USDT", "").toLowerCase() &&
         x.strategy.includes("short"),
     ),
   };
