@@ -79,6 +79,29 @@ export type KLine = {
   volume: string;
   time: number;
 };
+
+export type Contract = {
+  contractId: string;
+  symbol: string;
+  quantityPrecision: number;
+  pricePrecision: number;
+  takerFeeRate: number;
+  makerFeeRate: number;
+  tradeMinQuantity: number;
+  tradeMinUSDT: number;
+  currency: string;
+  asset: string;
+  status: number;
+  apiStateOpen: string;
+  apiStateClose: string;
+  ensureTrigger: boolean;
+  triggerFeeRate: string;
+  brokerState: boolean;
+  launchTime: number;
+  maintainTime: number;
+  offTime: number;
+};
+
 export type Period =
   | "1m"
   | "3m"
@@ -116,5 +139,6 @@ export type NotifyMessage =
   | { store: "transactions"; transactions: Transaction[] }
   | { store: "balance"; balance: Balance }
   | { store: "positions"; positions: Position[] }
+  | { store: "contracts"; contracts: Contracts[] }
   | { store: "klines"; symbol: string; period: Period; klines: KLine[] }
   | { store: "bots"; bots: Bot[] };

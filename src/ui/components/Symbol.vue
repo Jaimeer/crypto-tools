@@ -11,6 +11,7 @@ import KLineChart from "../components/KLineChart.vue";
 import { useBingXKLinesStore } from "../store/bingxKLines.store";
 import { useBingXPositionsStore } from "../store/bingxPositions.store";
 import { useBingXTradesStore } from "../store/bingxTrades.store";
+import { useBingXContractsStore } from "../store/bingxContracts.store";
 
 const props = defineProps<{ value: string }>();
 
@@ -22,6 +23,7 @@ const symbol = computed(() => {
 const bingXTradesStore = useBingXTradesStore();
 const bingXPositionsStore = useBingXPositionsStore();
 const bingXKLinesStore = useBingXKLinesStore();
+const bingXContractsStore = useBingXContractsStore();
 
 const isOpen = ref(false);
 
@@ -32,13 +34,27 @@ function openModal() {
   isOpen.value = true;
   bingXKLinesStore.fetchKLines(symbol.value, "15m");
 }
+const contract = computed(() => {
+  return bingXContractsStore.contracts.find((x) => x.symbol === symbol.value);
+});
 </script>
 
 <template>
-  <div class="cursor-pointer underline decoration-dotted" @click="openModal">
-    {{ value }}
-  </div>
+  <div class="flex items-center gap-1">
+    <div class="cursor-pointer underline decoration-dotted" @click="openModal">
+      {{ value }}
+    </div>
 
+    <span v-if="!contract" class="text-red-400"> no contract </span>
+    <template v-else>
+      <span v-if="contract?.apiStateOpen === 'false'" class="text-red-400">
+        open
+      </span>
+      <span v-if="contract?.apiStateClose === 'false'" class="text-red-400">
+        close
+      </span>
+    </template>
+  </div>
   <TransitionRoot appear :show="isOpen" as="template">
     <Dialog as="div" @close="closeModal" class="relative z-10">
       <TransitionChild

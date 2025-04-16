@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import { useBingXTransactionsStore } from "../../store/bingxTransactions.store";
 import Table from "../Table.vue";
 import Price from "../Price.vue";
 import Symbol from "../Symbol.vue";
+import Rescue from "../Rescue.vue";
 import { Icon } from "@iconify/vue";
 import { usePreferencesStore } from "../../store/preferences.store";
 import { useBingXTradesStore } from "../../store/bingxTrades.store";
 import { useBitkuaBotsStore } from "../../store/bitkuaBots.store";
 import { BitkuaActionUpdateStatus } from "../../../server/Bitkua.dto";
 import { useBingXPositionsStore } from "../../../ui/store/bingxPositions.store";
-import { Position } from "../../../server/BingX.dto";
 
 const bingXTradesStore = useBingXTradesStore();
 const bingXTransactionsStore = useBingXTransactionsStore();
@@ -55,8 +55,8 @@ const tradesInfo = computed(() => {
       if (!usedSymbols.value.includes(transaction.symbol)) {
         return acc;
       }
-      const symbol = transaction.symbol;
-      if (!acc[transaction.symbol]) {
+      const symbol = transaction.symbol.replace("-USDT", "");
+      if (!acc[symbol]) {
         acc[symbol] = {
           num: 0,
           pnl: 0,
@@ -87,12 +87,12 @@ const tradesInfo = computed(() => {
       }
 
       if (transaction.incomeType === "REALIZED_PNL") {
-        acc[transaction.symbol].num++;
-        acc[transaction.symbol].pnl += parseFloat(transaction.income);
+        acc[symbol].num++;
+        acc[symbol].pnl += parseFloat(transaction.income);
       } else {
-        acc[transaction.symbol].charges += parseFloat(transaction.income);
+        acc[symbol].charges += parseFloat(transaction.income);
       }
-      acc[transaction.symbol].all += parseFloat(transaction.income);
+      acc[symbol].all += parseFloat(transaction.income);
       return acc;
     },
     {} as Record<string, TradesInfo>,
@@ -102,7 +102,7 @@ const tradesInfo = computed(() => {
     if (!usedSymbols.value.includes(trade.symbol)) {
       return acc;
     }
-    const symbol = trade.symbol;
+    const symbol = trade.symbol.replace("-USDT", "");
     if (!acc[symbol]) {
       acc[symbol] = {
         num: 0,
@@ -153,7 +153,9 @@ const tradesInfo = computed(() => {
 
   bitkuaBotsStore.bots.forEach((bot) => {
     const symbol = bot.symbol.replace("USDT", "-USDT");
-    if (!usedSymbols.value.includes(symbol)) return;
+    const symbols = usedSymbols.value.map((x) => x.replace("-USDT", ""));
+
+    if (!symbols.includes(symbol)) return;
 
     const isShort = bot.strategy.includes("short");
 
@@ -187,6 +189,11 @@ const tradesInfo = computed(() => {
       };
     }
     const side = isShort ? "short" : "long";
+    // console.log({
+    //   symbol,
+    //   side,
+    //   bot,
+    // });
     data[symbol][side].amount = parseInt(bot?.amount || "0");
     data[symbol][side].botId = bot?.id || "";
     data[symbol][side].strategy = bot?.strategy || "";
@@ -194,6 +201,7 @@ const tradesInfo = computed(() => {
     data[symbol][side].orders = parseInt(bot?.orders || "0");
   });
 
+  console.log(data);
   return Object.entries(data)
     .map(([key, value]) => ({ key, ...value }))
     .sort(
@@ -209,27 +217,10 @@ const usedSymbols = computed(() => {
     .sort();
 });
 
-const investToToGap = (position: Position, desiredGap: number) => {
-  if (!position) return 0;
-  const markPrice = parseFloat(position.markPrice);
-  const avgOpenPrice = parseFloat(position.avgPrice);
-  const positionValue = parseFloat(position.positionValue);
-  const leverage = parseFloat(position.leverage);
-
-  const offset = (avgOpenPrice - markPrice) * (desiredGap / 100);
-  const newAvgOpenPrice = markPrice + offset;
-
-  const currentTokens = positionValue / markPrice;
-  const q =
-    (currentTokens * (avgOpenPrice - newAvgOpenPrice)) /
-    (newAvgOpenPrice / markPrice - 1);
-  return q / leverage;
-};
-
 const position = (symbol: string, side: string) => {
   return bingXPositionsStore.positions.find(
     (position) =>
-      position.symbol === symbol &&
+      position.symbol.replace("-USDT", "") === symbol &&
       position.positionSide === side.toUpperCase(),
   );
 };
@@ -307,9 +298,9 @@ const sendAction = (
       'RPNL',
       'charges',
       'profit',
-      'Long',
       'U_PNL',
-      'Rescue (leverage included)',
+      'Rescue (lev inc)',
+      'Long',
       'DK Bot (Long)',
       'Short',
       'U_PNL',
@@ -332,23 +323,6 @@ const sendAction = (
       </td>
       <td class="px-2 py-0.5"><Price :value="item.all" :decimals="2" /></td>
       <template v-for="side in sides" :key="side">
-        <td class="px-2 py-0.5">
-          <div class="flex gap-0.5">
-            <span class="text-amber-400">{{ item[side].open }}</span>
-            <span class="text-slate-600">/</span>
-            <span class="text-lime-400">{{ item[side].close }}</span>
-            <span class="text-slate-600">/</span>
-            <span
-              :class="{
-                'text-slate-400': item[side].currentOpen === 0,
-                'text-violet-400':
-                  item[side].currentOpen > 0 && item[side].currentOpen < 13,
-                'text-rose-400': item[side].currentOpen >= 13,
-              }"
-              >{{ item[side].currentOpen }}
-            </span>
-          </div>
-        </td>
         <td class="px-2 py-0.5">
           <div class="flex gap-1">
             <Price
@@ -398,17 +372,27 @@ const sendAction = (
           </div>
         </td>
         <td class="px-2 py-0.5">
-          <div class="flex gap-1">
-            <template v-for="gap in [5, 10, 50]" :key="gap">
-              <div v-if="investToToGap(position(item.key, side), gap) > 0">
-                {{ gap }}%[
-                <Price
-                  :value="investToToGap(position(item.key, side), gap)"
-                  :decimals="2"
-                  color="orange"
-                />]
-              </div>
-            </template>
+          <Rescue
+            :symbol="item.key.replace('-USDT', '')"
+            :side="side"
+            :allVisible="false"
+          />
+        </td>
+        <td class="px-2 py-0.5">
+          <div class="flex gap-0.5">
+            <!-- <span class="text-amber-400">{{ item[side].open }}</span>
+            <span class="text-slate-600">/</span>
+            <span class="text-lime-400">{{ item[side].close }}</span>
+            <span class="text-slate-600">/</span> -->
+            <span
+              :class="{
+                'text-slate-400': item[side].currentOpen === 0,
+                'text-violet-400':
+                  item[side].currentOpen > 0 && item[side].currentOpen < 13,
+                'text-rose-400': item[side].currentOpen >= 13,
+              }"
+              >{{ item[side].currentOpen }}
+            </span>
           </div>
         </td>
         <td class="flex items-center gap-1">

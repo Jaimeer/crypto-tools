@@ -11,6 +11,7 @@ import { useBingXTransactionsStore } from "../store/bingxTransactions.store";
 import { useBingXTradesStore } from "../store/bingxTrades.store";
 import { useBingXPositionsStore } from "../store/bingxPositions.store";
 import Price from "./Price.vue";
+import Rescue from "./Rescue.vue";
 import NumTrades from "./NumTrades.vue";
 import { BitkuaActionUpdateStatus } from "../../server/Bitkua.dto";
 import { useBitkuaBotsStore } from "../store/bitkuaBots.store";
@@ -226,31 +227,6 @@ const calculateNewAvgOpenPrice = (position: Position, desiredGap: number) => {
   const offset = (avgOpenPrice - markPrice) * (desiredGap / 100);
   const newAvgOpenPrice = markPrice + offset;
   return newAvgOpenPrice;
-};
-
-const investToToGap = (position: Position, desiredGap: number) => {
-  if (!position) return 0;
-  const markPrice = parseFloat(position.markPrice);
-  const avgOpenPrice = parseFloat(position.avgPrice);
-  const positionValue = parseFloat(position.positionValue);
-  const leverage = parseFloat(position.leverage);
-
-  const offset = (avgOpenPrice - markPrice) * (desiredGap / 100);
-  const newAvgOpenPrice = markPrice + offset;
-
-  const currentTokens = positionValue / markPrice;
-  const q =
-    (currentTokens * (avgOpenPrice - newAvgOpenPrice)) /
-    (newAvgOpenPrice / markPrice - 1);
-  return q / leverage;
-};
-
-const position = (symbol: string, side: string) => {
-  return bingXPositionsStore.positions.find(
-    (position) =>
-      position.symbol === symbol &&
-      position.positionSide === side.toUpperCase(),
-  );
 };
 
 onMounted(async () => {
@@ -600,40 +576,7 @@ watch(
                   icon="ic:round-warning"
                 />
               </div>
-              <div class="flex gap-1">
-                <template v-for="gap in [5, 10, 50]" :key="gap">
-                  <div
-                    v-if="
-                      investToToGap(
-                        bingXPositionsStore.positions.filter((position) => {
-                          return (
-                            position.symbol === symbol &&
-                            position.positionSide === side.toUpperCase()
-                          );
-                        })[0],
-                        gap,
-                      ) > 0
-                    "
-                  >
-                    {{ gap }}%[
-                    <Price
-                      :value="
-                        investToToGap(
-                          bingXPositionsStore.positions.filter((position) => {
-                            return (
-                              position.symbol === symbol &&
-                              position.positionSide === side.toUpperCase()
-                            );
-                          })[0],
-                          gap,
-                        )
-                      "
-                      :decimals="2"
-                      color="orange"
-                    />]
-                  </div>
-                </template>
-              </div>
+              <Rescue :symbol="symbol" :side="side" :allVisible="true" />
             </div>
           </div>
         </div>

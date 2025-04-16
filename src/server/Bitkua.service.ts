@@ -363,19 +363,28 @@ export class BitkuaService {
         .each((j, cell) => {
           switch (j) {
             case 0:
-              rowData.id = $(cell).text().trim();
-              break;
-            case 1:
               rowData.orders = $(cell).text().trim();
               break;
+            case 1:
+              rowData.symbol = $(cell).text().trim().replace("USDT", "");
+              break;
             case 2:
-              rowData.symbol = $(cell).text().trim();
+              // rowData.symbol = $(cell).text().trim();
               break;
             case 3:
               rowData.amount = $(cell).find("input").val().toString();
               break;
             case 4:
-              // rowData.token = $(cell).text().trim();
+              {
+                const tokenSpan = $(cell).find('span[id^="token_"]');
+                if (tokenSpan.length > 0) {
+                  const spanId = tokenSpan.attr("id") || "";
+                  const botIdMatch = spanId.match(/token_(\d+)/);
+                  if (botIdMatch && botIdMatch[1]) {
+                    rowData.id = botIdMatch[1];
+                  }
+                }
+              }
               break;
             case 5:
               {

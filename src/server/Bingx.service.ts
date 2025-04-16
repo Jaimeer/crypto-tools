@@ -1,6 +1,7 @@
 import { BrowserWindow } from "electron";
 import {
   Balance,
+  Contract,
   KLine,
   NotifyMessage,
   Period,
@@ -31,12 +32,14 @@ export class BingXService {
     >;
     balance: Balance | undefined;
     positions: Position[];
+    contracts: Contract[];
   } = {
     transactions: [],
     trades: [],
     kLines: {},
     balance: undefined,
     positions: [],
+    contracts: [],
   };
 
   constructor(apiKey: string, apiSecret: string) {
@@ -92,6 +95,7 @@ export class BingXService {
     this.data.trades = await this.restClient.fetchTrades(this.data.trades);
     this.data.balance = await this.restClient.fetchBalance();
     this.data.positions = await this.restClient.fetchPositions();
+    this.data.contracts = await this.restClient.fetchContracts();
 
     this.notifyClients({
       store: "transactions",
@@ -100,6 +104,7 @@ export class BingXService {
     this.notifyClients({ store: "trades", trades: this.data.trades });
     this.notifyClients({ store: "balance", balance: this.data.balance });
     this.notifyClients({ store: "positions", positions: this.data.positions });
+    this.notifyClients({ store: "contracts", contracts: this.data.contracts });
   }
 
   async loadSymbolKLines(symbol: string, period: Period) {

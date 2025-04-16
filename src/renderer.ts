@@ -10,6 +10,7 @@ import { useBingXTransactionsStore } from "./ui/store/bingxTransactions.store";
 import { useBingXTradesStore } from "./ui/store/bingxTrades.store";
 import { useBingXBalanceStore } from "./ui/store/bingxBalance.store";
 import { useBingXPositionsStore } from "./ui/store/bingxPositions.store";
+import { useBingXContractsStore } from "./ui/store/bingxContracts.store";
 import { useBingXKLinesStore } from "./ui/store/bingxKLines.store";
 import { useBitkuaBotsStore } from "./ui/store/bitkuaBots.store";
 
@@ -25,6 +26,7 @@ const transactionsStore = useBingXTransactionsStore();
 const tradesStore = useBingXTradesStore();
 const balanceStore = useBingXBalanceStore();
 const positionsStore = useBingXPositionsStore();
+const contractsStore = useBingXContractsStore();
 const klineStore = useBingXKLinesStore();
 const botsStore = useBitkuaBotsStore();
 
@@ -42,6 +44,9 @@ const updateDataHandler = (message: NotifyMessage) => {
       break;
     case "positions":
       positionsStore.processMessage(message.positions);
+      break;
+    case "contracts":
+      contractsStore.processMessage(message.contracts);
       break;
     case "klines":
       klineStore.processMessage(message.symbol, message.period, message.klines);

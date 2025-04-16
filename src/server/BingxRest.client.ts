@@ -4,6 +4,7 @@ import CryptoJS from "crypto-js";
 import { limiter } from "../utils/apiLimiter";
 import {
   Balance,
+  Contract,
   KLine,
   ListenKey,
   Period,
@@ -296,6 +297,18 @@ export class BingXRestClient {
     const balance = await this.bingXRequest<Balance[]>(API);
     console.log(`[fetchBalance] Fetched balance ${!!balance}`);
     return balance.find((x) => x.asset === "USDT");
+  }
+
+  async fetchContracts(): Promise<Contract[]> {
+    const API: BingXApiRequest = {
+      path: "/openApi/swap/v2/quote/contracts",
+      method: "GET",
+      payload: {},
+      protocol: "https",
+    };
+    const contracts = await this.bingXRequest<Contract[]>(API);
+    console.log(`[fetchContracts] Fetched contracts ${!!contracts}`);
+    return contracts;
   }
 
   async fetchPositions(): Promise<Position[]> {
