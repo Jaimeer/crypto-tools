@@ -378,7 +378,16 @@ export class BitkuaService {
               // rowData.token = $(cell).text().trim();
               break;
             case 5:
-              rowData.strategy = $(cell).text().trim();
+              {
+                const selectedOption = $(cell).find("select option[selected]");
+                rowData.strategy =
+                  selectedOption.length > 0
+                    ? selectedOption.val().toString()
+                    : $(cell)
+                        .find("select option:first-child")
+                        .val()
+                        .toString();
+              }
               break;
             case 6:
               rowData.status = $(cell).text().trim();

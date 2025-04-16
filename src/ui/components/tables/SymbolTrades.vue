@@ -412,42 +412,46 @@ const sendAction = (
           </div>
         </td>
         <td class="flex items-center gap-1">
-          <span class="text-slate-600">{{ item[side].botId }}</span>
-          <span
-            :class="{
-              'text-slate-400': item[side].status === 'active',
-              'text-slate-600 line-through': item[side].status === 'stop',
-              'text-amber-600': item[side].status === 'onlysell',
-            }"
-            v-tooltip="strategyName(item[side].strategy)"
-            >{{ strategyNameShort(item[side].strategy) }}</span
-          >
-          <span class="text-blue-400">[{{ item[side].amount }}]</span>
-          <span
-            :class="{
-              'text-slate-400': item[side].orders === 0,
-              'text-lime-400': item[side].orders > 0 && item[side].orders < 14,
-              'text-red-400': item[side].orders >= 13,
-            }"
-          >
-            [{{ item[side].orders }}]
-          </span>
-          <button
-            v-for="status in status"
-            class="cursor-pointer rounded px-1 text-xs transition disabled:cursor-default"
-            :class="{
-              'text-green-600 hover:text-green-400 disabled:bg-green-900 disabled:text-green-200':
-                status === 'active',
-              'text-red-600 hover:text-red-400 disabled:bg-red-900 disabled:text-red-200':
-                status === 'stop',
-              'text-amber-600 hover:text-amber-400 disabled:bg-amber-900 disabled:text-amber-200':
-                status === 'onlysell',
-            }"
-            :disabled="item[side].status === status"
-            @click="sendAction(item[side].botId, status)"
-          >
-            {{ status }}
-          </button>
+          <div v-if="!item[side].botId" class="text-slate-400">---</div>
+          <template v-else>
+            <span class="text-slate-600">{{ item[side].botId }}</span>
+            <span
+              :class="{
+                'text-slate-400': item[side].status === 'active',
+                'text-slate-600 line-through': item[side].status === 'stop',
+                'text-amber-600': item[side].status === 'onlysell',
+              }"
+              v-tooltip="strategyName(item[side].strategy)"
+              >{{ strategyNameShort(item[side].strategy) }}</span
+            >
+            <span class="text-blue-400">[{{ item[side].amount }}]</span>
+            <span
+              :class="{
+                'text-slate-400': item[side].orders === 0,
+                'text-lime-400':
+                  item[side].orders > 0 && item[side].orders < 14,
+                'text-red-400': item[side].orders >= 13,
+              }"
+            >
+              [{{ item[side].orders }}]
+            </span>
+            <button
+              v-for="status in status"
+              class="cursor-pointer rounded px-1 text-xs transition disabled:cursor-default"
+              :class="{
+                'text-green-600 hover:text-green-400 disabled:bg-green-900 disabled:text-green-200':
+                  status === 'active',
+                'text-red-600 hover:text-red-400 disabled:bg-red-900 disabled:text-red-200':
+                  status === 'stop',
+                'text-amber-600 hover:text-amber-400 disabled:bg-amber-900 disabled:text-amber-200':
+                  status === 'onlysell',
+              }"
+              :disabled="item[side].status === status"
+              @click="sendAction(item[side].botId, status)"
+            >
+              {{ status }}
+            </button>
+          </template>
         </td>
       </template>
     </template>

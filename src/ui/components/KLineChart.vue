@@ -413,12 +413,12 @@ watch(
     class="relative flex flex-col rounded border border-gray-600 p-4 text-slate-400"
     v-element-size="updateChartSize"
     :class="{
-      'border-t-green-600 border-l-green-600': bot.long.status === 'active',
-      'border-t-red-600 border-l-red-600': bot.long.status === 'stop',
-      'border-t-amber-600 border-l-amber-600': bot.long.status === 'onlysell',
-      'border-r-green-600 border-b-green-600': bot.short.status === 'active',
-      'border-r-red-600 border-b-red-600': bot.short.status === 'stop',
-      'border-r-amber-600 border-b-amber-600': bot.short.status === 'onlysell',
+      'border-t-green-600 border-l-green-600': bot.long?.status === 'active',
+      'border-t-red-600 border-l-red-600': bot.long?.status === 'stop',
+      'border-t-amber-600 border-l-amber-600': bot.long?.status === 'onlysell',
+      'border-r-green-600 border-b-green-600': bot.short?.status === 'active',
+      'border-r-red-600 border-b-red-600': bot.short?.status === 'stop',
+      'border-r-amber-600 border-b-amber-600': bot.short?.status === 'onlysell',
     }"
   >
     <!-- {{ trades.length }} - {{ filteredTrades.length }} -->
@@ -474,21 +474,21 @@ watch(
               >
                 {{ side }}
               </span>
-              <span class="text-blue-400">[{{ bot[side].amount }}]</span>
+              <span class="text-blue-400">[{{ bot[side]?.amount }}]</span>
               <span
                 :class="{
-                  'text-slate-400': parseInt(bot[side].orders) === 0,
+                  'text-slate-400': parseInt(bot[side]?.orders) === 0,
                   'text-lime-400':
-                    parseInt(bot[side].orders) > 0 &&
-                    parseInt(bot[side].orders) < 14,
-                  'text-red-400': parseInt(bot[side].orders) >= 13,
+                    parseInt(bot[side]?.orders) > 0 &&
+                    parseInt(bot[side]?.orders) < 14,
+                  'text-red-400': parseInt(bot[side]?.orders) >= 13,
                 }"
               >
-                [{{ bot[side].orders }}]
+                [{{ bot[side]?.orders }}]
               </span>
             </div>
             <div class="text-slate-400">
-              {{ strategyName(bot[side].strategy) }}
+              {{ strategyName(bot[side]?.strategy) }}
             </div>
             <div>
               <button
@@ -502,8 +502,8 @@ watch(
                   'px-1 text-amber-600 hover:text-amber-400 disabled:bg-amber-900 disabled:text-amber-200':
                     status === 'onlysell',
                 }"
-                :disabled="bot[side].status === status"
-                @click="sendAction(bot[side].id, status)"
+                :disabled="bot[side]?.status === status"
+                @click="sendAction(bot[side]?.id, status)"
               >
                 {{ status.slice(0, 1).toUpperCase() }}
               </button>
