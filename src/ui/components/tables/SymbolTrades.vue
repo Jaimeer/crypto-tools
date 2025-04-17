@@ -298,9 +298,9 @@ const sendAction = (
       'Rescue (lev inc)',
       'Long',
       'DK Bot (Long)',
-      'Short',
       'U_PNL',
-      'Rescue',
+      'Rescue (lev inc)',
+      'Short',
       'DK Bot (Short)',
     ]"
     :items="tradesInfo"
