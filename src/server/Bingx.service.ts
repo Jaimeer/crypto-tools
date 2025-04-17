@@ -13,12 +13,14 @@ import { v4 as uuidv4 } from "uuid";
 import { BingXRestClient } from "./BingxRest.client";
 import { BingXWebSocket } from "./BingxWebSocket.client";
 import { KLineDataEvent, WebSocketMessage } from "./BingX.ws.dto";
+import { CacheService } from "./Cache.service";
 
 const klineRegex = /^([A-Z0-9]*-[A-Z0-9]*)?@kline_([1-9]*[mhdwM]*)?$/;
 
 export class BingXService {
   private readonly restClient: BingXRestClient;
   private readonly wsClient: BingXWebSocket;
+  private readonly cacheService: CacheService;
   private refreshInterval: NodeJS.Timeout | null = null;
   private data: {
     transactions: Transaction[];
@@ -51,6 +53,7 @@ export class BingXService {
         this.restClient,
         this.handleWebSocketMessage.bind(this),
       );
+    this.cacheService = new CacheService();
   }
 
   setCredentials(apiKey: string, apiSecret: string) {
@@ -60,11 +63,11 @@ export class BingXService {
 
   startAutoRefresh(intervalMs = 60000) {
     this.stopAutoRefresh();
-    this.loadInitDate();
+    this.loadData();
 
     this.refreshInterval = setInterval(async () => {
       try {
-        await this.loadInitDate();
+        await this.loadData();
       } catch (error) {
         console.error("BingxService auto-refresh failed:", error);
       }
@@ -87,8 +90,21 @@ export class BingXService {
     }
   }
 
-  private async loadInitDate() {
-    console.log("loadInitDate");
+  private async loadData() {
+    console.log("loadData");
+    if (!this.data.transactions.length) {
+      const cachedData = await this.cacheService.loadTransactions();
+      this.data.transactions = cachedData?.data ?? [];
+
+      console.log({ transactions: cachedData?.data?.length });
+    }
+    if (!this.data.trades.length) {
+      const cachedData = await this.cacheService.loadTrades();
+      this.data.trades = cachedData?.data ?? [];
+
+      console.log({ trades: cachedData?.data?.length });
+    }
+
     this.data.transactions = await this.restClient.fetchTransactions(
       this.data.transactions,
     );
@@ -96,6 +112,9 @@ export class BingXService {
     this.data.balance = await this.restClient.fetchBalance();
     this.data.positions = await this.restClient.fetchPositions();
     this.data.contracts = await this.restClient.fetchContracts();
+
+    await this.cacheService.saveTransactions(this.data.transactions);
+    await this.cacheService.saveTrades(this.data.trades);
 
     this.notifyClients({
       store: "transactions",
