@@ -146,7 +146,7 @@ export class BingXRestClient {
       : undefined;
     let endTime = Date.now();
     const startTime = newestTransaction
-      ? newestTransaction + 1
+      ? newestTransaction + 1000
       : subYears(new Date(), 10).getTime();
     let hasMoreData = true;
     let page = 1;
