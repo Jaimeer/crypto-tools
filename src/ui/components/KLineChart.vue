@@ -357,6 +357,8 @@ const strategyName = (strategy: string) => {
       shortaiexpertavgplus: "AIP",
       lamilagrosa: "LMG",
       shortlamilagrosa: "LMG",
+      lamilagrosapro: "LMP",
+      shortlamilagrosapro: "LMP",
       pmd: "PMD",
       shortpmd: "PMD",
       degen: "DGN",

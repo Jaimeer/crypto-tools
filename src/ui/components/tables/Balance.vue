@@ -138,6 +138,7 @@ const parseValue = (value: number | string | undefined) => {
               totalIncomeTransactions +
               parseFloat(balance?.unrealizedProfit)
             "
+            :decimals="2"
           />
 
           <Price
