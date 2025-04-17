@@ -201,7 +201,6 @@ const tradesInfo = computed(() => {
     data[symbol][side].orders = parseInt(bot?.orders || "0");
   });
 
-  console.log(data);
   return Object.entries(data)
     .map(([key, value]) => ({ key, ...value }))
     .sort((a, b) => a.key.localeCompare(b.key));

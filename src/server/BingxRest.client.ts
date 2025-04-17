@@ -58,6 +58,10 @@ export class BingXRestClient {
     return parameters;
   }
 
+  private sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
   private async bingXRequest<T>(API: BingXApiRequest) {
     const timestamp = new Date().getTime();
     const sign = CryptoJS.enc.Hex.stringify(
@@ -79,7 +83,7 @@ export class BingXRestClient {
       // data: API.method === "POST" ? API.payload : undefined,
     };
     // console.log(config);
-    return await limiter.schedule(async () => {
+    return await limiter.schedule(async (): Promise<T> => {
       try {
         const resp = await axios.request<{
           code: number;
@@ -125,7 +129,15 @@ export class BingXRestClient {
 
         return obj.data;
       } catch (error: any) {
-        console.error("BingX API request error:", error.message);
+        if (error.response.status === 429) {
+          console.error("BingX API request error:", error.message);
+          if (error.response.data.code === 100410) {
+            console.error("Retry connection after 1 second");
+            await this.sleep(1000);
+            return this.bingXRequest<T>(API);
+          }
+        }
+        console.error("BingX API request error:", error.response.data);
         return;
       }
     });

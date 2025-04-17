@@ -1,6 +1,6 @@
 import Bottleneck from "bottleneck";
 
-const numRequestSec = 1; // Max 5
+const numRequestSec = 10; // Max 5
 // Bottleneck configuration: at most 10 calls per second
 
 const singletonLimiter = new Bottleneck({

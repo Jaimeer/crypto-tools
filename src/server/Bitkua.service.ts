@@ -183,11 +183,11 @@ export class BitkuaService {
     );
 
     // Log all cookies after login for debugging
-    const cookiesInJar = this.jar.getCookiesSync("https://app.bitkua.com");
-    console.log(`Cookies after login (${cookiesInJar.length}):`);
-    cookiesInJar.forEach((cookie) => {
-      console.log(`- ${cookie.key}=${cookie.value}`);
-    });
+    // const cookiesInJar = this.jar.getCookiesSync("https://app.bitkua.com");
+    // console.log(`Cookies after login (${cookiesInJar.length}):`);
+    // cookiesInJar.forEach((cookie) => {
+    //   console.log(`- ${cookie.key}=${cookie.value}`);
+    // });
 
     return {
       success:
@@ -242,11 +242,11 @@ export class BitkuaService {
     );
 
     // Log all cookies after 2FA for debugging
-    const cookiesInJar = this.jar.getCookiesSync("https://app.bitkua.com");
-    console.log(`Cookies after 2FA (${cookiesInJar.length}):`);
-    cookiesInJar.forEach((cookie) => {
-      console.log(`- ${cookie.key}=${cookie.value}`);
-    });
+    // const cookiesInJar = this.jar.getCookiesSync("https://app.bitkua.com");
+    // console.log(`Cookies after 2FA (${cookiesInJar.length}):`);
+    // cookiesInJar.forEach((cookie) => {
+    //   console.log(`- ${cookie.key}=${cookie.value}`);
+    // });
 
     // Check if verification was successful (redirected to dashboard)
     const isSuccessful =
@@ -272,13 +272,13 @@ export class BitkuaService {
     );
 
     // Log all cookies before dashboard request
-    const cookiesBeforeDashboard = this.jar.getCookiesSync(
-      "https://app.bitkua.com",
-    );
-    console.log(`Cookies before dashboard (${cookiesBeforeDashboard.length}):`);
-    cookiesBeforeDashboard.forEach((cookie) => {
-      console.log(`- ${cookie.key}=${cookie.value}`);
-    });
+    // const cookiesBeforeDashboard = this.jar.getCookiesSync(
+    //   "https://app.bitkua.com",
+    // );
+    // console.log(`Cookies before dashboard (${cookiesBeforeDashboard.length}):`);
+    // cookiesBeforeDashboard.forEach((cookie) => {
+    //   console.log(`- ${cookie.key}=${cookie.value}`);
+    // });
 
     // First, fetch dashboard
     console.log("Fetching dashboard...");
