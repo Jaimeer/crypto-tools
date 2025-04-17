@@ -204,11 +204,7 @@ const tradesInfo = computed(() => {
   console.log(data);
   return Object.entries(data)
     .map(([key, value]) => ({ key, ...value }))
-    .sort(
-      (a, b) =>
-        Math.max(b.long.currentOpen, b.short.currentOpen) -
-        Math.max(a.long.currentOpen, a.short.currentOpen),
-    );
+    .sort((a, b) => a.key.localeCompare(b.key));
 });
 
 const usedSymbols = computed(() => {

@@ -139,6 +139,20 @@ const parseValue = (value: number | string | undefined) => {
               parseFloat(balance?.unrealizedProfit)
             "
           />
+
+          <Price
+            v-if="balance"
+            class="text-[8px]"
+            :value="
+              ((parseFloat(balance?.balance) -
+                totalIncomeTransactions +
+                parseFloat(balance?.unrealizedProfit)) *
+                100) /
+              (parseFloat(balance?.balance) - totalIncomeTransactions)
+            "
+            :decimals="2"
+            suffix="%"
+          />
         </td>
       </tr>
       <tr
