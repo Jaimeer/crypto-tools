@@ -2,6 +2,7 @@ import { app } from "electron";
 import fs from "fs/promises";
 import path from "path";
 import { Trade, Transaction } from "./BingX.dto";
+import { CompressLib } from "../utils/CompressLib";
 
 export interface CachedData<T> {
   lastUpdated: number;
@@ -65,7 +66,11 @@ export class CacheService {
     data: CachedData<T>,
   ): Promise<void> {
     try {
-      await fs.writeFile(filePath, JSON.stringify(data), "utf8");
+      await fs.writeFile(
+        filePath,
+        await CompressLib.compressString(JSON.stringify(data)),
+        "utf8",
+      );
       console.log(`Cache saved to ${filePath}`);
     } catch (error) {
       console.error(`Failed to write cache to ${filePath}:`, error);
@@ -75,7 +80,9 @@ export class CacheService {
   private async readCache<T>(filePath: string): Promise<CachedData<T> | null> {
     try {
       const data = await fs.readFile(filePath, "utf8");
-      return JSON.parse(data) as CachedData<T>;
+      return JSON.parse(
+        await CompressLib.decompressString(data),
+      ) as CachedData<T>;
     } catch (error) {
       // File doesn't exist or contains invalid JSON
       console.log(`No valid cache found at ${filePath}`);
