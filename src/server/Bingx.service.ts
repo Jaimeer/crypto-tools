@@ -46,19 +46,24 @@ export class BingXService {
 
   constructor(apiKey: string, apiSecret: string) {
     console.log("BingXService constructor ");
-    if (!this.restClient)
+    if (!this.restClient) {
       this.restClient = new BingXRestClient(apiKey, apiSecret);
+    }
     if (!this.wsClient)
       this.wsClient = new BingXWebSocket(
         this.restClient,
         this.handleWebSocketMessage.bind(this),
       );
     this.cacheService = new CacheService();
+    if (apiKey && apiSecret) {
+      this.cacheService.setHashCode(this.restClient.hashCode);
+    }
   }
 
   setCredentials(apiKey: string, apiSecret: string) {
     this.restClient.setCredentials(apiKey, apiSecret);
     this.wsClient.updateListenKey();
+    this.cacheService.setHashCode(this.restClient.hashCode);
   }
 
   startAutoRefresh(intervalMs = 60000) {

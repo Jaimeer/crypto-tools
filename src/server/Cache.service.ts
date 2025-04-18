@@ -1,6 +1,6 @@
 import { app } from "electron";
 import fs from "fs/promises";
-import path from "path";
+import path from "node:path";
 import { Trade, Transaction } from "./BingX.dto";
 import { CompressLib } from "../utils/CompressLib";
 
@@ -14,7 +14,10 @@ export class CacheService {
 
   constructor() {
     // Use user data directory for persistent storage across app updates
-    this.cacheDir = path.join(app.getPath("userData"), "data-cache");
+  }
+
+  setHashCode(hashCode: string): void {
+    this.cacheDir = path.join(app.getPath("userData"), "data-cache", hashCode);
     console.log("Cache dir: ", this.cacheDir);
     this.ensureCacheDirectory();
   }
@@ -22,10 +25,6 @@ export class CacheService {
   private async ensureCacheDirectory(): Promise<void> {
     try {
       await fs.mkdir(this.cacheDir, { recursive: true });
-      console.log(
-        "FOLDER Cache directory created or already exists:",
-        this.cacheDir,
-      );
     } catch (error) {
       console.error("Failed to create cache directory:", error);
     }

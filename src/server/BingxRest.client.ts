@@ -13,6 +13,7 @@ import {
   Transaction,
 } from "./BingX.dto";
 import { subYears } from "date-fns";
+import { HashLib } from "../utils/HashLib";
 
 export type BingXApiRequest = {
   path: string;
@@ -34,6 +35,15 @@ export class BingXRestClient {
   setCredentials(apiKey: string, apiSecret: string) {
     this.API_KEY = apiKey;
     this.API_SECRET = apiSecret;
+  }
+
+  get hashCode() {
+    return HashLib.generateHash(
+      JSON.stringify({
+        API_KEY: this.API_KEY,
+        API_SECRET: this.API_SECRET,
+      }),
+    );
   }
 
   private getParameters(
