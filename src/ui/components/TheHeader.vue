@@ -42,7 +42,7 @@ watch(selectedSymbols, () => {
       >
         Dashboard
       </RouterLink>
-      <RouterLink
+      <!-- <RouterLink
         to="/charts"
         class="rounded bg-slate-500 px-4 py-1 text-white transition hover:bg-slate-600"
       >
@@ -53,7 +53,7 @@ watch(selectedSymbols, () => {
         @click="openChartsWindow"
       >
         New Window
-      </button>
+      </button> -->
       <slot name="left" />
     </div>
     <div class="flex items-center gap-2">

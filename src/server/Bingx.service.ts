@@ -176,6 +176,12 @@ export class BingXService {
           }
         });
 
+        // console.log(symbol, {
+        //   ini: this.data.kLines[symbol].data[0].close,
+        //   end: this.data.kLines[symbol].data[
+        //     this.data.kLines[symbol].data.length - 1
+        //   ].close,
+        // });
         this.notifyClients({
           store: "klines",
           symbol,
@@ -187,21 +193,33 @@ export class BingXService {
   }
 
   private handleWebSocketMessage(message: WebSocketMessage) {
+    const logMessage = false;
     if ("e" in message) {
       if (message.e === "SNAPSHOT") {
         //console.log("TODO", message.e);
         return;
       }
       if (message.e === "TRADE_UPDATE") {
-        console.log("TODO", message.e);
+        console.log(
+          "TODO[TRADE_UPDATE]",
+          logMessage && JSON.stringify(message, null, 2),
+        );
+
         return;
       }
       if (message.e === "ORDER_TRADE_UPDATE") {
-        console.log("TODO", message.e);
+        console.log(
+          "TODO[ORDER_TRADE_UPDATE]",
+          logMessage && JSON.stringify(message, null, 2),
+        );
+        this.startAutoRefresh();
         return;
       }
       if (message.e === "ACCOUNT_UPDATE") {
-        console.log("TODO", message);
+        console.log(
+          "TODO[ACCOUNT_UPDATE]",
+          logMessage && JSON.stringify(message, null, 2),
+        );
         return;
       }
     }
