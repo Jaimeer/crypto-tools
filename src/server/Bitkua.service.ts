@@ -111,17 +111,17 @@ export class BitkuaService {
     }
 
     try {
-      console.log("Fetching promotional banners...");
-      const bannersResult = await this.fetchPromotionalBanners();
+      console.log("Fetching dk-bots...");
+      const bannersResult = await this.fetchDkBots();
       if (!bannersResult.success) {
-        console.error("Failed to fetch promotional banners");
+        console.error("Failed to fetch dk-bots");
         return {
           success: false,
           stage: "banners",
           message: "Failed to fetch banners",
         };
       }
-      console.log("Successfully fetched promotional banners");
+      console.log("Successfully fetched dk-bots");
 
       // Process the data
       const bots = this.scrapeBotData(bannersResult.data);
@@ -260,7 +260,7 @@ export class BitkuaService {
     };
   }
 
-  private async fetchPromotionalBanners() {
+  private async fetchDkBots() {
     // Create axios instance using the same cookie jar
     const axiosInstance = wrapper(
       axios.create({
@@ -295,10 +295,10 @@ export class BitkuaService {
       };
     }
 
-    // Now fetch promotional banners
-    console.log("Fetching promotional banners...");
+    // Now fetch dk-bots
+    console.log("Fetching dk-bots...");
     const bannersResponse = await axiosInstance.get(
-      "https://app.bitkua.com/user/promotional-banners",
+      "https://app.bitkua.com/user/dk-bot",
       {
         headers: {
           Referer: "https://app.bitkua.com/user/dashboard",
@@ -331,7 +331,7 @@ export class BitkuaService {
         {
           method: "POST",
           headers: {
-            Referer: "https://app.bitkua.com/user/promotional-banners",
+            Referer: "https://app.bitkua.com/user/dk-bot",
           },
           data: {
             action: "update_status",
