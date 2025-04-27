@@ -12,6 +12,7 @@ import {
   Position,
   Trade,
 } from "../../../server/data.dto";
+import { Icon } from "@iconify/vue";
 
 defineProps<{
   exchange: string;
@@ -52,8 +53,14 @@ const lastClosedTransactions = computed(() => {
           :contracts="contracts"
         />
       </td>
-      <td class="px-2 py-0.5">
+      <td class="flex items-center px-2 py-0.5">
         <Price :value="item.income" :decimals="2" />
+        <Icon
+          v-if="item.info.startsWith('Sell')"
+          icon="majesticons:arrow-up-line"
+          class="text-green-400"
+        />
+        <Icon v-else icon="majesticons:arrow-down-line" class="text-red-400" />
       </td>
     </template>
   </Table>

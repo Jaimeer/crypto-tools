@@ -15,6 +15,7 @@ import {
   Trade,
   Transaction,
 } from "../../../server/data.dto";
+import { Icon } from "@iconify/vue";
 
 const props = defineProps<{
   exchange: string;
@@ -31,6 +32,8 @@ const props = defineProps<{
 
 type PriceData = {
   num: number;
+  numLong: number;
+  numShort: number;
   pnl: number;
   all: number;
   charges: number;
@@ -51,6 +54,8 @@ const transactionsBySymbol = computed(() => {
       if (!acc[date][symbol])
         acc[date][symbol] = {
           num: 0,
+          numLong: 0,
+          numShort: 0,
           pnl: 0,
           all: 0,
           charges: 0,
@@ -59,6 +64,8 @@ const transactionsBySymbol = computed(() => {
         };
       if (transaction.incomeType === "REALIZED_PNL") {
         acc[date][symbol].num++;
+        if (transaction.info.startsWith("Sell")) acc[date][symbol].numLong++;
+        if (transaction.info.startsWith("Buy")) acc[date][symbol].numShort++;
         acc[date][symbol].pnl += parseFloat(transaction.income);
       } else {
         acc[date][symbol].charges += parseFloat(transaction.income);
@@ -116,7 +123,7 @@ const usedSymbols = computed(() => {
     </template>
     <template #default="{ item }">
       <td class="px-2 py-0.5">{{ item.key }}</td>
-      <td class="bg-slate-900 px-2 py-0.5">
+      <td class="flex items-center gap-1 bg-slate-900 px-2 py-0.5">
         <Price :value="item.total" />
         <NumTrades :num="item.num" />
       </td>
@@ -127,11 +134,46 @@ const usedSymbols = computed(() => {
       >
         <template v-if="item.symbols[symbol]">
           <VDropdown>
-            <Price :value="item.symbols[symbol].all" />
-            <NumTrades :num="item.symbols[symbol].num" />
-            <span class="text-[10px] text-slate-600">
-              {{ item.symbols[symbol].transactions.length }}
-            </span>
+            <div class="flex items-center gap-1">
+              <Price :value="item.symbols[symbol].all" />
+              <NumTrades :num="item.symbols[symbol].num">
+                <template #suffix>
+                  <Icon
+                    v-if="
+                      item.symbols[symbol].numLong > 0 &&
+                      item.symbols[symbol].numShort === 0
+                    "
+                    icon="mdi:arrow-up"
+                    class="text-green-400"
+                  />
+                  <Icon
+                    v-if="
+                      item.symbols[symbol].numLong === 0 &&
+                      item.symbols[symbol].numShort > 0
+                    "
+                    icon="mdi:arrow-down"
+                    class="text-red-400"
+                  />
+                </template>
+              </NumTrades>
+              <template
+                v-if="
+                  item.symbols[symbol].numLong > 0 &&
+                  item.symbols[symbol].numShort > 0
+                "
+              >
+                <div class="flex items-center gap-0 text-[10px] text-green-400">
+                  {{ item.symbols[symbol].numLong }}
+                </div>
+                <div class="flex items-center gap-0 text-[10px] text-red-400">
+                  {{ item.symbols[symbol].numShort }}
+                </div>
+              </template>
+
+              <span class="text-[10px] text-slate-600">
+                {{ item.symbols[symbol].transactions.length }}
+              </span>
+            </div>
             <template #popper>
               <div v-close-popper>
                 <Table
