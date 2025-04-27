@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import Price from "./Price.vue";
-import { useBingXPositionsStore } from "../../ui/store/bingxPositions.store";
+import { useBingXPositionsStore } from "../store/bingx/bingxPositions.store";
 
 import { useElementHover } from "@vueuse/core";
 import { useTemplateRef } from "vue";
@@ -12,13 +12,13 @@ const props = defineProps<{
   allVisible: boolean;
 }>();
 
-const bingXPositionsStore = useBingXPositionsStore();
+const bingxPositionsStore = useBingXPositionsStore();
 
 const myHoverableElement = useTemplateRef<HTMLButtonElement>("rescueElement");
 const isHovered = useElementHover(myHoverableElement);
 
 const position = computed(() => {
-  return bingXPositionsStore.positions.find(
+  return bingxPositionsStore.positions.find(
     (position) =>
       position.symbol.replace("-USDT", "") ===
         props.symbol.replace("-USDT", "") &&

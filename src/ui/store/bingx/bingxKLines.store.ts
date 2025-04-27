@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { KLine, Period } from "../../server/BingX.dto";
+import { KLine, Period } from "../../../server/data.dto";
 
 type State = {
   klines: Record<string, { period: Period; data: KLine[] }>;

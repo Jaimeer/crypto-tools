@@ -6,22 +6,22 @@ import { addMonths, subDays, subHours } from "date-fns";
 import { Icon } from "@iconify/vue";
 import { simpleAnnotationDown } from "./klinechart/simpleAnnotationDown.overlay";
 import { rectangle } from "./klinechart/rectangle.overlay";
-import { KLine, Period, Position, Trade } from "../../server/BingX.dto";
-import { useBingXTransactionsStore } from "../store/bingxTransactions.store";
-import { useBingXTradesStore } from "../store/bingxTrades.store";
-import { useBingXPositionsStore } from "../store/bingxPositions.store";
+import { KLine, Period, Position, Trade } from "../../server/data.dto";
+import { useBingXTransactionsStore } from "../store/bingx/bingxTransactions.store";
+import { useBingXTradesStore } from "../store/bingx/bingxTrades.store";
+import { useBingXPositionsStore } from "../store/bingx/bingxPositions.store";
 import Price from "./Price.vue";
 import Rescue from "./Rescue.vue";
 import NumTrades from "./NumTrades.vue";
-import { BitkuaActionUpdateStatus } from "../../server/Bitkua.dto";
-import { useBitkuaBotsStore } from "../store/bitkuaBots.store";
+import { BitkuaActionUpdateStatus } from "../../server/bitkua/Bitkua.dto";
+import { useBitkuaBotsStore } from "../store/bitkua/bitkuaBots.store";
 
 registerOverlay(rectangle);
 registerOverlay(simpleAnnotationDown);
 
-const bingXTradesStore = useBingXTradesStore();
-const bingXTransactionsStore = useBingXTransactionsStore();
-const bingXPositionsStore = useBingXPositionsStore();
+const bingxTradesStore = useBingXTradesStore();
+const bingxTransactionsStore = useBingXTransactionsStore();
+const bingxPositionsStore = useBingXPositionsStore();
 const bitkuaBotsStore = useBitkuaBotsStore();
 
 const chart = ref();
@@ -254,11 +254,11 @@ const updateChartSize = () => {
 };
 
 const transactions = computed(() => {
-  return bingXTransactionsStore.transactions.filter((x) => x.symbol);
+  return bingxTransactionsStore.transactions.filter((x) => x.symbol);
 });
 
 const trades = computed(() => {
-  return bingXTradesStore.trades;
+  return bingxTradesStore.trades;
 });
 
 type PriceData = {
@@ -455,14 +455,13 @@ watch(
               <span class="text-blue-400">[{{ bot[side]?.amount }}]</span>
               <span
                 :class="{
-                  'text-slate-400': parseInt(bot[side]?.orders) === 0,
+                  'text-slate-400': bot[side]?.count === 0,
                   'text-lime-400':
-                    parseInt(bot[side]?.orders) > 0 &&
-                    parseInt(bot[side]?.orders) < 14,
-                  'text-red-400': parseInt(bot[side]?.orders) >= 13,
+                    bot[side]?.count > 0 && bot[side]?.count < 14,
+                  'text-red-400': bot[side]?.count >= 13,
                 }"
               >
-                [{{ bot[side]?.orders }}]
+                [{{ bot[side]?.count }}]
               </span>
             </div>
             <div class="text-slate-400">
@@ -500,7 +499,7 @@ watch(
               <Price
                 :value="
                   parseFloat(
-                    bingXPositionsStore.positions.filter((position) => {
+                    bingxPositionsStore.positions.filter((position) => {
                       return (
                         position.symbol === symbol &&
                         position.positionSide === side.toUpperCase()
@@ -514,7 +513,7 @@ watch(
               <Price
                 :value="
                   parseFloat(
-                    bingXPositionsStore.positions.filter((position) => {
+                    bingxPositionsStore.positions.filter((position) => {
                       return (
                         position.symbol === symbol &&
                         position.positionSide === side.toUpperCase()
@@ -529,7 +528,7 @@ watch(
                 :value="
                   100 *
                   parseFloat(
-                    bingXPositionsStore.positions.filter((position) => {
+                    bingxPositionsStore.positions.filter((position) => {
                       return (
                         position.symbol === symbol &&
                         position.positionSide === side.toUpperCase()
@@ -546,7 +545,7 @@ watch(
                     Math.abs(
                       (100 *
                         parseFloat(
-                          bingXPositionsStore.positions.find(
+                          bingxPositionsStore.positions.find(
                             (position) =>
                               position.symbol === symbol &&
                               position.positionSide === side.toUpperCase(),
@@ -564,7 +563,7 @@ watch(
                     Math.abs(
                       (100 *
                         parseFloat(
-                          bingXPositionsStore.positions.find(
+                          bingxPositionsStore.positions.find(
                             (position) =>
                               position.symbol === symbol &&
                               position.positionSide === side.toUpperCase(),

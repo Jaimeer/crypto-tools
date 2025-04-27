@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { differenceInHours, format, startOfDay } from "date-fns";
-import { useBingXTransactionsStore } from "../../store/bingxTransactions.store";
-import { useBingXTradesStore } from "../../store/bingxTrades.store";
+import { useBingXTransactionsStore } from "../../store/bingx/bingxTransactions.store";
+import { useBingXTradesStore } from "../../store/bingx/bingxTrades.store";
 import Price from "../Price.vue";
 import Table from "../Table.vue";
 
-const bingXTradesStore = useBingXTradesStore();
-const bingXTransactionsStore = useBingXTransactionsStore();
+const bingxTradesStore = useBingXTradesStore();
+const bingxTransactionsStore = useBingXTransactionsStore();
 
 type PriceData = {
   num: number;
@@ -18,11 +18,11 @@ type PriceData = {
 };
 
 const transactions = computed(() => {
-  return bingXTransactionsStore.transactions.filter((x) => x.symbol);
+  return bingxTransactionsStore.transactions.filter((x) => x.symbol);
 });
 
 const trades = computed(() => {
-  return bingXTradesStore.trades;
+  return bingxTradesStore.trades;
 });
 
 const transactionsByDay = computed(() => {

@@ -1,4 +1,4 @@
-export type Transaction = {
+export type BingxTransaction = {
   symbol: string;
   incomeType:
     | "TRANSFER"
@@ -18,7 +18,7 @@ export type Transaction = {
   tradeId: string;
 };
 
-export type Balance = {
+export type BingxBalance = {
   code: number;
   msg: string;
   asset: string;
@@ -32,7 +32,7 @@ export type Balance = {
   shortUid: string;
 };
 
-export type Trade = {
+export type BingxTrade = {
   symbol: string;
   qty: string;
   price: string;
@@ -49,7 +49,7 @@ export type Trade = {
   realisedPNL: string;
 };
 
-export type Position = {
+export type BingxPosition = {
   symbol: string;
   positionId: string;
   positionSide: string;
@@ -71,7 +71,7 @@ export type Position = {
   updateTime: string;
 };
 
-export type KLine = {
+export type BingxKLine = {
   open: string;
   close: string;
   high: string;
@@ -80,7 +80,7 @@ export type KLine = {
   time: number;
 };
 
-export type Contract = {
+export type BingxContract = {
   contractId: string;
   symbol: string;
   quantityPrecision: number;
@@ -102,7 +102,7 @@ export type Contract = {
   offTime: number;
 };
 
-export type Period =
+export type BingxPeriod =
   | "1m"
   | "3m"
   | "5m"
@@ -119,26 +119,6 @@ export type Period =
   | "1w"
   | "1M";
 
-export type ListenKey = {
+export type BingxListenKey = {
   listenKey: string;
 };
-
-export type Bot = {
-  id: string;
-  orders: string;
-  symbol: string;
-  amount: string;
-  strategy: string;
-  status: string;
-  delete: string;
-  reset: string;
-};
-
-export type NotifyMessage =
-  | { store: "trades"; trades: Trade[] }
-  | { store: "transactions"; transactions: Transaction[] }
-  | { store: "balance"; balance: Balance }
-  | { store: "positions"; positions: Position[] }
-  | { store: "contracts"; contracts: Contracts[] }
-  | { store: "klines"; symbol: string; period: Period; klines: KLine[] }
-  | { store: "bots"; bots: Bot[] };

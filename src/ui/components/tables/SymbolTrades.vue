@@ -1,29 +1,34 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useBingXTransactionsStore } from "../../store/bingxTransactions.store";
 import Table from "../Table.vue";
 import Price from "../Price.vue";
 import Symbol from "../Symbol.vue";
 import Rescue from "../Rescue.vue";
 import { Icon } from "@iconify/vue";
-import { usePreferencesStore } from "../../store/preferences.store";
-import { useBingXTradesStore } from "../../store/bingxTrades.store";
-import { useBitkuaBotsStore } from "../../store/bitkuaBots.store";
-import { BitkuaActionUpdateStatus } from "../../../server/Bitkua.dto";
-import { useBingXPositionsStore } from "../../../ui/store/bingxPositions.store";
+import { BitkuaActionUpdateStatus } from "../../../server/bitkua/Bitkua.dto";
+import {
+  Balance,
+  Bot,
+  Contract,
+  Position,
+  Trade,
+  Transaction,
+} from "../../../server/data.dto";
 
-const bingXTradesStore = useBingXTradesStore();
-const bingXTransactionsStore = useBingXTransactionsStore();
-const bingXPositionsStore = useBingXPositionsStore();
-const bitkuaBotsStore = useBitkuaBotsStore();
-const preferencesStore = usePreferencesStore();
+const props = defineProps<{
+  exchange: string;
+  trades: Trade[];
+  positions: Position[];
+  balance: Balance;
+  bots: Bot[];
+  contracts: Contract[];
+  transactions: Transaction[];
+  allSymbols: string[];
+  hidedSymbols: string[];
+}>();
 
 const transactions = computed(() => {
-  return bingXTransactionsStore.transactions.filter((x) => x.symbol);
-});
-
-const trades = computed(() => {
-  return bingXTradesStore.trades;
+  return props.transactions?.filter((x) => x.symbol) ?? [];
 });
 
 type TradesInfoSide = {
@@ -98,7 +103,7 @@ const tradesInfo = computed(() => {
     {} as Record<string, TradesInfo>,
   );
 
-  trades.value.reduce((acc, trade) => {
+  props.trades?.reduce((acc, trade) => {
     if (!usedSymbols.value.includes(trade.symbol)) {
       return acc;
     }
@@ -151,8 +156,9 @@ const tradesInfo = computed(() => {
     return acc;
   }, data);
 
-  bitkuaBotsStore.bots.forEach((bot) => {
-    const symbol = bot.symbol.replace("USDT", "-USDT");
+  props.bots?.forEach((bot) => {
+    if (bot.exchange !== props.exchange) return;
+    const symbol = bot.symbol.replace("USDT", "");
     const symbols = usedSymbols.value.map((x) => x.replace("-USDT", ""));
 
     if (!symbols.includes(symbol)) return;
@@ -194,11 +200,11 @@ const tradesInfo = computed(() => {
     //   side,
     //   bot,
     // });
-    data[symbol][side].amount = parseInt(bot?.amount || "0");
+    data[symbol][side].amount = bot?.count ?? 0;
     data[symbol][side].botId = bot?.id || "";
     data[symbol][side].strategy = bot?.strategy || "";
     data[symbol][side].status = bot?.status || "";
-    data[symbol][side].orders = parseInt(bot?.orders || "0");
+    data[symbol][side].orders = bot?.count ?? 0;
   });
 
   return Object.entries(data)
@@ -207,13 +213,14 @@ const tradesInfo = computed(() => {
 });
 
 const usedSymbols = computed(() => {
-  return bingXTransactionsStore.allSymbols
-    .filter((x) => !preferencesStore.hidedSymbols.includes(x))
-    .sort();
+  return (
+    props.allSymbols?.filter((x) => !props.hidedSymbols.includes(x)).sort() ??
+    []
+  );
 });
 
 const position = (symbol: string, side: string) => {
-  return bingXPositionsStore.positions.find(
+  return props.positions.find(
     (position) =>
       position.symbol.replace("-USDT", "") === symbol &&
       position.positionSide === side.toUpperCase(),
@@ -310,7 +317,15 @@ const sendAction = (
   >
     <template #default="{ item }">
       <td class="px-2 py-0.5">
-        <Symbol :value="item.key.replace('-USDT', '')" />
+        <Symbol
+          :value="item.key.replace('-USDT', '')"
+          :exchange="exchange"
+          :bots="bots"
+          :trades="trades"
+          :positions="positions"
+          :balance="balance"
+          :contracts="contracts"
+        />
       </td>
       <td class="px-2 py-0.5">{{ item.num }}</td>
       <td class="px-2 py-0.5"><Price :value="item.pnl" :decimals="2" /></td>
@@ -395,7 +410,12 @@ const sendAction = (
           </div>
         </td>
         <td class="flex items-center gap-1">
-          <div v-if="!item[side].botId" class="text-slate-400">---</div>
+          <div v-if="!item[side].botId" class="text-slate-400">
+            <template v-if="item[side].currentOpen > 0">
+              Bot deleted but position open
+            </template>
+            <template v-else> --- </template>
+          </div>
           <template v-else>
             <span class="text-slate-600">{{ item[side].botId }}</span>
             <span

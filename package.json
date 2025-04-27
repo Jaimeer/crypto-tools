@@ -55,6 +55,7 @@
     "@vueuse/core": "^13.0.0",
     "axios": "^1.8.4",
     "axios-cookiejar-support": "^5.0.5",
+    "bitget-api": "^2.3.5",
     "bottleneck": "^2.19.5",
     "bufferutil": "^4.0.9",
     "chart.js": "^4.4.8",

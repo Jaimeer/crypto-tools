@@ -1,14 +1,28 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { subDays, subHours, subWeeks } from "date-fns";
-import { useBingXTransactionsStore } from "../../store/bingxTransactions.store";
 import Table from "../Table.vue";
 import Price from "../Price.vue";
 import Symbol from "../Symbol.vue";
-import { usePreferencesStore } from "../../../ui/store/preferences.store";
+import {
+  Trade,
+  Balance,
+  Bot,
+  Contract,
+  Position,
+  Transaction,
+} from "../../../server/data.dto";
 
-const bingXTransactionsStore = useBingXTransactionsStore();
-const preferencesStore = usePreferencesStore();
+const props = defineProps<{
+  exchange: string;
+  trades: Trade[];
+  positions: Position[];
+  balance: Balance;
+  bots: Bot[];
+  contracts: Contract[];
+  transactions: Transaction[];
+  hidedSymbols: string[];
+}>();
 
 type RankingData = {
   profit4h: number;
@@ -17,8 +31,10 @@ type RankingData = {
 };
 
 const transactions = computed(() => {
-  return bingXTransactionsStore.transactions.filter(
-    (x) => x.symbol && !preferencesStore.hidedSymbols.includes(x.symbol),
+  return (
+    props.transactions?.filter(
+      (x) => x.symbol && !props.hidedSymbols.includes(x.symbol),
+    ) ?? []
   );
 });
 
@@ -91,7 +107,15 @@ const symbolRanking = computed(() => {
     </template>
     <template #default="{ item }">
       <td class="px-2 py-0.5">
-        <Symbol :value="item.key" />
+        <Symbol
+          :value="item.key"
+          :exchange="exchange"
+          :bots="bots"
+          :trades="trades"
+          :positions="positions"
+          :balance="balance"
+          :contracts="contracts"
+        />
       </td>
       <td class="px-2 py-0.5">
         <Price :value="item.profit4h" :decimals="2" />

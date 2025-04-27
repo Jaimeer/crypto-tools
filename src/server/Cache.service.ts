@@ -1,7 +1,6 @@
 import { app } from "electron";
 import fs from "fs/promises";
 import path from "node:path";
-import { Trade, Transaction } from "./BingX.dto";
 import { CompressLib } from "../utils/CompressLib";
 
 export interface CachedData<T> {
@@ -11,10 +10,6 @@ export interface CachedData<T> {
 
 export class CacheService {
   private cacheDir: string;
-
-  constructor() {
-    // Use user data directory for persistent storage across app updates
-  }
 
   setHashCode(hashCode: string): void {
     this.cacheDir = path.join(app.getPath("userData"), "data-cache", hashCode);
@@ -30,40 +25,8 @@ export class CacheService {
     }
   }
 
-  async saveTransactions(transactions: Transaction[]): Promise<void> {
-    const cachedData: CachedData<Transaction> = {
-      lastUpdated: Date.now(),
-      data: transactions,
-    };
-
-    const filePath = path.join(this.cacheDir, "transactions.json");
-    await this.writeCache(filePath, cachedData);
-  }
-
-  async loadTransactions(): Promise<CachedData<Transaction> | null> {
-    const filePath = path.join(this.cacheDir, "transactions.json");
-    return this.readCache<Transaction>(filePath);
-  }
-
-  async saveTrades(trades: Trade[]): Promise<void> {
-    const cachedData: CachedData<Trade> = {
-      lastUpdated: Date.now(),
-      data: trades,
-    };
-
-    const filePath = path.join(this.cacheDir, "trades.json");
-    await this.writeCache(filePath, cachedData);
-  }
-
-  async loadTrades(): Promise<CachedData<Trade> | null> {
-    const filePath = path.join(this.cacheDir, "trades.json");
-    return this.readCache<Trade>(filePath);
-  }
-
-  private async writeCache<T>(
-    filePath: string,
-    data: CachedData<T>,
-  ): Promise<void> {
+  async writeCache<T>(fileName: string, data: CachedData<T>): Promise<void> {
+    const filePath = path.join(this.cacheDir, fileName);
     try {
       await fs.writeFile(
         filePath,
@@ -76,7 +39,8 @@ export class CacheService {
     }
   }
 
-  private async readCache<T>(filePath: string): Promise<CachedData<T> | null> {
+  async readCache<T>(fileName: string): Promise<CachedData<T> | null> {
+    const filePath = path.join(this.cacheDir, fileName);
     try {
       const data = await fs.readFile(filePath, "utf8");
       return JSON.parse(

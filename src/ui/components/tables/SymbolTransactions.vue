@@ -1,19 +1,33 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { format } from "date-fns";
-import { useBingXTransactionsStore } from "../../store/bingxTransactions.store";
+import { useBingXTransactionsStore } from "../../store/bingx/bingxTransactions.store";
 import Price from "../Price.vue";
 import Table from "../Table.vue";
 import Symbol from "../Symbol.vue";
 import DateTime from "../DateTime.vue";
 import NumTrades from "../NumTrades.vue";
-import { usePreferencesStore } from "../../store/preferences.store";
-import { Transaction } from "../../../server/BingX.dto";
+import {
+  Balance,
+  Bot,
+  Contract,
+  Position,
+  Trade,
+  Transaction,
+} from "../../../server/data.dto";
 
-const bingXTransactionsStore = useBingXTransactionsStore();
-const preferencesStore = usePreferencesStore();
-
-const props = defineProps<{ dateFormat: string }>();
+const props = defineProps<{
+  exchange: string;
+  dateFormat: string;
+  trades: Trade[];
+  positions: Position[];
+  balance: Balance;
+  bots: Bot[];
+  contracts: Contract[];
+  transactions: Transaction[];
+  allSymbols: string[];
+  hidedSymbols: string[];
+}>();
 
 type PriceData = {
   num: number;
@@ -25,7 +39,7 @@ type PriceData = {
 };
 
 const transactions = computed(() => {
-  return bingXTransactionsStore.transactions.filter((x) => x.symbol);
+  return props.transactions?.filter((x) => x.symbol) ?? [];
 });
 
 const transactionsBySymbol = computed(() => {
@@ -72,9 +86,10 @@ const transactionsBySymbol = computed(() => {
 });
 
 const usedSymbols = computed(() => {
-  return bingXTransactionsStore.allSymbols
-    .filter((x) => !preferencesStore.hidedSymbols.includes(x))
-    .sort();
+  return (
+    props.allSymbols?.filter((x) => !props.hidedSymbols.includes(x)).sort() ??
+    []
+  );
 });
 </script>
 
@@ -88,7 +103,15 @@ const usedSymbols = computed(() => {
         class="px-2 py-0.5"
         v-for="header of usedSymbols.map((x) => x.replace('-USDT', ''))"
       >
-        <Symbol :value="header" />
+        <Symbol
+          :value="header"
+          :exchange="exchange"
+          :bots="bots"
+          :trades="trades"
+          :positions="positions"
+          :balance="balance"
+          :contracts="contracts"
+        />
       </th>
     </template>
     <template #default="{ item }">

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { Icon } from "@iconify/vue";
 import {
   TransitionRoot,
   TransitionChild,
@@ -8,22 +9,24 @@ import {
   DialogTitle,
 } from "@headlessui/vue";
 import KLineChart from "../components/KLineChart.vue";
-import { useBingXKLinesStore } from "../store/bingxKLines.store";
-import { useBingXPositionsStore } from "../store/bingxPositions.store";
-import { useBingXTradesStore } from "../store/bingxTrades.store";
-import { useBingXContractsStore } from "../store/bingxContracts.store";
+import { useBingXKLinesStore } from "../store/bingx/bingxKLines.store";
+import { Bot, Contract, Position, Trade } from "../../server/data.dto";
 
-const props = defineProps<{ value: string }>();
+const props = defineProps<{
+  value: string;
+  exchange: string;
+  trades: Trade[];
+  positions: Position[];
+  bots: Bot[];
+  contracts: Contract[];
+}>();
 
 const symbol = computed(() => {
   if (props.value.includes("USDT")) return props.value;
   return props.value + "-USDT";
 });
 
-const bingXTradesStore = useBingXTradesStore();
-const bingXPositionsStore = useBingXPositionsStore();
-const bingXKLinesStore = useBingXKLinesStore();
-const bingXContractsStore = useBingXContractsStore();
+const bingxKLinesStore = useBingXKLinesStore();
 
 const isOpen = ref(false);
 
@@ -32,17 +35,69 @@ function closeModal() {
 }
 function openModal() {
   isOpen.value = true;
-  bingXKLinesStore.fetchKLines(symbol.value, "15m");
+  bingxKLinesStore.fetchKLines(symbol.value, "15m");
 }
+
+const botLong = computed(() => {
+  return props.bots?.find(
+    (x) =>
+      x.exchange === props.exchange &&
+      x.symbol.replace("USDT", "") === symbol.value.replace("-USDT", "") &&
+      !x.strategy.includes("short"),
+  );
+});
+
+const botShort = computed(() => {
+  return props.bots?.find(
+    (x) =>
+      x.exchange === props.exchange &&
+      x.symbol.replace("USDT", "") === symbol.value.replace("-USDT", "") &&
+      x.strategy.includes("short"),
+  );
+});
+
 const contract = computed(() => {
-  return bingXContractsStore.contracts.find((x) => x.symbol === symbol.value);
+  return props.contracts?.find((x) => x.symbol === symbol.value);
 });
 </script>
 
 <template>
   <div class="flex items-center gap-1">
-    <div class="cursor-pointer underline decoration-dotted" @click="openModal">
-      {{ value }}
+    <div
+      class="flex cursor-pointer items-center pr-4 underline decoration-dotted"
+      @click="openModal"
+    >
+      <span
+        :class="{
+          'text-slate-400/50': !botLong && !botShort,
+          'text-red-400/50':
+            botLong?.status === 'stop' && botShort?.status === 'stop',
+        }"
+      >
+        {{ value }}
+      </span>
+      <div class="relative">
+        <Icon
+          class="absolute -right-5 -bottom-1.5 text-xl"
+          :class="{
+            'text-slate-400/50': !botLong,
+            'text-green-400': botLong?.status === 'active',
+            'text-orange-400': botLong?.status === 'onlysell',
+            'text-red-400/50': botLong?.status === 'stop',
+          }"
+          icon="ic:baseline-arrow-drop-up"
+        />
+        <Icon
+          class="absolute -top-1.5 -right-5 text-xl"
+          :class="{
+            'text-slate-400/50': !botShort,
+            'text-green-400': botShort?.status === 'active',
+            'text-orange-400': botShort?.status === 'onlysell',
+            'text-red-400/50': botShort?.status === 'stop',
+          }"
+          icon="ic:baseline-arrow-drop-down"
+        />
+      </div>
     </div>
 
     <span v-if="!contract" class="text-red-400"> no contract </span>
@@ -99,7 +154,7 @@ const contract = computed(() => {
               </DialogTitle>
               <div class="mt-2">
                 <div
-                  v-if="!bingXKLinesStore.kLine(symbol, '15m')?.length"
+                  v-if="!bingxKLinesStore.kLine(symbol, '15m')?.length"
                   class="flex h-full items-center justify-center rounded border border-gray-600 p-4 text-slate-600"
                 >
                   {{ symbol }} Fetching data...
@@ -109,15 +164,9 @@ const contract = computed(() => {
                   :symbol="symbol"
                   period="15m"
                   :hideTrades="false"
-                  :klines="bingXKLinesStore.kLine(symbol, '15m') ?? []"
-                  :trades="
-                    bingXTradesStore.trades.filter((x) => x.symbol === symbol)
-                  "
-                  :positions="
-                    bingXPositionsStore.positions.filter(
-                      (x) => x.symbol === symbol,
-                    )
-                  "
+                  :klines="bingxKLinesStore.kLine(symbol, '15m') ?? []"
+                  :trades="trades.filter((x) => x.symbol === symbol)"
+                  :positions="positions.filter((x) => x.symbol === symbol)"
                   size="large"
                 />
               </div>

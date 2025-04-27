@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { Transaction } from "../../server/BingX.dto";
+import { Transaction } from "../../../server/data.dto";
 
 type State = {
   transactions: Transaction[];
@@ -22,20 +22,6 @@ export const useBingXTransactionsStore = defineStore("bingx-transactions", {
     },
   },
   actions: {
-    async fetchTransactions() {
-      // this.loading = true;
-      // this.error = null;
-      // try {
-      //   const data = await window.electronAPI.getBingXTransactions();
-      //   console.log("fetchTransactions", { t: data });
-      //   this.transactions = data ?? [];
-      // } catch (error) {
-      //   this.error = error.message || "Failed to fetch transactions";
-      //   console.error("Error in store:", error);
-      // } finally {
-      //   this.loading = false;
-      // }
-    },
     processMessage(transactions: Transaction[]) {
       this.transactions = transactions;
     },

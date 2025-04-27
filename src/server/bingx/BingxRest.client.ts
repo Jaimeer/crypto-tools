@@ -1,19 +1,19 @@
 // eslint-disable-next-line import/no-unresolved
 import axios from "axios";
 import CryptoJS from "crypto-js";
-import { limiter } from "../utils/apiLimiter";
+import { limiter } from "../../utils/apiLimiter";
+import { HashLib } from "../../utils/HashLib";
 import {
-  Balance,
-  Contract,
-  KLine,
-  ListenKey,
-  Period,
-  Position,
-  Trade,
-  Transaction,
-} from "./BingX.dto";
+  BingxBalance,
+  BingxContract,
+  BingxKLine,
+  BingxListenKey,
+  BingxPeriod,
+  BingxPosition,
+  BingxTrade,
+  BingxTransaction,
+} from "./Bingx.dto";
 import { subYears } from "date-fns";
-import { HashLib } from "../utils/HashLib";
 
 export type BingXApiRequest = {
   path: string;
@@ -72,7 +72,7 @@ export class BingXRestClient {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  private async bingXRequest<T>(API: BingXApiRequest) {
+  private async bingxRequest<T>(API: BingXApiRequest) {
     const timestamp = new Date().getTime();
     const sign = CryptoJS.enc.Hex.stringify(
       CryptoJS.HmacSHA256(
@@ -144,7 +144,7 @@ export class BingXRestClient {
           if (error.response.data.code === 100410) {
             console.error("Retry connection after 1 second");
             await this.sleep(1000);
-            return this.bingXRequest<T>(API);
+            return this.bingxRequest<T>(API);
           }
         }
         console.error("BingX API request error:", error.response.data);
@@ -154,13 +154,13 @@ export class BingXRestClient {
   }
 
   async fetchTransactions(
-    currentTransactions: Transaction[],
-  ): Promise<Transaction[]> {
+    currentTransactions: BingxTransaction[],
+  ): Promise<BingxTransaction[]> {
     // console.log('fetchTrades', {
     //   apiKey: this.API_KEY,
     //   apiSecret: this.API_SECRET,
     // })
-    const allTransactions: Transaction[] = currentTransactions;
+    const allTransactions: BingxTransaction[] = currentTransactions;
 
     // Start with the current time
     const newestTransaction = allTransactions.length
@@ -200,7 +200,7 @@ export class BingXRestClient {
           protocol: "https",
         };
 
-        const transactions = await this.bingXRequest<Transaction[]>(API);
+        const transactions = await this.bingxRequest<BingxTransaction[]>(API);
 
         if (!transactions || transactions.length === 0) {
           hasMoreData = false;
@@ -232,12 +232,12 @@ export class BingXRestClient {
     return allTransactions.toSorted((a, b) => b.time - a.time);
   }
 
-  async fetchTrades(currentTrades: Trade[]): Promise<Trade[]> {
+  async fetchTrades(currentTrades: BingxTrade[]): Promise<BingxTrade[]> {
     // console.log('fetchTrades', {
     //   apiKey: this.API_KEY,
     //   apiSecret: this.API_SECRET,
     // })
-    const allTrades: Trade[] = currentTrades;
+    const allTrades: BingxTrade[] = currentTrades;
 
     // Start with the current time
     const newestTransaction = allTrades.length
@@ -268,8 +268,8 @@ export class BingXRestClient {
           protocol: "https",
         };
 
-        const trades = await this.bingXRequest<{
-          fill_history_orders: Trade[];
+        const trades = await this.bingxRequest<{
+          fill_history_orders: BingxTrade[];
         }>(API);
 
         if (!trades || trades.fill_history_orders?.length === 0) {
@@ -309,43 +309,46 @@ export class BingXRestClient {
     );
   }
 
-  async fetchBalance(): Promise<Balance> {
+  async fetchBalance(): Promise<BingxBalance> {
     const API: BingXApiRequest = {
       path: "/openApi/swap/v3/user/balance",
       method: "GET",
       payload: {},
       protocol: "https",
     };
-    const balance = await this.bingXRequest<Balance[]>(API);
+    const balance = await this.bingxRequest<BingxBalance[]>(API);
     console.log(`[fetchBalance] Fetched balance ${!!balance}`);
     return balance.find((x) => x.asset === "USDT");
   }
 
-  async fetchContracts(): Promise<Contract[]> {
+  async fetchContracts(): Promise<BingxContract[]> {
     const API: BingXApiRequest = {
       path: "/openApi/swap/v2/quote/contracts",
       method: "GET",
       payload: {},
       protocol: "https",
     };
-    const contracts = await this.bingXRequest<Contract[]>(API);
+    const contracts = await this.bingxRequest<BingxContract[]>(API);
     console.log(`[fetchContracts] Fetched contracts ${!!contracts}`);
     return contracts;
   }
 
-  async fetchPositions(): Promise<Position[]> {
+  async fetchPositions(): Promise<BingxPosition[]> {
     const API: BingXApiRequest = {
       path: "/openApi/swap/v2/user/positions",
       method: "GET",
       payload: {},
       protocol: "https",
     };
-    const positions = await this.bingXRequest<Position[]>(API);
+    const positions = await this.bingxRequest<BingxPosition[]>(API);
     console.log(`[fetchPositions] Fetched positions ${!!positions}`);
     return positions;
   }
 
-  async fetchKLines(symbol: string, period: Period): Promise<KLine[]> {
+  async fetchKLines(
+    symbol: string,
+    period: BingxPeriod,
+  ): Promise<BingxKLine[]> {
     const API: BingXApiRequest = {
       path: "/openApi/swap/v3/quote/klines",
       method: "GET",
@@ -356,7 +359,7 @@ export class BingXRestClient {
       },
       protocol: "https",
     };
-    const klines = await this.bingXRequest<KLine[]>(API);
+    const klines = await this.bingxRequest<BingxKLine[]>(API);
     console.log(
       `[fetchKlines][${symbol}][${period}] Fetched klines ${klines?.length ?? "ERROR"}`,
     );
@@ -372,7 +375,7 @@ export class BingXRestClient {
       payload: {},
       protocol: "https",
     };
-    const listenKeyData = await this.bingXRequest<ListenKey>(API);
+    const listenKeyData = await this.bingxRequest<BingxListenKey>(API);
     console.log(
       `[fetchBalance] Fetched getWSListenKey ${listenKeyData?.listenKey}`,
     );
@@ -388,7 +391,7 @@ export class BingXRestClient {
       },
       protocol: "https",
     };
-    await this.bingXRequest<ListenKey>(API);
+    await this.bingxRequest<BingxListenKey>(API);
     console.log(`[fetchBalance] Extended listenKey`);
   }
 }

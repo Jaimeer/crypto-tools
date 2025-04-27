@@ -3,24 +3,26 @@ import {
   Balance,
   Contract,
   KLine,
-  NotifyMessage,
   Period,
   Position,
   Trade,
   Transaction,
-} from "./BingX.dto";
+} from "../data.dto";
 import { v4 as uuidv4 } from "uuid";
 import { BingXRestClient } from "./BingxRest.client";
 import { BingXWebSocket } from "./BingxWebSocket.client";
-import { KLineDataEvent, WebSocketMessage } from "./BingX.ws.dto";
-import { CacheService } from "./Cache.service";
+import { KLineDataEvent, WebSocketMessage } from "./Bingx.ws.dto";
+import { CacheService } from "../Cache.service";
+import { NotifyMessage } from "../messages.dto";
+import { BingxBalance } from "./Bingx.dto";
+import { BingxCacheService } from "./Bingx.cache";
 
 const klineRegex = /^([A-Z0-9]*-[A-Z0-9]*)?@kline_([1-9]*[mhdwM]*)?$/;
 
 export class BingXService {
   private readonly restClient: BingXRestClient;
   private readonly wsClient: BingXWebSocket;
-  private readonly cacheService: CacheService;
+  private readonly cacheService: BingxCacheService;
   private refreshInterval: NodeJS.Timeout | null = null;
   private data: {
     transactions: Transaction[];
@@ -45,7 +47,7 @@ export class BingXService {
   };
 
   constructor(apiKey: string, apiSecret: string) {
-    console.log("BingXService constructor ");
+    console.log("[Bingx] BingXService constructor ");
     if (!this.restClient) {
       this.restClient = new BingXRestClient(apiKey, apiSecret);
     }
@@ -54,7 +56,7 @@ export class BingXService {
         this.restClient,
         this.handleWebSocketMessage.bind(this),
       );
-    this.cacheService = new CacheService();
+    this.cacheService = new BingxCacheService(new CacheService());
     if (apiKey && apiSecret) {
       this.cacheService.setHashCode(this.restClient.hashCode);
     }
@@ -74,12 +76,12 @@ export class BingXService {
       try {
         await this.loadData();
       } catch (error) {
-        console.error("BingxService auto-refresh failed:", error);
+        console.error("[Bingx] BingxService auto-refresh failed:", error);
       }
     }, intervalMs);
 
     console.log(
-      `BingxService auto-refresh started: every ${intervalMs / 1000} seconds`,
+      `[Bingx] BingxService auto-refresh started: every ${intervalMs / 1000} seconds`,
     );
   }
 
@@ -91,44 +93,65 @@ export class BingXService {
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
       this.refreshInterval = null;
-      console.log("BingxService auto-refresh stopped");
+      console.log("[Bingx] BingxService auto-refresh stopped");
     }
   }
 
   private async loadData() {
-    console.log("loadData");
+    console.log("[BingX] loadData");
     if (!this.data.transactions.length) {
-      const cachedData = await this.cacheService.loadTransactions();
+      const cachedData = await this.cacheService.loadBingxTransactions();
       this.data.transactions = cachedData?.data ?? [];
 
-      console.log({ transactions: cachedData?.data?.length });
+      console.log("[Bingx]", { transactions: cachedData?.data?.length });
     }
     if (!this.data.trades.length) {
-      const cachedData = await this.cacheService.loadTrades();
+      const cachedData = await this.cacheService.loadBingxTrades();
       this.data.trades = cachedData?.data ?? [];
 
-      console.log({ trades: cachedData?.data?.length });
+      console.log("[Bingx]", { trades: cachedData?.data?.length });
     }
 
     this.data.transactions = await this.restClient.fetchTransactions(
       this.data.transactions,
     );
     this.data.trades = await this.restClient.fetchTrades(this.data.trades);
-    this.data.balance = await this.restClient.fetchBalance();
+    const bingxBalance = await this.restClient.fetchBalance();
     this.data.positions = await this.restClient.fetchPositions();
     this.data.contracts = await this.restClient.fetchContracts();
 
-    await this.cacheService.saveTransactions(this.data.transactions);
-    await this.cacheService.saveTrades(this.data.trades);
+    this.data.balance = this.balanceTransform(bingxBalance);
+
+    await this.cacheService.saveBingxTransactions(this.data.transactions);
+    await this.cacheService.saveBingxTrades(this.data.trades);
 
     this.notifyClients({
-      store: "transactions",
+      store: "bingx.transactions",
       transactions: this.data.transactions,
     });
-    this.notifyClients({ store: "trades", trades: this.data.trades });
-    this.notifyClients({ store: "balance", balance: this.data.balance });
-    this.notifyClients({ store: "positions", positions: this.data.positions });
-    this.notifyClients({ store: "contracts", contracts: this.data.contracts });
+    this.notifyClients({ store: "bingx.trades", trades: this.data.trades });
+    this.notifyClients({ store: "bingx.balance", balance: this.data.balance });
+    this.notifyClients({
+      store: "bingx.positions",
+      positions: this.data.positions,
+    });
+    this.notifyClients({
+      store: "bingx.contracts",
+      contracts: this.data.contracts,
+    });
+  }
+
+  private balanceTransform(balance: BingxBalance): Balance {
+    return {
+      symbol: balance.asset,
+      availableMargin: balance.availableMargin,
+      balance: balance.balance,
+      equity: balance.equity,
+      freezedMargin: balance.freezedMargin,
+      realisedPnl: balance.realisedProfit,
+      unrealizedPnl: balance.unrealizedProfit,
+      usedMargin: balance.usedMargin,
+    };
   }
 
   async loadSymbolKLines(symbol: string, period: Period) {
@@ -138,7 +161,7 @@ export class BingXService {
     this.data.kLines[symbol].data = kLines;
 
     this.notifyClients({
-      store: "klines",
+      store: "bingx.klines",
       symbol,
       period,
       klines: this.data.kLines[symbol].data,
@@ -183,7 +206,7 @@ export class BingXService {
         //   ].close,
         // });
         this.notifyClients({
-          store: "klines",
+          store: "bingx.klines",
           symbol,
           period,
           klines: this.data.kLines[symbol].data,
@@ -201,7 +224,7 @@ export class BingXService {
       }
       if (message.e === "TRADE_UPDATE") {
         console.log(
-          "TODO[TRADE_UPDATE]",
+          "[Bingx] TODO[TRADE_UPDATE]",
           logMessage && JSON.stringify(message, null, 2),
         );
 
@@ -209,7 +232,7 @@ export class BingXService {
       }
       if (message.e === "ORDER_TRADE_UPDATE") {
         console.log(
-          "TODO[ORDER_TRADE_UPDATE]",
+          "[Bingx] TODO[ORDER_TRADE_UPDATE]",
           logMessage && JSON.stringify(message, null, 2),
         );
         this.startAutoRefresh();
@@ -217,7 +240,7 @@ export class BingXService {
       }
       if (message.e === "ACCOUNT_UPDATE") {
         console.log(
-          "TODO[ACCOUNT_UPDATE]",
+          "[Bingx] TODO[ACCOUNT_UPDATE]",
           logMessage && JSON.stringify(message, null, 2),
         );
         return;
@@ -229,7 +252,7 @@ export class BingXService {
         return this.processWSEventKline(message as KLineDataEvent);
       }
     }
-    console.log("handleWebSocketMessage", message);
+    console.log("[Bingx] handleWebSocketMessage", message);
   }
 
   private notifyClients(message: NotifyMessage) {

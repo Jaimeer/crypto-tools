@@ -5,14 +5,20 @@ import "floating-vue/dist/style.css";
 
 import App from "./App.vue";
 import { router } from "./router";
-import { NotifyMessage } from "./server/BingX.dto";
-import { useBingXTransactionsStore } from "./ui/store/bingxTransactions.store";
-import { useBingXTradesStore } from "./ui/store/bingxTrades.store";
-import { useBingXBalanceStore } from "./ui/store/bingxBalance.store";
-import { useBingXPositionsStore } from "./ui/store/bingxPositions.store";
-import { useBingXContractsStore } from "./ui/store/bingxContracts.store";
-import { useBingXKLinesStore } from "./ui/store/bingxKLines.store";
-import { useBitkuaBotsStore } from "./ui/store/bitkuaBots.store";
+import { NotifyMessage } from "./server/messages.dto";
+import { useBingXTransactionsStore } from "./ui/store/bingx/bingxTransactions.store";
+import { useBingXTradesStore } from "./ui/store/bingx/bingxTrades.store";
+import { useBingXBalanceStore } from "./ui/store/bingx/bingxBalance.store";
+import { useBingXPositionsStore } from "./ui/store/bingx/bingxPositions.store";
+import { useBingXContractsStore } from "./ui/store/bingx/bingxContracts.store";
+import { useBingXKLinesStore } from "./ui/store/bingx/bingxKLines.store";
+import { useBitkuaBotsStore } from "./ui/store/bitkua/bitkuaBots.store";
+import { useBitgetBalanceStore } from "./ui/store/bitget/bitgetBalance.store";
+import { useBitgetPositionsStore } from "./ui/store/bitget/bitgetPositions.store";
+import { useBitgetTransactionsStore } from "./ui/store/bitget/bitgetTransactions.store";
+import { useBitgetContractsStore } from "./ui/store/bitget/bitgetContracts.store";
+import { useBitgetKLinesStore } from "./ui/store/bitget/bitgetKLines.store";
+import { useBitgetTradesStore } from "./ui/store/bitget/bitgetTrades.store";
 
 const pinia = createPinia();
 
@@ -22,34 +28,67 @@ app.use(pinia);
 app.use(FloatingVue);
 app.mount("#app");
 
-const transactionsStore = useBingXTransactionsStore();
-const tradesStore = useBingXTradesStore();
-const balanceStore = useBingXBalanceStore();
-const positionsStore = useBingXPositionsStore();
-const contractsStore = useBingXContractsStore();
-const klineStore = useBingXKLinesStore();
+const bingxTransactionsStore = useBingXTransactionsStore();
+const bingxTradesStore = useBingXTradesStore();
+const bingxBalanceStore = useBingXBalanceStore();
+const bingxPositionsStore = useBingXPositionsStore();
+const bingxContractsStore = useBingXContractsStore();
+const bingxKlineStore = useBingXKLinesStore();
+
+const bitgetTransactionsStore = useBitgetTransactionsStore();
+const bitgetTradesStore = useBitgetTradesStore();
+const bitgetBalanceStore = useBitgetBalanceStore();
+const bitgetPositionsStore = useBitgetPositionsStore();
+const bitgetContractsStore = useBitgetContractsStore();
+const bitgetKlineStore = useBitgetKLinesStore();
+
 const botsStore = useBitkuaBotsStore();
 
 const updateDataHandler = (message: NotifyMessage) => {
   switch (message.store) {
-    case "transactions":
-      transactionsStore.processMessage(message.transactions);
+    case "bingx.transactions":
+      bingxTransactionsStore.processMessage(message.transactions);
       break;
-    case "trades":
-      //   console.log("trades", message.trades);
-      tradesStore.processMessage(message.trades);
+    case "bingx.trades":
+      bingxTradesStore.processMessage(message.trades);
       break;
-    case "balance":
-      balanceStore.processMessage(message.balance);
+    case "bingx.balance":
+      bingxBalanceStore.processMessage(message.balance);
       break;
-    case "positions":
-      positionsStore.processMessage(message.positions);
+    case "bingx.positions":
+      bingxPositionsStore.processMessage(message.positions);
       break;
-    case "contracts":
-      contractsStore.processMessage(message.contracts);
+    case "bingx.contracts":
+      bingxContractsStore.processMessage(message.contracts);
       break;
-    case "klines":
-      klineStore.processMessage(message.symbol, message.period, message.klines);
+    case "bingx.klines":
+      bingxKlineStore.processMessage(
+        message.symbol,
+        message.period,
+        message.klines,
+      );
+      break;
+    case "bitget.transactions":
+      bitgetTransactionsStore.processMessage(message.transactions);
+      break;
+    case "bitget.trades":
+      bitgetTradesStore.processMessage(message.trades);
+      break;
+    case "bitget.balance":
+      bitgetBalanceStore.processMessage(message.balance);
+      break;
+    case "bitget.positions":
+      bitgetPositionsStore.processMessage(message.positions);
+      break;
+    case "bitget.contracts":
+      bitgetContractsStore.processMessage(message.contracts);
+      break;
+    case "bitget.klines":
+      bitgetKlineStore.processMessage(
+        message.symbol,
+        message.period,
+        message.klines,
+      );
       break;
     case "bots":
       botsStore.processMessage(message.bots);

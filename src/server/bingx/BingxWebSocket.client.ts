@@ -2,7 +2,7 @@
 import WebSocket from "ws";
 import zlib from "zlib";
 import { BingXRestClient } from "./BingxRest.client";
-import { WebSocketMessage } from "./BingX.ws.dto";
+import { WebSocketMessage } from "./Bingx.ws.dto";
 
 export type HandleMessageFn = (message: WebSocketMessage) => void;
 

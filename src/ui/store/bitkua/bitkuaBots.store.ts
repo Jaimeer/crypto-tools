@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { Bot } from "../../server/BingX.dto";
+import { Bot } from "../../../server/data.dto";
 
 type State = {
   bots: Bot[];

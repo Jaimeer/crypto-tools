@@ -1,10 +1,11 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
-import { BingXService } from "./server/Bingx.service";
-import { BitkuaService } from "./server/Bitkua.service";
-import { Period } from "./server/BingX.dto";
-import { BitkuaAction } from "./server/Bitkua.dto";
+import { BingXService } from "./server/bingx/Bingx.service";
+import { BitkuaService } from "./server/bitkua/Bitkua.service";
+import { BitgetService } from "./server/bitget/Bitget.service";
+import { Period } from "./server/data.dto";
+import { BitkuaAction } from "./server/bitkua/Bitkua.dto";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -50,7 +51,8 @@ function createChartsWindow() {
 }
 
 // Initialize BingX service
-let bingXService: BingXService | undefined;
+let bingxService: BingXService | undefined;
+let bitgetService: BitgetService | undefined;
 let bitkuaService: BitkuaService | undefined;
 
 ipcMain.handle(
@@ -61,29 +63,42 @@ ipcMain.handle(
   ) => {
     console.log("Setting BingX credentials");
 
-    if (!bingXService) bingXService = new BingXService(apiKey, apiSecret);
-    else bingXService.setCredentials(apiKey, apiSecret);
+    if (!bingxService) bingxService = new BingXService(apiKey, apiSecret);
+    else bingxService.setCredentials(apiKey, apiSecret);
 
-    await bingXService.startAutoRefresh();
+    await bingxService.startAutoRefresh();
+    return { success: true };
+  },
+);
+
+ipcMain.handle(
+  "set-bitget-credentials",
+  async (
+    event,
+    {
+      apiKey,
+      apiSecret,
+      password,
+    }: { apiKey: string; apiSecret: string; password: string },
+  ) => {
+    console.log("Setting Bitget credentials");
+
+    if (!bitgetService)
+      bitgetService = new BitgetService(apiKey, apiSecret, password);
+    else bitgetService.setCredentials(apiKey, apiSecret, password);
+
+    await bitgetService.startAutoRefresh();
     return { success: true };
   },
 );
 
 ipcMain.handle(
   "set-bitkua-credentials",
-  async (
-    event,
-    {
-      email,
-      password,
-      secret,
-    }: { email: string; password: string; secret: string },
-  ) => {
+  async (event, { username, token }: { username: string; token: string }) => {
     console.log("Setting Bitkua credentials");
 
-    if (!bitkuaService)
-      bitkuaService = new BitkuaService(email, password, secret);
-    else bitkuaService.setCredentials(email, password, secret);
+    if (!bitkuaService) bitkuaService = new BitkuaService(username, token);
+    else bitkuaService.setCredentials(username, token);
 
     await bitkuaService.startAutoRefresh();
     return { success: true };
@@ -99,7 +114,7 @@ ipcMain.handle("send-bitkua-action", async (event, message: BitkuaAction) => {
 
 // Add IPC handler for opening charts window
 ipcMain.handle("open-charts-window", () => {
-  if (bingXService) bingXService.stopWebSocket();
+  if (bingxService) bingxService.stopWebSocket();
   createChartsWindow();
   return { success: true };
 });
@@ -107,12 +122,12 @@ ipcMain.handle("open-charts-window", () => {
 // Set up IPC handlers
 // ipcMain.handle("get-bingx-transactions", async (event) => {
 //   try {
-//     if (!bingXService) {
+//     if (!bingxService) {
 //       throw new Error(
 //         "BingX service not initialized. Please set API credentials first.",
 //       );
 //     }
-//     return await bingXService.fetchTransactions();
+//     return await bingxService.fetchTransactions();
 //   } catch (error) {
 //     console.error("Error fetching BingX transactions:", error);
 //     throw error;
@@ -121,12 +136,12 @@ ipcMain.handle("open-charts-window", () => {
 
 // ipcMain.handle("get-bingx-trades", async (event) => {
 //   try {
-//     if (!bingXService) {
+//     if (!bingxService) {
 //       throw new Error(
 //         "BingX service not initialized. Please set API credentials first.",
 //       );
 //     }
-//     return await bingXService.fetchTrades();
+//     return await bingxService.fetchTrades();
 //   } catch (error) {
 //     console.error("Error fetching BingX trades:", error);
 //     throw error;
@@ -136,23 +151,23 @@ ipcMain.handle("open-charts-window", () => {
 ipcMain.handle(
   "get-bingx-klines",
   async (event, symbol: string, period: Period) => {
-    if (!bingXService) {
+    if (!bingxService) {
       throw new Error(
         "BingX service not initialized. Please set API credentials first.",
       );
     }
-    bingXService.loadSymbolKLines(symbol, period);
+    bingxService.loadSymbolKLines(symbol, period);
   },
 );
 
 // ipcMain.handle("get-bingx-balance", async (event) => {
 //   try {
-//     if (!bingXService) {
+//     if (!bingxService) {
 //       throw new Error(
 //         "BingX service not initialized. Please set API credentials first.",
 //       );
 //     }
-//     return await bingXService.fetchBalance();
+//     return await bingxService.fetchBalance();
 //   } catch (error) {
 //     console.error("Error fetching BingX balance:", error);
 //     throw error;
@@ -161,12 +176,12 @@ ipcMain.handle(
 
 // ipcMain.handle("get-bingx-positions", async (event) => {
 //   try {
-//     if (!bingXService) {
+//     if (!bingxService) {
 //       throw new Error(
 //         "BingX service not initialized. Please set API credentials first.",
 //       );
 //     }
-//     return await bingXService.fetchPositions();
+//     return await bingxService.fetchPositions();
 //   } catch (error) {
 //     console.error("Error fetching BingX positions:", error);
 //     throw error;
@@ -207,7 +222,7 @@ app.on("ready", createWindow);
 // explicitly with Cmd + Q.
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
-    bingXService.stopAutoRefresh();
+    bingxService.stopAutoRefresh();
     bitkuaService.stopAutoRefresh();
 
     app.quit();

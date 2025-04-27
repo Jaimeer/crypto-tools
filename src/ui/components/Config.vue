@@ -1,80 +1,122 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { useBingXConfigStore } from "../store/bingxConfig.store";
-import { useBitkuaConfigStore } from "../store/bitkuaConfig.store";
+import { useBingXConfigStore } from "../store/bingx/bingxConfig.store";
+import { useBitkuaConfigStore } from "../store/bitkua/bitkuaConfig.store";
+import { useBitgetConfigStore } from "../store/bitget/bitgetConfig.store";
 
-const bingXConfig = useBingXConfigStore();
+const bingxConfig = useBingXConfigStore();
 const bitkuaConfig = useBitkuaConfigStore();
+const bitgetConfig = useBitgetConfigStore();
 
-const inputApiKey = ref(bingXConfig.apiKey);
-const inputApiSecret = ref(bingXConfig.apiSecret);
-const inputEmail = ref(bitkuaConfig.email);
-const inputPassword = ref(bitkuaConfig.password);
-const inputSecret = ref(bitkuaConfig.secret);
+const inputBingxApiKey = ref(bingxConfig.apiKey);
+const inputBingxApiSecret = ref(bingxConfig.apiSecret);
+
+const inputBitgetApiKey = ref(bitgetConfig.apiKey);
+const inputBitgetApiSecret = ref(bitgetConfig.apiSecret);
+const inputBitgetPassword = ref(bitgetConfig.apiSecret);
+
+const inputBitkuaUserName = ref(bitkuaConfig.username);
+const inputBitkuaToken = ref(bitkuaConfig.token);
 
 const save = async () => {
-  await bingXConfig.setConfig(inputApiKey.value, inputApiSecret.value);
+  await bingxConfig.setConfig(
+    inputBingxApiKey.value,
+    inputBingxApiSecret.value,
+  );
   await bitkuaConfig.setConfig(
-    inputEmail.value,
-    inputPassword.value,
-    inputSecret.value,
+    inputBitkuaUserName.value,
+    inputBitkuaToken.value,
+  );
+  await bitgetConfig.setConfig(
+    inputBitgetApiKey.value,
+    inputBitgetApiSecret.value,
+    inputBitgetPassword.value,
   );
 
-  bingXConfig.toggleViewConfig();
+  bingxConfig.toggleViewConfig();
 };
 </script>
 
 <template>
   <div class="flex h-screen flex-col items-center justify-center gap-4 p-4">
     <form class="">
-      <div class="text-4xl">BingX Config</div>
+      <div>
+        <div class="text-4xl">BingX Config</div>
 
-      <label for="apiKey" class="text-slate-400">API Key</label>
-      <input
-        id="apiKey"
-        v-model="inputApiKey"
-        type="text"
-        placeholder="API Key"
-        class="mb-2 w-full rounded border border-gray-300 p-2"
-      />
-      <label for="apiSecret" class="text-slate-400">API Secret</label>
-      <input
-        id="apiSecret"
-        v-model="inputApiSecret"
-        type="password"
-        placeholder="API Secret"
-        class="mb-2 w-full rounded border border-gray-300 p-2"
-      />
-      <div class="my-4 text-right text-slate-500 italic">
-        Api key only need read permissions
+        <label for="bingxApiKey" class="text-slate-400">API Key</label>
+        <input
+          id="bingxApiKey"
+          v-model="inputBingxApiKey"
+          type="text"
+          placeholder="API Key"
+          class="mb-2 w-full rounded border border-gray-300 p-2"
+        />
+        <label for="bingxApiSecret" class="text-slate-400">API Secret</label>
+        <input
+          id="bingxApiSecret"
+          v-model="inputBingxApiSecret"
+          type="password"
+          placeholder="API Secret"
+          class="mb-2 w-full rounded border border-gray-300 p-2"
+        />
+        <div class="my-4 text-right text-slate-500 italic">
+          Api key only need read permissions
+        </div>
       </div>
 
-      <div class="text-4xl">Bitkua Config</div>
+      <div>
+        <div class="text-4xl">Bitget Config</div>
 
-      <label for="apiKey" class="text-slate-400">Email</label>
-      <input
-        id="email"
-        v-model="inputEmail"
-        type="text"
-        placeholder="Email"
-        class="mb-2 w-full rounded border border-gray-300 p-2"
-      />
-      <label for="apiSecret" class="text-slate-400">Password</label>
-      <input
-        id="password"
-        v-model="inputPassword"
-        type="password"
-        placeholder="Password"
-        class="mb-2 w-full rounded border border-gray-300 p-2"
-      />
-      <label for="apiSecret" class="text-slate-400">2FA Secret</label>
-      <input
-        id="secret"
-        v-model="inputSecret"
-        type="password"
-        placeholder="2FA Secret"
-        class="mb-2 w-full rounded border border-gray-300 p-2"
-      />
+        <label for="bitgetApiKey" class="text-slate-400">API Key</label>
+        <input
+          id="bitgetApiKey"
+          v-model="inputBitgetApiKey"
+          type="text"
+          placeholder="API Key"
+          class="mb-2 w-full rounded border border-gray-300 p-2"
+        />
+        <label for="bitgetApiSecret" class="text-slate-400">API Secret</label>
+        <input
+          id="bitgetApiSecret"
+          v-model="inputBitgetApiSecret"
+          type="password"
+          placeholder="API Secret"
+          class="mb-2 w-full rounded border border-gray-300 p-2"
+        />
+        <label for="bitgetPassword" class="text-slate-400">Password</label>
+        <input
+          id="bitgetPassword"
+          v-model="inputBitgetPassword"
+          type="password"
+          placeholder="Password"
+          class="mb-2 w-full rounded border border-gray-300 p-2"
+        />
+
+        <div class="my-4 text-right text-slate-500 italic">
+          Api key only need read permissions
+        </div>
+      </div>
+
+      <div>
+        <div class="text-4xl">Bitkua Config</div>
+
+        <label for="username" class="text-slate-400">UserName</label>
+        <input
+          id="username"
+          v-model="inputBitkuaUserName"
+          type="text"
+          placeholder="UserName"
+          class="mb-2 w-full rounded border border-gray-300 p-2"
+        />
+        <label for="token" class="text-slate-400">Token</label>
+        <input
+          id="token"
+          v-model="inputBitkuaToken"
+          type="password"
+          placeholder="Token"
+          class="mb-2 w-full rounded border border-gray-300 p-2"
+        />
+      </div>
 
       <div class="my-8 text-right text-slate-500 italic"></div>
 

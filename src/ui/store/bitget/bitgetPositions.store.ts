@@ -1,0 +1,22 @@
+import { defineStore } from "pinia";
+import { Position } from "../../../server/bitget/Bitget.dto";
+
+type State = {
+  positions: Position[];
+  loading: boolean;
+  error: string | null;
+};
+
+export const useBitgetPositionsStore = defineStore("bitget.positions", {
+  state: (): State => ({
+    positions: [],
+    loading: false,
+    error: null,
+  }),
+
+  actions: {
+    processMessage(positions: Position[]) {
+      this.positions = positions;
+    },
+  },
+});

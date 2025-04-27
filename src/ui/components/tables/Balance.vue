@@ -2,28 +2,20 @@
 import { computed } from "vue";
 import { differenceInDays, startOfDay } from "date-fns";
 import { Icon } from "@iconify/vue";
-import { useBingXTransactionsStore } from "../../store/bingxTransactions.store";
-import { useBingXBalanceStore } from "../../store/bingxBalance.store";
 import Price from "../Price.vue";
 import Table from "../Table.vue";
-import { useBitkuaBotsStore } from "../../../ui/store/bitkuaBots.store";
-import { useBingXPositionsStore } from "../../../ui/store/bingxPositions.store";
+import { Position, Transaction, Balance, Bot } from "../../../server/data.dto";
 
-const bingXTransactionsStore = useBingXTransactionsStore();
-const bingXBalanceStore = useBingXBalanceStore();
-const bitkuaBotsStore = useBitkuaBotsStore();
-const bingXPositionsStore = useBingXPositionsStore();
-
-const transactions = computed(() => {
-  return bingXTransactionsStore.transactions.filter((x) => x.symbol);
-});
-
-const incomeTransactions = computed(() => {
-  return bingXTransactionsStore.transactions.filter((x) => !x.symbol);
-});
+const props = defineProps<{
+  transactions: Transaction[];
+  incomeTransactions: Transaction[];
+  positions: Position[];
+  balance: Balance;
+  bots: Bot[];
+}>();
 
 const totalIncomeTransactions = computed(() => {
-  return incomeTransactions.value
+  return props.incomeTransactions
     .map((x) => x.income)
     .reduce((acc, value) => {
       return acc + parseFloat(value);
@@ -31,11 +23,7 @@ const totalIncomeTransactions = computed(() => {
 });
 
 const riskRate = computed(() => {
-  return parseFloat(bingXPositionsStore.positions[0]?.riskRate ?? "0") * 100;
-});
-
-const balance = computed(() => {
-  return bingXBalanceStore.balance;
+  return parseFloat(props.positions[0]?.riskRate ?? "0") * 100;
 });
 
 const parseValue = (value: number | string | undefined) => {
@@ -80,12 +68,12 @@ const parseValue = (value: number | string | undefined) => {
       <tr
         class="border-b border-gray-200 bg-white hover:bg-slate-700 dark:border-gray-700 dark:bg-gray-800"
       >
-        <td class="px-2 py-0.5">unrealizedProfit (bal vs eq)</td>
+        <td class="px-2 py-0.5">unrealizedPnl (bal vs eq)</td>
         <td class="px-2 py-0.5">
-          <Price :value="balance?.unrealizedProfit" :decimals="2" />
+          <Price :value="balance?.unrealizedPnl" :decimals="2" />
           ({{
             (
-              (-1 * parseFloat(balance?.unrealizedProfit) * 100) /
+              (-1 * parseFloat(balance?.unrealizedPnl) * 100) /
               parseFloat(balance?.balance)
             ).toFixed(2)
           }}%)
@@ -136,7 +124,7 @@ const parseValue = (value: number | string | undefined) => {
             :value="
               parseFloat(balance?.balance) -
               totalIncomeTransactions +
-              parseFloat(balance?.unrealizedProfit)
+              parseFloat(balance?.unrealizedPnl)
             "
             :decimals="2"
           />
@@ -147,7 +135,7 @@ const parseValue = (value: number | string | undefined) => {
             :value="
               ((parseFloat(balance?.balance) -
                 totalIncomeTransactions +
-                parseFloat(balance?.unrealizedProfit)) *
+                parseFloat(balance?.unrealizedPnl)) *
                 100) /
               (parseFloat(balance?.balance) - totalIncomeTransactions)
             "
@@ -173,7 +161,7 @@ const parseValue = (value: number | string | undefined) => {
           ),
           transfer: parseValue(totalIncomeTransactions),
           equity: balance?.equity,
-          realisedProfit: balance?.realisedProfit,
+          realisedPnl: balance?.realisedPnl,
           freezedMargin: balance?.freezedMargin,
         })"
         :key="key"
@@ -201,17 +189,13 @@ const parseValue = (value: number | string | undefined) => {
         <td class="px-2 py-0.5">DKBots - Num</td>
         <td class="flex gap-1 px-2 py-0.5">
           <span class="text-green-400">
-            {{
-              bitkuaBotsStore.bots.filter((x) => x.status === "active").length
-            }}
+            {{ bots.filter((x) => x.status === "active").length }}
           </span>
           <span class="text-amber-400">
-            {{
-              bitkuaBotsStore.bots.filter((x) => x.status === "onlysell").length
-            }}
+            {{ bots.filter((x) => x.status === "onlysell").length }}
           </span>
           <span class="text-red-400">
-            {{ bitkuaBotsStore.bots.filter((x) => x.status === "stop").length }}
+            {{ bots.filter((x) => x.status === "stop").length }}
           </span>
         </td>
       </tr>
@@ -222,9 +206,9 @@ const parseValue = (value: number | string | undefined) => {
         <td class="flex gap-1 px-2 py-0.5">
           <Price
             :value="
-              bitkuaBotsStore.bots.reduce((acc, bot) => {
+              bots.reduce((acc, bot) => {
                 if (bot.status === 'stop') return acc;
-                return acc + parseFloat(bot.amount);
+                return acc + bot.amount;
               }, 0)
             "
             :decimals="2"
@@ -238,8 +222,8 @@ const parseValue = (value: number | string | undefined) => {
         <td class="flex gap-1 px-2 py-0.5">
           <Price
             :value="
-              bitkuaBotsStore.bots.reduce((acc, bot) => {
-                return acc + parseFloat(bot.amount) * parseInt(bot.orders);
+              bots.reduce((acc, bot) => {
+                return acc + bot.amount * bot.count;
               }, 0)
             "
             prefix="~"
@@ -254,9 +238,9 @@ const parseValue = (value: number | string | undefined) => {
         <td class="flex gap-1 px-2 py-0.5">
           <Price
             :value="
-              bitkuaBotsStore.bots.reduce((acc, bot) => {
+              bots.reduce((acc, bot) => {
                 if (bot.status === 'stop') return acc;
-                return acc + parseFloat(bot.amount);
+                return acc + bot.amount;
               }, 0) * 10
             "
             prefix="~"
@@ -271,17 +255,17 @@ const parseValue = (value: number | string | undefined) => {
         <td class="flex items-center gap-1 px-2 py-0.5">
           <Price
             :value="
-              bitkuaBotsStore.bots.reduce((acc, bot) => {
+              bots.reduce((acc, bot) => {
                 if (bot.status === 'stop') return acc;
-                return acc + parseFloat(bot.amount);
+                return acc + bot.amount;
               }, 0) *
               10 *
               0.75
             "
             :color="
-              bitkuaBotsStore.bots.reduce((acc, bot) => {
+              bots.reduce((acc, bot) => {
                 if (bot.status === 'stop') return acc;
-                return acc + parseFloat(bot.amount);
+                return acc + bot.amount;
               }, 0) *
                 10 *
                 0.75 >
@@ -294,9 +278,9 @@ const parseValue = (value: number | string | undefined) => {
           />
           <Icon
             v-if="
-              bitkuaBotsStore.bots.reduce((acc, bot) => {
+              bots.reduce((acc, bot) => {
                 if (bot.status === 'stop') return acc;
-                return acc + parseFloat(bot.amount);
+                return acc + bot.amount;
               }, 0) *
                 10 *
                 0.75 >

@@ -1,25 +1,25 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from "vue";
-import { useBingXTransactionsStore } from "../store/bingxTransactions.store";
+import { useBingXTransactionsStore } from "../store/bingx/bingxTransactions.store";
 import KLineChart from "../components/KLineChart.vue";
 import TheHeader from "../components/TheHeader.vue";
-import { useBingXTradesStore } from "../store/bingxTrades.store";
-import { useBingXPositionsStore } from "../store/bingxPositions.store";
-import { usePreferencesStore } from "../store/preferences.store";
-import { useBingXKLinesStore } from "../store/bingxKLines.store";
-import { Period } from "../../server/BingX.dto";
+import { useBingXTradesStore } from "../store/bingx/bingxTrades.store";
+import { useBingXPositionsStore } from "../store/bingx/bingxPositions.store";
+import { useBingXKLinesStore } from "../store/bingx/bingxKLines.store";
+import { Period } from "../../server/data.dto";
 import {
   Listbox,
   ListboxButton,
   ListboxOptions,
   ListboxOption,
 } from "@headlessui/vue";
+import { useBingxPreferencesStore } from "../store/bingx/bingxPreferences.store";
 
-const bingXTransactionsStore = useBingXTransactionsStore();
-const bingXTradesStore = useBingXTradesStore();
-const bingXPositionsStore = useBingXPositionsStore();
-const preferencesStore = usePreferencesStore();
-const bingXKLinesStore = useBingXKLinesStore();
+const bingxTransactionsStore = useBingXTransactionsStore();
+const bingxTradesStore = useBingXTradesStore();
+const bingxPositionsStore = useBingXPositionsStore();
+const bingxKLinesStore = useBingXKLinesStore();
+const bingxPreferencesStore = useBingxPreferencesStore();
 
 const periodsOptions: Period[] = [
   "1m",
@@ -50,8 +50,8 @@ const fetchData = async () => {
   isRefreshing.value = true;
   try {
     await Promise.all(
-      bingXTransactionsStore.allSymbols.map((symbol) =>
-        bingXKLinesStore.fetchKLines(symbol, selectedPeriod.value),
+      bingxTransactionsStore.allSymbols.map((symbol) =>
+        bingxKLinesStore.fetchKLines(symbol, selectedPeriod.value),
       ),
     );
   } finally {
@@ -62,7 +62,7 @@ const fetchData = async () => {
 const filteredFilters = computed(() => {
   if (!search.value)
     return usedSymbols.value.sort((a, b) => a.localeCompare(b));
-  return bingXTransactionsStore.allSymbols
+  return bingxTransactionsStore.allSymbols
     .filter((symbol) =>
       symbol.toLowerCase().includes(search.value.toLowerCase()),
     )
@@ -70,8 +70,8 @@ const filteredFilters = computed(() => {
 });
 
 const usedSymbols = computed(() => {
-  return bingXTransactionsStore.allSymbols
-    .filter((x) => !preferencesStore.hidedSymbols.includes(x))
+  return bingxTransactionsStore.allSymbols
+    .filter((x) => !bingxPreferencesStore.hidedSymbols.includes(x))
     .sort();
 });
 
@@ -82,7 +82,7 @@ onMounted(async () => {
 
 <template>
   <div class="p-4">
-    <TheHeader>
+    <TheHeader page="charts">
       <template #left>
         <input
           type="text"
@@ -123,18 +123,18 @@ onMounted(async () => {
             </div>
           </ListboxOptions>
         </Listbox>
-        <button
-          @click="preferencesStore.hideTrades = !preferencesStore.hideTrades"
+        <!-- <button
+          @click="bingxPreferencesStore.hideTrades = !bingxPreferencesStore.hideTrades"
           class="cursor-pointer rounded px-4 py-1 text-white transition hover:bg-emerald-700"
           :class="{
-            'bg-emerald-400': preferencesStore.hideTrades,
-            'bg-emerald-600': !preferencesStore.hideTrades,
+            'bg-emerald-400': bingxPreferencesStore.hideTrades,
+            'bg-emerald-600': !bingxPreferencesStore.hideTrades,
           }"
         >
           <span>
-            {{ preferencesStore.hideTrades ? "Hided" : "Hide" }} trades
+            {{ bingxPreferencesStore.hideTrades ? "Hided" : "Hide" }} trades
           </span>
-        </button>
+        </button> -->
       </template>
     </TheHeader>
     <div
@@ -146,7 +146,7 @@ onMounted(async () => {
         :key="`${selectedPeriod}-${symbol}`"
       >
         <div
-          v-if="!bingXKLinesStore.kLine(symbol, selectedPeriod)?.length"
+          v-if="!bingxKLinesStore.kLine(symbol, selectedPeriod)?.length"
           class="flex h-full items-center justify-center rounded border border-gray-600 p-4 text-slate-600"
         >
           {{ symbol }} Fetching data...
@@ -155,11 +155,11 @@ onMounted(async () => {
           v-else
           :symbol="symbol"
           :period="selectedPeriod"
-          :hideTrades="preferencesStore.hideTrades"
-          :klines="bingXKLinesStore.kLine(symbol, selectedPeriod) ?? []"
-          :trades="bingXTradesStore.trades.filter((x) => x.symbol === symbol)"
+          :hideTrades="false"
+          :klines="bingxKLinesStore.kLine(symbol, selectedPeriod) ?? []"
+          :trades="bingxTradesStore.trades.filter((x) => x.symbol === symbol)"
           :positions="
-            bingXPositionsStore.positions.filter((x) => x.symbol === symbol)
+            bingxPositionsStore.positions.filter((x) => x.symbol === symbol)
           "
           size="small"
         />

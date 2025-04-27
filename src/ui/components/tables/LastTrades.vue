@@ -1,23 +1,31 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useBingXTransactionsStore } from "../../store/bingxTransactions.store";
+import { useBingXTransactionsStore } from "../../store/bingx/bingxTransactions.store";
 import Price from "../Price.vue";
 import Table from "../Table.vue";
 import Symbol from "../Symbol.vue";
 import DateTime from "../DateTime.vue";
+import {
+  Balance,
+  Bot,
+  Contract,
+  Position,
+  Trade,
+} from "../../../server/data.dto";
 
-const bingXTransactionsStore = useBingXTransactionsStore();
+defineProps<{
+  exchange: string;
+  trades: Trade[];
+  positions: Position[];
+  balance: Balance;
+  bots: Bot[];
+  contracts: Contract[];
+}>();
 
-type PriceData = {
-  num: number;
-  pnl: number;
-  all: number;
-  charges: number;
-  volume: number;
-};
+const bingxTransactionsStore = useBingXTransactionsStore();
 
 const transactions = computed(() => {
-  return bingXTransactionsStore.transactions.filter((x) => x.symbol);
+  return bingxTransactionsStore.transactions.filter((x) => x.symbol);
 });
 
 const lastClosedTransactions = computed(() => {
@@ -34,7 +42,15 @@ const lastClosedTransactions = computed(() => {
     <template #default="{ item }">
       <td class="px-2 py-0.5"><DateTime :value="new Date(item.time)" /></td>
       <td class="px-2 py-0.5">
-        <Symbol :value="item.symbol.replace('-USDT', '')" />
+        <Symbol
+          :value="item.symbol.replace('-USDT', '')"
+          :exchange="exchange"
+          :bots="bots"
+          :trades="trades"
+          :positions="positions"
+          :balance="balance"
+          :contracts="contracts"
+        />
       </td>
       <td class="px-2 py-0.5">
         <Price :value="item.income" :decimals="2" />

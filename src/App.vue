@@ -1,34 +1,36 @@
 <script setup lang="ts">
-import BingXTransactions from "./ui/components/BingXTransactions.vue";
+import BingXTransactions from "./ui/components/BingxDashboard.vue";
 import Config from "./ui/components/Config.vue";
-import { useBingXConfigStore } from "./ui/store/bingxConfig.store";
-import { useBitkuaConfigStore } from "./ui/store/bitkuaConfig.store";
+import { useBingXConfigStore } from "./ui/store/bingx/bingxConfig.store";
+import { useBitkuaConfigStore } from "./ui/store/bitkua/bitkuaConfig.store";
 import { computed, resolveComponent } from "vue";
 import md5 from "md5";
 import { useDark } from "@vueuse/core";
+import { useBitgetConfigStore } from "./ui/store/bitget/bitgetConfig.store";
 
 const isDark = useDark();
 isDark.value = true;
 
-const bingXConfig = useBingXConfigStore();
+const bingxConfig = useBingXConfigStore();
 const bitkuaConfig = useBitkuaConfigStore();
+const bitgetConfig = useBitgetConfigStore();
 
 resolveComponent;
 const hashKey = computed(() => {
   const hash = md5(
     JSON.stringify({
-      apiKey: bingXConfig.apiKey,
-      apiSecret: bingXConfig.apiSecret,
+      apiKey: bingxConfig.apiKey,
+      apiSecret: bingxConfig.apiSecret,
     }),
   );
   return hash;
 });
 
-if (bingXConfig.apiKey && bingXConfig.apiSecret) {
+if (bingxConfig.apiKey && bingxConfig.apiSecret) {
   try {
     window.electronAPI.setBingXCredentials(
-      bingXConfig.apiKey,
-      bingXConfig.apiSecret,
+      bingxConfig.apiKey,
+      bingxConfig.apiSecret,
     );
     console.log("BingX service initialized successfully");
   } catch (error) {
@@ -36,12 +38,24 @@ if (bingXConfig.apiKey && bingXConfig.apiSecret) {
   }
 }
 
-if (bitkuaConfig.email && bitkuaConfig.password && bitkuaConfig.secret) {
+if (bitgetConfig.apiKey && bitgetConfig.apiSecret && bitgetConfig.password) {
+  try {
+    window.electronAPI.setBitgetCredentials(
+      bitgetConfig.apiKey,
+      bitgetConfig.apiSecret,
+      bitgetConfig.password,
+    );
+    console.log("Bitget service initialized successfully");
+  } catch (error) {
+    console.error("Failed to initialize Bitget service:", error);
+  }
+}
+
+if (bitkuaConfig.username && bitkuaConfig.token) {
   try {
     window.electronAPI.setBitkuaCredentials(
-      bitkuaConfig.email,
-      bitkuaConfig.password,
-      bitkuaConfig.secret,
+      bitkuaConfig.username,
+      bitkuaConfig.token,
     );
     console.log("Bitkua service initialized successfully");
   } catch (error) {
@@ -52,7 +66,7 @@ if (bitkuaConfig.email && bitkuaConfig.password && bitkuaConfig.secret) {
 
 <template>
   <div class="min-h-screen w-full bg-slate-900 text-slate-200">
-    <Config v-if="bingXConfig.viewConfig" />
+    <Config v-if="bingxConfig.viewConfig" />
     <div v-else :key="hashKey">
       <RouterView />
     </div>
