@@ -1,24 +1,24 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import Price from "./Price.vue";
-import { useBingXPositionsStore } from "../store/bingx/bingxPositions.store";
 
 import { useElementHover } from "@vueuse/core";
 import { useTemplateRef } from "vue";
+import { Position } from "../../server/data.dto";
 
 const props = defineProps<{
   symbol: string;
   side: "long" | "short";
   allVisible: boolean;
+  gaps: number[];
+  positions: Position[];
 }>();
-
-const bingxPositionsStore = useBingXPositionsStore();
 
 const myHoverableElement = useTemplateRef<HTMLButtonElement>("rescueElement");
 const isHovered = useElementHover(myHoverableElement);
 
 const position = computed(() => {
-  return bingxPositionsStore.positions.find(
+  return props.positions.find(
     (position) =>
       position.symbol.replace("-USDT", "") ===
         props.symbol.replace("-USDT", "") &&
@@ -42,25 +42,16 @@ const investToToGap = (desiredGap: number) => {
     (newAvgOpenPrice / markPrice - 1);
   return q / leverage;
 };
-
-const gaps = [
-  { value: 5, visible: false },
-  { value: 10, visible: true },
-  { value: 50, visible: false },
-];
 </script>
 
 <template>
   <div class="flex gap-1 text-xs" ref="rescueElement">
-    <template v-for="gap in gaps" :key="gap.value">
-      <div v-if="investToToGap(gap.value) > 0 && (allVisible || gap.visible)">
-        {{ gap.value }}%[
-        <Price
-          :value="investToToGap(gap.value)"
-          :decimals="2"
-          color="orange"
-        />]
+    <template v-for="gap in gaps" :key="gap">
+      <div v-if="investToToGap(gap) > 0">
+        {{ gap }}%[
+        <Price :value="investToToGap(gap)" :decimals="2" color="orange" />]
       </div>
+      <div v-else class="text-slate-600">---</div>
     </template>
   </div>
 </template>

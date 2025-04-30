@@ -93,8 +93,8 @@ const draw = () => {
   if (!props.hideTrades) {
     filteredTrades.value.forEach((trade) => {
       const tradeTime = new Date(trade.filledTime).getTime();
-      const tradePrice = parseFloat(trade.price);
-      const isProfit = parseFloat(trade.realisedPNL) > 0;
+      const tradePrice = trade.price;
+      const isProfit = trade.realisedPNL > 0;
       const color = trade.side === "BUY" ? "#20aa93" : "#FF0000";
       const overlayName =
         trade.side === "BUY" ? "simpleAnnotationDown" : "simpleAnnotation";
@@ -104,7 +104,7 @@ const draw = () => {
         points: [{ timestamp: tradeTime, value: tradePrice }],
         lock: true,
         extendData: isProfit
-          ? parseFloat(trade.realisedPNL).toFixed(2)
+          ? trade.realisedPNL.toFixed(2)
           : trade.side.charAt(0),
         styles: {
           text: {
@@ -280,13 +280,17 @@ const symbolData = computed(() => {
       if (!acc) {
         acc = { num: 0, pnl: 0, all: 0, charges: 0, volume: 0 };
       }
-      if (transaction.incomeType === "REALIZED_PNL") {
+      if (
+        ["REALIZED_PNL", "close_long", "close_short"].includes(
+          transaction.incomeType,
+        )
+      ) {
         acc.num++;
-        acc.pnl += parseFloat(transaction.income);
+        acc.pnl += transaction.income;
       } else {
-        acc.charges += parseFloat(transaction.income);
+        acc.charges += transaction.income;
       }
-      acc.all += parseFloat(transaction.income);
+      acc.all += transaction.income;
       return acc;
     },
     { num: 0, pnl: 0, all: 0, charges: 0, volume: 0 } as PriceData,
@@ -300,8 +304,8 @@ const symbolData = computed(() => {
     if (!acc) {
       acc = { num: 0, pnl: 0, all: 0, charges: 0, volume: 0 };
     }
-    if (parseFloat(trade.realisedPNL) !== 0) return acc;
-    acc.volume += parseFloat(trade.quoteQty);
+    if (trade.realisedPNL !== 0) return acc;
+    acc.volume += trade.quoteQty;
     return acc;
   }, data);
 
@@ -577,7 +581,13 @@ watch(
                   icon="ic:round-warning"
                 />
               </div>
-              <Rescue :symbol="symbol" :side="side" :allVisible="true" />
+              <Rescue
+                :symbol="symbol"
+                :side="side"
+                :allVisible="true"
+                :gaps="[5, 10, 50]"
+                :positions="positions"
+              />
             </div>
           </div>
         </div>

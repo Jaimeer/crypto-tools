@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { Transaction } from "../../../server/bitget/Bitget.dto";
+import { Transaction } from "../../../server/data.dto";
 
 type State = {
   transactions: Transaction[];

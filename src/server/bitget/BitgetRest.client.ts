@@ -1,11 +1,13 @@
 // eslint-disable-next-line import/no-unresolved
+import { subDays } from "date-fns";
 import { HashLib } from "../../utils/HashLib";
 import {
+  FuturesAccountBillV2,
   FuturesAccountsV2,
-  FuturesTransactionRecordV2,
+  FuturesHistoryOrderV2,
+  FuturesOrderFillV2,
   RestClientV2,
 } from "bitget-api";
-import { subDays } from "date-fns";
 
 export class BitgetRestClient {
   //   private bingX: bitget
@@ -53,171 +55,150 @@ export class BitgetRestClient {
     return client;
   }
 
-  async fetchTransactions(
-    currentTransactions: FuturesTransactionRecordV2[],
-  ): Promise<FuturesTransactionRecordV2[]> {
-    if (!this.client) return [];
-
-    const transactions = await this.client.getFuturesTransactionRecords({
-      startTime: subDays(new Date(), 1).getTime().toString(),
-      endTime: Date.now().toString(),
-    });
-
-    // console.log(transactions);
-    return [];
-
-    // const allTransactions: Transaction[] = currentTransactions;
-
-    // // Start with the current time
-    // const newestTransaction = allTransactions.length
-    //   ? Math.max(...allTransactions.map((t) => t.time))
-    //   : undefined;
-    // let endTime = Date.now();
-    // const startTime = newestTransaction
-    //   ? newestTransaction + 1000
-    //   : subYears(new Date(), 10).getTime();
-    // let hasMoreData = true;
-    // let page = 1;
-    // const limit = 1000;
-
-    // do {
-    //   try {
-    //     console.log(
-    //       `[fetchTransactions] Fetching page ${page}, startTime ${startTime} ` +
-    //         `${new Date(startTime).toISOString()}, endTime ${endTime} ` +
-    //         `${new Date(endTime).toISOString()} transactions so far: ${allTransactions.length}`,
-    //     );
-
-    //     const API: BingXApiRequest = {
-    //       path: "/openApi/swap/v2/user/income",
-    //       method: "GET",
-    //       payload: {
-    //         limit: limit.toString(),
-    //         startTime: startTime.toString(),
-    //         endTime: endTime.toString(),
-    //       },
-    //       protocol: "https",
-    //     };
-
-    //     const transactions = await this.bitgetRequest<Transaction[]>(API);
-
-    //     if (!transactions || transactions.length === 0) {
-    //       hasMoreData = false;
-    //       continue;
-    //     }
-
-    //     // Add to our collection
-    //     allTransactions.push(...transactions);
-
-    //     // Find the oldest transaction timestamp for next pagination request
-    //     const oldestTransaction = Math.min(...transactions.map((t) => t.time));
-
-    //     // Set end time to just before the oldest transaction time
-    //     endTime = oldestTransaction - 1;
-
-    //     page++;
-
-    //     if (transactions.length < limit) {
-    //       hasMoreData = false;
-    //       continue;
-    //     }
-    //   } catch (error) {
-    //     console.error("Error during pagination:", error);
-    //     hasMoreData = false;
-    //   }
-    // } while (hasMoreData);
-
-    // console.log(`Total transactions fetched: ${allTransactions.length}`);
-    // return allTransactions.toSorted((a, b) => b.time - a.time);
+  private sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  // async fetchTrades(currentTrades: Trade[]): Promise<Trade[]> {
-  //   return [];
-  //   // // console.log('fetchTrades', {
-  //   // //   apiKey: this.API_KEY,
-  //   // //   apiSecret: this.API_SECRET,
-  //   // // })
-  //   // const allTrades: Trade[] = currentTrades;
+  async fetchTransactions(
+    currentTransactions: FuturesAccountBillV2[],
+  ): Promise<FuturesAccountBillV2[]> {
+    if (!this.client) return [];
+    const allTransactions: FuturesAccountBillV2[] = currentTransactions;
 
-  //   // // Start with the current time
-  //   // const newestTransaction = allTrades.length
-  //   //   ? Math.max(...allTrades.map((t) => new Date(t.filledTime).getTime()))
-  //   //   : undefined;
-  //   // let endTime = Date.now();
-  //   // const startTime = newestTransaction ?? subYears(new Date(), 10).getTime();
-  //   // let hasMoreData = true;
-  //   // let page = 1;
-  //   // const limit = 1000;
+    const newestTransaction = allTransactions.length
+      ? Math.max(...allTransactions.map((t) => parseInt(t.cTime)))
+      : undefined;
+    const startTime = newestTransaction
+      ? newestTransaction + 1000
+      : subDays(new Date(), 30).getTime();
+    let hasMoreData = true;
+    let page = 1;
+    const limit = 100;
+    let idLessThan = "";
 
-  //   // do {
-  //   //   try {
-  //   //     console.log(
-  //   //       `[fetchTrades] Fetching page ${page}, startTime ${startTime} ` +
-  //   //         `${new Date(startTime).toISOString()}, endTime ${endTime} ` +
-  //   //         `${new Date(endTime).toISOString()} transactions so far: ${allTrades.length}`,
-  //   //     );
+    do {
+      try {
+        console.log(
+          `[Bitget][fetchTransactions] Fetching page ${page}, ` +
+            `idLessThan ${idLessThan} ` +
+            `transactions so far: ${allTransactions.length}`,
+        );
 
-  //   //     const API: BingXApiRequest = {
-  //   //       path: "/openApi/swap/v2/trade/fillHistory",
-  //   //       method: "GET",
-  //   //       payload: {
-  //   //         pageSize: limit.toString(),
-  //   //         startTs: startTime.toString(),
-  //   //         endTs: endTime.toString(),
-  //   //       },
-  //   //       protocol: "https",
-  //   //     };
+        const response = await this.client.getFuturesAccountBills({
+          productType: "USDT-FUTURES",
+          limit: limit.toString(),
+          idLessThan,
+          startTime: startTime.toString(),
+        });
 
-  //   //     const trades = await this.bitgetRequest<{
-  //   //       fill_history_orders: Trade[];
-  //   //     }>(API);
+        const transactions = response.data.bills;
+        idLessThan = response.data.endId;
 
-  //   //     if (!trades || trades.fill_history_orders?.length === 0) {
-  //   //       hasMoreData = false;
-  //   //       continue;
-  //   //     }
+        if (!transactions || transactions.length === 0) {
+          hasMoreData = false;
+          continue;
+        }
 
-  //   //     // Add to our collection
-  //   //     allTrades.push(...trades.fill_history_orders);
+        allTransactions.push(...transactions);
 
-  //   //     // Find the oldest transaction timestamp for next pagination request
-  //   //     const oldestTransaction = Math.min(
-  //   //       ...trades.fill_history_orders.map((t) =>
-  //   //         new Date(t.filledTime).getTime(),
-  //   //       ),
-  //   //     );
+        page++;
 
-  //   //     // Set end time to just before the oldest transaction time
-  //   //     endTime = oldestTransaction - 1;
+        if (transactions.length < limit) {
+          hasMoreData = false;
+          continue;
+        }
+        await this.sleep(1000);
+      } catch (error) {
+        console.error("Error during pagination:", error);
+        hasMoreData = false;
+      }
 
-  //   //     page++;
+      console.log({ hasMoreData });
+    } while (hasMoreData);
 
-  //   //     if (trades.fill_history_orders.length < limit) {
-  //   //       hasMoreData = false;
-  //   //       continue;
-  //   //     }
-  //   //   } catch (error) {
-  //   //     console.error("Error during pagination:", error);
-  //   //     hasMoreData = false;
-  //   //   }
-  //   // } while (hasMoreData);
+    console.log(
+      `[Bitget] Total transactions fetched: ${allTransactions.length}`,
+    );
+    return allTransactions.toSorted(
+      (a, b) => parseInt(b.cTime) - parseInt(a.cTime),
+    );
+  }
 
-  //   // console.log(`Total trades fetched: ${allTrades?.length ?? "ERROR"}`);
-  //   // return allTrades.toSorted(
-  //   //   (a, b) =>
-  //   //     new Date(b.filledTime).getTime() - new Date(a.filledTime).getTime(),
-  //   // );
-  // }
+  async fetchTrades(
+    currentTrades: FuturesOrderFillV2[],
+  ): Promise<FuturesOrderFillV2[]> {
+    if (!this.client) return [];
+    const allTrades: FuturesOrderFillV2[] = currentTrades;
+
+    const newestTransaction = allTrades.length
+      ? Math.max(...allTrades.map((t) => parseInt(t.cTime)))
+      : undefined;
+    const startTime = newestTransaction
+      ? newestTransaction + 1000
+      : subDays(new Date(), 30).getTime();
+    let hasMoreData = true;
+    let page = 1;
+    const limit = 100;
+    let idLessThan = "";
+
+    do {
+      try {
+        console.log(
+          `[Bitget][fetchTrades] Fetching page ${page}, ` +
+            `idLessThan ${idLessThan} ` +
+            `trades so far: ${allTrades.length}`,
+        );
+
+        const response = await this.client.getFuturesHistoricOrderFills({
+          productType: "USDT-FUTURES",
+          limit: limit.toString(),
+          idLessThan,
+          startTime: startTime.toString(),
+        });
+
+        const trades = response.data.fillList;
+        idLessThan = response.data.endId;
+
+        if (!trades || trades.length === 0) {
+          hasMoreData = false;
+          continue;
+        }
+
+        allTrades.push(...trades);
+
+        page++;
+
+        if (trades.length < limit) {
+          hasMoreData = false;
+          continue;
+        }
+        await this.sleep(1000);
+      } catch (error) {
+        console.error("Error during pagination:", error);
+        hasMoreData = false;
+      }
+
+      console.log({ hasMoreData });
+    } while (hasMoreData);
+
+    console.log(`[Bitget] Total trades fetched: ${allTrades.length}`);
+    return allTrades.toSorted((a, b) => parseInt(b.cTime) - parseInt(a.cTime));
+  }
 
   async fetchBalance(): Promise<FuturesAccountsV2> {
     if (!this.client) return undefined;
 
-    const response = await this.client.getFuturesAccountAssets({
-      productType: "USDT-FUTURES",
-    });
+    try {
+      const response = await this.client.getFuturesAccountAssets({
+        productType: "USDT-FUTURES",
+      });
 
-    const data = response.data.find((x) => x.marginCoin === "USDT");
-    return data;
+      const data = response.data.find((x) => x.marginCoin === "USDT");
+      return data;
+    } catch (error) {
+      console.error("Error fetching balance:", error.body);
+      return undefined;
+    }
   }
 
   // async fetchContracts(): Promise<Contract[]> {

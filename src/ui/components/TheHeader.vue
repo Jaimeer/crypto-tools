@@ -22,20 +22,20 @@ const openChartsWindow = () => {
       <h1 class="text-xl font-bold">Crypto Tools</h1>
       <RouterLink
         to="/bingx"
-        class="rounded bg-slate-500 px-4 py-1 text-white transition hover:bg-slate-600"
+        class="rounded bg-slate-500 px-4 py-1 transition hover:bg-slate-600"
         :class="{
-          'bg-slate-500': page === 'bingx',
-          'bg-slate-700': page !== 'bingx',
+          'bg-slate-500 text-white': page === 'bingx',
+          'bg-slate-700 text-slate-400': page !== 'bingx',
         }"
       >
         BingX
       </RouterLink>
       <RouterLink
         to="/bitget"
-        class="rounded bg-slate-500 px-4 py-1 text-white transition hover:bg-slate-600"
+        class="rounded bg-slate-500 px-4 py-1 transition hover:bg-slate-600"
         :class="{
-          'bg-slate-500': page === 'bitget',
-          'bg-slate-700': page !== 'bitget',
+          'bg-slate-500 text-white': page === 'bitget',
+          'bg-slate-700 text-slate-400': page !== 'bitget',
         }"
       >
         Bitget

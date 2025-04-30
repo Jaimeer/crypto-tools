@@ -1,16 +1,16 @@
 export type Transaction = {
   symbol: string;
-  incomeType:
-    | "TRANSFER"
-    | "REALIZED_PNL"
-    | "FUNDING_FEE"
-    | "TRADING_FEE"
-    | "INSURANCE_CLEAR"
-    | "TRIAL_FUND"
-    | "ADL"
-    | "SYSTEM_DEDUCTION"
-    | "GTD_PRICE";
-  income: string;
+  incomeType: string;
+  // | "TRANSFER"
+  // | "REALIZED_PNL"
+  // | "FUNDING_FEE"
+  // | "TRADING_FEE"
+  // | "INSURANCE_CLEAR"
+  // | "TRIAL_FUND"
+  // | "ADL"
+  // | "SYSTEM_DEDUCTION"
+  // | "GTD_PRICE";
+  income: number;
   asset: string;
   info: string;
   time: number;
@@ -31,10 +31,10 @@ export type Balance = {
 
 export type Trade = {
   symbol: string;
-  qty: string;
-  price: string;
-  quoteQty: string;
-  commission: string;
+  qty: number;
+  price: number;
+  quoteQty: number;
+  commission: number;
   commissionAsset: string;
   orderId: string;
   tradeId: "LONG" | "SHORT";
@@ -43,7 +43,7 @@ export type Trade = {
   positionSide: string;
   role: string;
   total: number;
-  realisedPNL: string;
+  realisedPNL: number;
 };
 
 export type Position = {

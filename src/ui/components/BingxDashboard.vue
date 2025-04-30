@@ -22,7 +22,7 @@ import {
   ListboxOption,
 } from "@headlessui/vue";
 
-const exchange = "Bingx";
+const exchange = "bingx";
 const bingxTransactionsStore = useBingXTransactionsStore();
 const bingxBalanceStore = useBingXBalanceStore();
 const bitkuaBotsStore = useBitkuaBotsStore();
@@ -80,7 +80,7 @@ watch(selectedSymbols, () => {
 
 <template>
   <div class="p-4">
-    <TheHeader page="bingx">
+    <TheHeader :page="exchange">
       <template #right>
         <Listbox v-model="selectedSymbols" multiple>
           <ListboxButton
@@ -126,27 +126,10 @@ watch(selectedSymbols, () => {
       </template>
     </TheHeader>
 
-    <div
-      v-if="bingxTransactionsStore.loading && !transactions.length"
-      class="text-gray-600"
-    >
-      Loading transactions...
-    </div>
-
-    <div v-else-if="bingxTransactionsStore.error" class="text-red-500">
-      Error: {{ bingxTransactionsStore.error }}
-    </div>
-
-    <div
-      v-else-if="bingxTransactionsStore.transactions.length === 0"
-      class="text-gray-600"
-    >
+    <div v-if="transactions.length === 0" class="text-gray-600">
       No transactions found.
     </div>
     <div v-else class="flex flex-col gap-2">
-      <!-- <div>
-        <Chart :symbols="allSymbols" :data="transactionsBySymbolAndDay" />
-      </div> -->
       <div class="grid grid-cols-5 gap-2">
         <Balance
           :transactions="transactions"
@@ -155,7 +138,12 @@ watch(selectedSymbols, () => {
           :balance="balance"
           :bots="bots"
         />
-        <ProfitByDay class="col-span-2" />
+        <ProfitByDay
+          class="col-span-2"
+          :exchange="exchange"
+          :trades="trades"
+          :transactions="transactions"
+        />
         <LastTrades
           :exchange="exchange"
           :trades="trades"
@@ -163,6 +151,7 @@ watch(selectedSymbols, () => {
           :balance="balance"
           :bots="bots"
           :contracts="contracts"
+          :transactions="transactions"
         />
         <ProfitRanking
           :exchange="exchange"

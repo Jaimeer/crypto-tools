@@ -14,7 +14,7 @@ import { BingXWebSocket } from "./BingxWebSocket.client";
 import { KLineDataEvent, WebSocketMessage } from "./Bingx.ws.dto";
 import { CacheService } from "../Cache.service";
 import { NotifyMessage } from "../messages.dto";
-import { BingxBalance } from "./Bingx.dto";
+import { BingxBalance, BingxTrade, BingxTransaction } from "./Bingx.dto";
 import { BingxCacheService } from "./Bingx.cache";
 
 const klineRegex = /^([A-Z0-9]*-[A-Z0-9]*)?@kline_([1-9]*[mhdwM]*)?$/;
@@ -24,6 +24,13 @@ export class BingXService {
   private readonly wsClient: BingXWebSocket;
   private readonly cacheService: BingxCacheService;
   private refreshInterval: NodeJS.Timeout | null = null;
+  private originalData: {
+    transactions: BingxTransaction[];
+    trades: BingxTrade[];
+  } = {
+    transactions: [],
+    trades: [],
+  };
   private data: {
     transactions: Transaction[];
     trades: Trade[];
@@ -97,33 +104,79 @@ export class BingXService {
     }
   }
 
+  private transactionsTransform(
+    transactions: BingxTransaction[],
+  ): Transaction[] {
+    return transactions.map((transaction) => ({
+      symbol: transaction.symbol,
+      incomeType: transaction.incomeType,
+      income: parseFloat(transaction.income),
+      asset: transaction.asset,
+      info: transaction.info,
+      time: transaction.time,
+      tranId: transaction.tranId,
+      tradeId: transaction.tradeId,
+    }));
+  }
+
+  private tradesTransform(trades: BingxTrade[]): Trade[] {
+    return trades.map((trade) => ({
+      symbol: trade.symbol,
+      qty: parseFloat(trade.qty),
+      price: parseFloat(trade.price),
+      quoteQty: parseFloat(trade.quoteQty),
+      commission: parseFloat(trade.commission),
+      commissionAsset: trade.commissionAsset,
+      orderId: trade.orderId,
+      tradeId: trade.tradeId,
+      filledTime: trade.filledTime,
+      side: trade.side,
+      positionSide: trade.positionSide,
+      role: trade.role,
+      total: trade.total,
+      realisedPNL: parseFloat(trade.realisedPNL),
+    }));
+  }
+
   private async loadData() {
     console.log("[BingX] loadData");
-    if (!this.data.transactions.length) {
+    if (!this.originalData.transactions.length) {
       const cachedData = await this.cacheService.loadBingxTransactions();
-      this.data.transactions = cachedData?.data ?? [];
-
-      console.log("[Bingx]", { transactions: cachedData?.data?.length });
+      this.originalData.transactions = cachedData?.data ?? [];
+      console.log("[Bingx] Cache", {
+        transactions: this.originalData.transactions.length,
+      });
     }
-    if (!this.data.trades.length) {
+    if (!this.originalData.trades.length) {
       const cachedData = await this.cacheService.loadBingxTrades();
-      this.data.trades = cachedData?.data ?? [];
+      this.originalData.trades = cachedData?.data ?? [];
 
-      console.log("[Bingx]", { trades: cachedData?.data?.length });
+      console.log("[Bingx] Cache", {
+        trades: this.originalData.trades.length,
+      });
     }
 
-    this.data.transactions = await this.restClient.fetchTransactions(
-      this.data.transactions,
+    this.originalData.transactions = await this.restClient.fetchTransactions(
+      this.originalData.transactions,
     );
-    this.data.trades = await this.restClient.fetchTrades(this.data.trades);
+    this.originalData.trades = await this.restClient.fetchTrades(
+      this.originalData.trades,
+    );
     const bingxBalance = await this.restClient.fetchBalance();
     this.data.positions = await this.restClient.fetchPositions();
     this.data.contracts = await this.restClient.fetchContracts();
 
     this.data.balance = this.balanceTransform(bingxBalance);
 
-    await this.cacheService.saveBingxTransactions(this.data.transactions);
-    await this.cacheService.saveBingxTrades(this.data.trades);
+    await this.cacheService.saveBingxTransactions(
+      this.originalData.transactions,
+    );
+    await this.cacheService.saveBingxTrades(this.originalData.trades);
+
+    this.data.transactions = this.transactionsTransform(
+      this.originalData.transactions,
+    );
+    this.data.trades = this.tradesTransform(this.originalData.trades);
 
     this.notifyClients({
       store: "bingx.transactions",

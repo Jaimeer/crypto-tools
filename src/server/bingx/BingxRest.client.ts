@@ -184,7 +184,7 @@ export class BingXRestClient {
     do {
       try {
         console.log(
-          `[fetchTransactions] Fetching page ${page}, startTime ${startTime} ` +
+          `[Bingx][fetchTransactions] Fetching page ${page}, startTime ${startTime} ` +
             `${new Date(startTime).toISOString()}, endTime ${endTime} ` +
             `${new Date(endTime).toISOString()} transactions so far: ${allTransactions.length}`,
         );
@@ -228,7 +228,9 @@ export class BingXRestClient {
       }
     } while (hasMoreData);
 
-    console.log(`Total transactions fetched: ${allTransactions.length}`);
+    console.log(
+      `[Bingx] Total transactions fetched: ${allTransactions.length}`,
+    );
     return allTransactions.toSorted((a, b) => b.time - a.time);
   }
 
@@ -252,7 +254,7 @@ export class BingXRestClient {
     do {
       try {
         console.log(
-          `[fetchTrades] Fetching page ${page}, startTime ${startTime} ` +
+          `[Bingx][fetchTrades] Fetching page ${page}, startTime ${startTime} ` +
             `${new Date(startTime).toISOString()}, endTime ${endTime} ` +
             `${new Date(endTime).toISOString()} transactions so far: ${allTrades.length}`,
         );
@@ -302,7 +304,9 @@ export class BingXRestClient {
       }
     } while (hasMoreData);
 
-    console.log(`Total trades fetched: ${allTrades?.length ?? "ERROR"}`);
+    console.log(
+      `[Bingx] Total trades fetched: ${allTrades?.length ?? "ERROR"}`,
+    );
     return allTrades.toSorted(
       (a, b) =>
         new Date(b.filledTime).getTime() - new Date(a.filledTime).getTime(),
@@ -317,7 +321,7 @@ export class BingXRestClient {
       protocol: "https",
     };
     const balance = await this.bingxRequest<BingxBalance[]>(API);
-    console.log(`[fetchBalance] Fetched balance ${!!balance}`);
+    console.log(`[Bingx][fetchBalance] Fetched balance ${!!balance}`);
     return balance.find((x) => x.asset === "USDT");
   }
 
@@ -329,7 +333,7 @@ export class BingXRestClient {
       protocol: "https",
     };
     const contracts = await this.bingxRequest<BingxContract[]>(API);
-    console.log(`[fetchContracts] Fetched contracts ${!!contracts}`);
+    console.log(`[Bingx][fetchContracts] Fetched contracts ${!!contracts}`);
     return contracts;
   }
 
@@ -341,7 +345,7 @@ export class BingXRestClient {
       protocol: "https",
     };
     const positions = await this.bingxRequest<BingxPosition[]>(API);
-    console.log(`[fetchPositions] Fetched positions ${!!positions}`);
+    console.log(`[Bingx][fetchPositions] Fetched positions ${!!positions}`);
     return positions;
   }
 
@@ -361,7 +365,7 @@ export class BingXRestClient {
     };
     const klines = await this.bingxRequest<BingxKLine[]>(API);
     console.log(
-      `[fetchKlines][${symbol}][${period}] Fetched klines ${klines?.length ?? "ERROR"}`,
+      `[Bingx][fetchLines][${symbol}][${period}] Fetched klines ${klines?.length ?? "ERROR"}`,
     );
     if (!klines) return [];
 
@@ -377,7 +381,7 @@ export class BingXRestClient {
     };
     const listenKeyData = await this.bingxRequest<BingxListenKey>(API);
     console.log(
-      `[fetchBalance] Fetched getWSListenKey ${listenKeyData?.listenKey}`,
+      `[Bingx][fetchBalance] Fetched getWSListenKey ${listenKeyData?.listenKey}`,
     );
     return listenKeyData.listenKey;
   }
@@ -392,6 +396,6 @@ export class BingXRestClient {
       protocol: "https",
     };
     await this.bingxRequest<BingxListenKey>(API);
-    console.log(`[fetchBalance] Extended listenKey`);
+    console.log(`[Bingx][fetchBalance] Extended listenKey`);
   }
 }

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useBingXTransactionsStore } from "../../store/bingx/bingxTransactions.store";
 import Price from "../Price.vue";
 import Table from "../Table.vue";
 import Symbol from "../Symbol.vue";
@@ -11,28 +10,30 @@ import {
   Contract,
   Position,
   Trade,
+  Transaction,
 } from "../../../server/data.dto";
 import { Icon } from "@iconify/vue";
 
-defineProps<{
+const props = defineProps<{
   exchange: string;
   trades: Trade[];
   positions: Position[];
   balance: Balance;
   bots: Bot[];
   contracts: Contract[];
+  transactions: Transaction[];
 }>();
 
-const bingxTransactionsStore = useBingXTransactionsStore();
-
 const transactions = computed(() => {
-  return bingxTransactionsStore.transactions.filter((x) => x.symbol);
+  return props.transactions.filter((x) => x.symbol);
 });
 
 const lastClosedTransactions = computed(() => {
   return transactions.value
     .filter((transaction) => {
-      return transaction.incomeType === "REALIZED_PNL";
+      return ["REALIZED_PNL", "close_long", "close_short"].includes(
+        transaction.incomeType,
+      );
     })
     .slice(0, 30);
 });

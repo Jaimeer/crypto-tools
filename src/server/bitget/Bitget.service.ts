@@ -9,7 +9,13 @@ import {
   Transaction,
 } from "../data.dto";
 import { BitgetRestClient } from "./BitgetRest.client";
-import { FuturesAccountsV2, FuturesTransactionRecordV2 } from "bitget-api";
+import {
+  FuturesAccountsV2,
+  FuturesAccountBillV2,
+  FuturesOrderFillV2,
+} from "bitget-api";
+import { BitgetCacheService } from "./Bitget.cache";
+import { CacheService } from "../Cache.service";
 // import {
 //   Balance,
 //   Contract,
@@ -21,8 +27,8 @@ import { FuturesAccountsV2, FuturesTransactionRecordV2 } from "bitget-api";
 //   Transaction,
 // } from "./Bitget.dto";
 // import { v4 as uuidv4 } from "uuid";
-// import { BitgetRestClient } from "./BingxRest.client";
-// import { BitgetWebSocket } from "./BingxWebSocket.client";
+// import { BitgetRestClient } from "./BitgetRest.client";
+// import { BitgetWebSocket } from "./BitgetWebSocket.client";
 // import { KLineDataEvent, WebSocketMessage } from "./Bitget.ws.dto";
 // import { CacheService } from "./Cache.service";
 
@@ -31,8 +37,15 @@ import { FuturesAccountsV2, FuturesTransactionRecordV2 } from "bitget-api";
 export class BitgetService {
   private readonly restClient: BitgetRestClient;
   // private readonly wsClient: BitgetWebSocket;
-  // private readonly cacheService: CacheService;
+  private readonly cacheService: BitgetCacheService;
   // private refreshInterval: NodeJS.Timeout | null = null;
+  private originalData: {
+    transactions: FuturesAccountBillV2[];
+    trades: FuturesOrderFillV2[];
+  } = {
+    transactions: [],
+    trades: [],
+  };
   private data: {
     transactions: Transaction[];
     trades: Trade[];
@@ -65,10 +78,10 @@ export class BitgetService {
     //     this.restClient,
     //     this.handleWebSocketMessage.bind(this),
     //   );
-    // this.cacheService = new CacheService();
-    // if (apiKey && apiSecret) {
-    //   this.cacheService.setHashCode(this.restClient.hashCode);
-    // }
+    this.cacheService = new BitgetCacheService(new CacheService());
+    if (apiKey && apiSecret && password) {
+      this.cacheService.setHashCode(this.restClient.hashCode);
+    }
   }
 
   setCredentials(apiKey: string, apiSecret: string, password: string) {
@@ -85,11 +98,11 @@ export class BitgetService {
     //   try {
     //     await this.loadData();
     //   } catch (error) {
-    //     console.error("BingxService auto-refresh failed:", error);
+    //     console.error("BitgetService auto-refresh failed:", error);
     //   }
     // }, intervalMs);
     // console.log(
-    //   `BingxService auto-refresh started: every ${intervalMs / 1000} seconds`,
+    //   `BitgetService auto-refresh started: every ${intervalMs / 1000} seconds`,
     // );
   }
 
@@ -101,45 +114,54 @@ export class BitgetService {
     // if (this.refreshInterval) {
     //   clearInterval(this.refreshInterval);
     //   this.refreshInterval = null;
-    //   console.log("BingxService auto-refresh stopped");
+    //   console.log("BitgetService auto-refresh stopped");
     // }
   }
 
   private async loadData() {
     console.log("[Bitget] loadData");
-    // if (!this.data.transactions.length) {
-    //   const cachedData = await this.cacheService.loadTransactions();
-    //   this.data.transactions = cachedData?.data ?? [];
+    if (!this.originalData.transactions.length) {
+      const cachedData = await this.cacheService.loadBitgetTransactions();
+      this.originalData.transactions = cachedData?.data ?? [];
+      console.log("[Bitget] Cache", {
+        transactions: this.originalData.transactions.length,
+      });
+    }
+    if (!this.originalData.trades.length) {
+      const cachedData = await this.cacheService.loadBitgetTrades();
+      this.originalData.trades = cachedData?.data ?? [];
 
-    //   console.log({ transactions: cachedData?.data?.length });
-    // }
-    // if (!this.data.trades.length) {
-    //   const cachedData = await this.cacheService.loadTrades();
-    //   this.data.trades = cachedData?.data ?? [];
+      console.log("[Bitget] Cache", {
+        trades: this.originalData.trades.length,
+      });
+    }
 
-    //   console.log({ trades: cachedData?.data?.length });
-    // }
-
-    const cacheTransactions: FuturesTransactionRecordV2[] = [];
-
-    const bitgetTransactions =
-      await this.restClient.fetchTransactions(cacheTransactions);
-    // this.data.trades = await this.restClient.fetchTrades(this.data.trades);
+    this.originalData.transactions = await this.restClient.fetchTransactions(
+      this.originalData.transactions,
+    );
+    this.originalData.trades = await this.restClient.fetchTrades(
+      this.originalData.trades,
+    );
     const bitgetBalance = await this.restClient.fetchBalance();
     // this.data.positions = await this.restClient.fetchPositions();
     // this.data.contracts = await this.restClient.fetchContracts();
 
-    // await this.cacheService.saveTransactions(this.data.transactions);
-    // await this.cacheService.saveTrades(this.data.trades);
+    await this.cacheService.saveBitgetTransactions(
+      this.originalData.transactions,
+    );
+    await this.cacheService.saveBitgetTrades(this.originalData.trades);
 
-    this.data.transactions = this.transactionsTransform(bitgetTransactions);
+    this.data.transactions = this.transactionsTransform(
+      this.originalData.transactions,
+    );
+    this.data.trades = this.tradesTransform(this.originalData.trades);
     this.data.balance = this.balanceTransform(bitgetBalance);
 
     this.notifyClients({
       store: "bitget.transactions",
       transactions: this.data.transactions,
     });
-    // this.notifyClients({ store: "bitget.trades", trades: this.data.trades });
+    this.notifyClients({ store: "bitget.trades", trades: this.data.trades });
     this.notifyClients({ store: "bitget.balance", balance: this.data.balance });
     // this.notifyClients({ store: "bitget.positions", positions: this.data.positions });
     // this.notifyClients({ store: "bitget.contracts", contracts: this.data.contracts });
@@ -147,7 +169,7 @@ export class BitgetService {
 
   private balanceTransform(balance: FuturesAccountsV2): Balance {
     return {
-      symbol: balance.marginCoin,
+      symbol: balance.marginCoin.replace("USDT", ""),
       availableMargin: balance.crossedMaxAvailable,
       balance: balance.available + balance.locked,
       equity: balance.accountEquity,
@@ -159,9 +181,39 @@ export class BitgetService {
   }
 
   private transactionsTransform(
-    transactions: FuturesTransactionRecordV2[],
+    transactions: FuturesAccountBillV2[],
   ): Transaction[] {
-    return [];
+    return transactions.map((transaction) => ({
+      symbol: transaction.symbol.replace("USDT", ""),
+      incomeType: transaction.businessType,
+      income: parseFloat(transaction.amount) + parseFloat(transaction.fee),
+      asset: transaction.coin,
+      info: transaction.businessType,
+      time: parseInt(transaction.cTime),
+      tranId: transaction.billId,
+      tradeId: transaction.billId,
+    }));
+  }
+
+  private tradesTransform(trades: FuturesOrderFillV2[]): Trade[] {
+    return trades.map((trade) => {
+      return {
+        symbol: trade.symbol.replace("USDT", ""),
+        qty: parseFloat("0"),
+        price: parseFloat(trade.price),
+        quoteQty: parseFloat(trade.quoteVolume),
+        commission: 0,
+        commissionAsset: "",
+        orderId: trade.orderId,
+        tradeId: trade.side === "buy" ? "LONG" : "SHORT",
+        filledTime: new Date(trade.cTime),
+        side: trade.side.toUpperCase() as "BUY" | "SELL",
+        positionSide: trade.side.toUpperCase(),
+        role: trade.tradeScope.toUpperCase(),
+        total: parseFloat(trade.quoteVolume),
+        realisedPNL: parseFloat(trade.profit),
+      };
+    });
   }
 
   // async loadSymbolKLines(symbol: string, period: Period) {

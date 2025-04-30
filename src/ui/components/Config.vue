@@ -13,7 +13,7 @@ const inputBingxApiSecret = ref(bingxConfig.apiSecret);
 
 const inputBitgetApiKey = ref(bitgetConfig.apiKey);
 const inputBitgetApiSecret = ref(bitgetConfig.apiSecret);
-const inputBitgetPassword = ref(bitgetConfig.apiSecret);
+const inputBitgetPassword = ref(bitgetConfig.password);
 
 const inputBitkuaUserName = ref(bitkuaConfig.username);
 const inputBitkuaToken = ref(bitkuaConfig.token);

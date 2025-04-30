@@ -7,6 +7,6 @@ type State = {
 
 export const useBitgetPreferencesStore = defineStore("preferences", {
   state: (): State => ({
-    hidedSymbols: useStorage("bingx.preferences.hidedSymbols", []),
+    hidedSymbols: useStorage("bitget.preferences.hidedSymbols", []),
   }),
 });

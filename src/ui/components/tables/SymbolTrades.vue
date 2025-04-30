@@ -91,13 +91,17 @@ const tradesInfo = computed(() => {
         };
       }
 
-      if (transaction.incomeType === "REALIZED_PNL") {
+      if (
+        ["REALIZED_PNL", "close_long", "close_short"].includes(
+          transaction.incomeType,
+        )
+      ) {
         acc[symbol].num++;
-        acc[symbol].pnl += parseFloat(transaction.income);
+        acc[symbol].pnl += transaction.income;
       } else {
-        acc[symbol].charges += parseFloat(transaction.income);
+        acc[symbol].charges += transaction.income;
       }
-      acc[symbol].all += parseFloat(transaction.income);
+      acc[symbol].all += transaction.income;
       return acc;
     },
     {} as Record<string, TradesInfo>,
@@ -139,18 +143,18 @@ const tradesInfo = computed(() => {
     }
 
     if (trade.positionSide === "LONG") {
-      if (!closeLongDetected[symbol] && parseFloat(trade.realisedPNL) !== 0)
+      if (!closeLongDetected[symbol] && trade.realisedPNL !== 0)
         closeLongDetected[symbol] = true;
       if (!closeLongDetected[symbol]) acc[symbol].long.currentOpen++;
 
-      if (parseFloat(trade.realisedPNL) === 0) acc[symbol].long.open++;
+      if (trade.realisedPNL === 0) acc[symbol].long.open++;
       else acc[symbol].long.close++;
     } else {
-      if (!closeShortDetected[symbol] && parseFloat(trade.realisedPNL) !== 0)
+      if (!closeShortDetected[symbol] && trade.realisedPNL !== 0)
         closeShortDetected[symbol] = true;
       if (!closeShortDetected[symbol]) acc[symbol].short.currentOpen++;
 
-      if (parseFloat(trade.realisedPNL) === 0) acc[symbol].short.open++;
+      if (trade.realisedPNL === 0) acc[symbol].short.open++;
       else acc[symbol].short.close++;
     }
     return acc;
@@ -159,8 +163,9 @@ const tradesInfo = computed(() => {
   props.bots?.forEach((bot) => {
     if (bot.exchange !== props.exchange) return;
     const symbol = bot.symbol.replace("USDT", "");
-    const symbols = usedSymbols.value.map((x) => x.replace("-USDT", ""));
-
+    const symbols = usedSymbols.value.map((x) =>
+      x.replace("-USDT", "").replace("USDT", ""),
+    );
     if (!symbols.includes(symbol)) return;
 
     const isShort = bot.strategy.includes("short");
@@ -306,12 +311,8 @@ const sendAction = (
       'profit',
       'U_PNL',
       'Rescue (lev inc)',
-      'Long',
-      'DK Bot (Long)',
-      'U_PNL',
-      'Rescue (lev inc)',
-      'Short',
-      'DK Bot (Short)',
+      'Averages',
+      'DK Bot',
     ]"
     :items="tradesInfo"
   >
@@ -336,9 +337,11 @@ const sendAction = (
         </span>
       </td>
       <td class="px-2 py-0.5"><Price :value="item.all" :decimals="2" /></td>
-      <template v-for="side in sides" :key="side">
-        <td class="px-2 py-0.5">
-          <div class="flex gap-1">
+
+      <td class="px-2 py-0.5">
+        <template v-for="side in sides" :key="side">
+          <div v-if="!position(item.key, side)" class="text-slate-600">---</div>
+          <div v-else class="flex gap-1">
             <Price
               :value="parseFloat(position(item.key, side)?.positionValue)"
               :decimals="2"
@@ -384,15 +387,22 @@ const sendAction = (
               />
             </div>
           </div>
-        </td>
-        <td class="px-2 py-0.5">
+        </template>
+      </td>
+      <td class="px-2 py-0.5">
+        <template v-for="side in sides" :key="side">
           <Rescue
             :symbol="item.key.replace('-USDT', '')"
             :side="side"
             :allVisible="false"
+            :gaps="[10]"
+            :positions="positions"
+            s
           />
-        </td>
-        <td class="px-2 py-0.5">
+        </template>
+      </td>
+      <td class="px-2 py-0.5">
+        <template v-for="side in sides" :key="side">
           <div class="flex gap-0.5">
             <!-- <span class="text-amber-400">{{ item[side].open }}</span>
             <span class="text-slate-600">/</span>
@@ -408,15 +418,17 @@ const sendAction = (
               >{{ item[side].currentOpen }}
             </span>
           </div>
-        </td>
-        <td class="flex items-center gap-1">
+        </template>
+      </td>
+      <td class="flex flex-col">
+        <template v-for="side in sides" :key="side">
           <div v-if="!item[side].botId" class="text-slate-400">
             <template v-if="item[side].currentOpen > 0">
               Bot deleted but position open
             </template>
-            <template v-else> --- </template>
+            <div v-else class="text-slate-600">---</div>
           </div>
-          <template v-else>
+          <div v-else>
             <span class="text-slate-600">{{ item[side].botId }}</span>
             <span
               :class="{
@@ -454,9 +466,9 @@ const sendAction = (
             >
               {{ status }}
             </button>
-          </template>
-        </td>
-      </template>
+          </div>
+        </template>
+      </td>
     </template>
   </Table>
 </template>

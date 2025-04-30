@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { differenceInHours, format, startOfDay } from "date-fns";
-import { useBingXTransactionsStore } from "../../store/bingx/bingxTransactions.store";
-import { useBingXTradesStore } from "../../store/bingx/bingxTrades.store";
 import Price from "../Price.vue";
 import Table from "../Table.vue";
+import { Trade, Transaction } from "../../../server/data.dto";
 
-const bingxTradesStore = useBingXTradesStore();
-const bingxTransactionsStore = useBingXTransactionsStore();
+const props = defineProps<{
+  exchange: string;
+  trades: Trade[];
+  transactions: Transaction[];
+}>();
 
 type PriceData = {
   num: number;
@@ -18,11 +20,11 @@ type PriceData = {
 };
 
 const transactions = computed(() => {
-  return bingxTransactionsStore.transactions.filter((x) => x.symbol);
+  return props.transactions.filter((x) => x.symbol);
 });
 
 const trades = computed(() => {
-  return bingxTradesStore.trades;
+  return props.trades;
 });
 
 const transactionsByDay = computed(() => {
@@ -32,13 +34,17 @@ const transactionsByDay = computed(() => {
       if (!acc[date]) {
         acc[date] = { num: 0, pnl: 0, all: 0, charges: 0, volume: 0 };
       }
-      if (transaction.incomeType === "REALIZED_PNL") {
+      if (
+        ["REALIZED_PNL", "close_long", "close_short"].includes(
+          transaction.incomeType,
+        )
+      ) {
         acc[date].num++;
-        acc[date].pnl += parseFloat(transaction.income);
+        acc[date].pnl += transaction.income;
       } else {
-        acc[date].charges += parseFloat(transaction.income);
+        acc[date].charges += transaction.income;
       }
-      acc[date].all += parseFloat(transaction.income);
+      acc[date].all += transaction.income;
       return acc;
     },
     {} as Record<string, PriceData>,
@@ -49,8 +55,8 @@ const transactionsByDay = computed(() => {
     if (!acc[date]) {
       acc[date] = { num: 0, pnl: 0, all: 0, charges: 0, volume: 0 };
     }
-    if (parseFloat(trade.realisedPNL) !== 0) return acc;
-    acc[date].volume += parseFloat(trade.quoteQty);
+    if (trade.realisedPNL !== 0) return acc;
+    acc[date].volume += trade.quoteQty;
     return acc;
   }, data);
 

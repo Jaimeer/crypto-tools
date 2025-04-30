@@ -53,14 +53,12 @@ const symbolRanking = computed(() => {
         acc[symbol] = { profit4h: 0, profit24h: 0, profit1w: 0 };
       }
 
-      if (transaction.time > date1w)
-        acc[symbol].profit1w += parseFloat(transaction.income);
+      if (transaction.time > date1w) acc[symbol].profit1w += transaction.income;
 
       if (transaction.time > date24h)
-        acc[symbol].profit24h += parseFloat(transaction.income);
+        acc[symbol].profit24h += transaction.income;
 
-      if (transaction.time > date4h)
-        acc[symbol].profit4h += parseFloat(transaction.income);
+      if (transaction.time > date4h) acc[symbol].profit4h += transaction.income;
 
       return acc;
     },

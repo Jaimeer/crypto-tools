@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { Trade } from "../../../server/bitget/Bitget.dto";
+import { Trade } from "../../../server/data.dto";
 
 type State = {
   trades: Trade[];

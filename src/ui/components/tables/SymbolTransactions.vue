@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { format } from "date-fns";
-import { useBingXTransactionsStore } from "../../store/bingx/bingxTransactions.store";
 import Price from "../Price.vue";
 import Table from "../Table.vue";
 import Symbol from "../Symbol.vue";
@@ -62,16 +61,28 @@ const transactionsBySymbol = computed(() => {
           volume: 0,
           transactions: [],
         };
-      if (transaction.incomeType === "REALIZED_PNL") {
+      if (
+        ["REALIZED_PNL", "close_long", "close_short"].includes(
+          transaction.incomeType,
+        )
+      ) {
         acc[date][symbol].num++;
-        if (transaction.info.startsWith("Sell")) acc[date][symbol].numLong++;
-        if (transaction.info.startsWith("Buy")) acc[date][symbol].numShort++;
-        acc[date][symbol].pnl += parseFloat(transaction.income);
+        if (
+          transaction.info.startsWith("Sell") ||
+          transaction.incomeType.endsWith("long")
+        )
+          acc[date][symbol].numLong++;
+        if (
+          transaction.info.startsWith("Buy") ||
+          transaction.incomeType.endsWith("short")
+        )
+          acc[date][symbol].numShort++;
+        acc[date][symbol].pnl += transaction.income;
       } else {
-        acc[date][symbol].charges += parseFloat(transaction.income);
+        acc[date][symbol].charges += transaction.income;
       }
       acc[date][symbol].transactions.push(transaction);
-      acc[date][symbol].all += parseFloat(transaction.income);
+      acc[date][symbol].all += transaction.income;
       return acc;
     },
     {} as Record<string, Record<string, PriceData>>,
