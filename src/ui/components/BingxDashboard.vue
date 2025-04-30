@@ -1,81 +1,83 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
-import { useBingXTransactionsStore } from "../store/bingx/bingxTransactions.store";
-import { useBingXBalanceStore } from "../store/bingx/bingxBalance.store";
-import { useBitkuaBotsStore } from "../store/bitkua/bitkuaBots.store";
-import { useBingXPositionsStore } from "../store/bingx/bingxPositions.store";
-import { useBingXTradesStore } from "../store/bingx/bingxTrades.store";
-import { useBingXContractsStore } from "../store/bingx/bingxContracts.store";
-import { useBingxPreferencesStore } from "../store/bingx/bingxPreferences.store";
+import { computed, ref, watch } from 'vue'
+import { useBingxTransactionsStore } from '../store/bingx/bingxTransactions.store'
+import { useBingxBalanceStore } from '../store/bingx/bingxBalance.store'
+import { useBitkuaBotsStore } from '../store/bitkua/bitkuaBots.store'
+import { useBingxPositionsStore } from '../store/bingx/bingxPositions.store'
+import { useBingxTradesStore } from '../store/bingx/bingxTrades.store'
+import { useBingxContractsStore } from '../store/bingx/bingxContracts.store'
+import { useBingxPreferencesStore } from '../store/bingx/bingxPreferences.store'
 
-import ProfitByDay from "./tables/ProfitByDay.vue";
-import Balance from "./tables/Balance.vue";
-import SymbolTrades from "./tables/SymbolTrades.vue";
-import SymbolTransactions from "./tables/SymbolTransactions.vue";
-import LastTrades from "./tables/LastTrades.vue";
-import TheHeader from "./TheHeader.vue";
-import ProfitRanking from "./tables/ProfitRanking.vue";
+import ProfitByDay from './tables/ProfitByDay.vue'
+import Balance from './tables/Balance.vue'
+import SymbolTrades from './tables/SymbolTrades.vue'
+import SymbolTransactions from './tables/SymbolTransactions.vue'
+import LastTrades from './tables/LastTrades.vue'
+import TheHeader from './TheHeader.vue'
+import ProfitRanking from './tables/ProfitRanking.vue'
 import {
   Listbox,
   ListboxButton,
   ListboxOptions,
   ListboxOption,
-} from "@headlessui/vue";
+} from '@headlessui/vue'
 
-const exchange = "bingx";
-const bingxTransactionsStore = useBingXTransactionsStore();
-const bingxBalanceStore = useBingXBalanceStore();
-const bitkuaBotsStore = useBitkuaBotsStore();
-const bingxPositionsStore = useBingXPositionsStore();
-const bingxTradesStore = useBingXTradesStore();
-const bingXContractsStore = useBingXContractsStore();
-const bingxPreferencesStore = useBingxPreferencesStore();
+const exchange = 'bingx'
+const bingxTransactionsStore = useBingxTransactionsStore()
+const bingxBalanceStore = useBingxBalanceStore()
+const bitkuaBotsStore = useBitkuaBotsStore()
+const bingxPositionsStore = useBingxPositionsStore()
+const bingxTradesStore = useBingxTradesStore()
+const bingXContractsStore = useBingxContractsStore()
+const bingxPreferencesStore = useBingxPreferencesStore()
 
 const transactions = computed(() => {
-  return bingxTransactionsStore.transactions.filter((x) => x.symbol);
-});
+  return bingxTransactionsStore.transactions.filter((x) => x.symbol)
+})
 
 const incomeTransactions = computed(() => {
-  return bingxTransactionsStore.transactions.filter((x) => !x.symbol);
-});
+  return bingxTransactionsStore.transactions.filter((x) => !x.symbol)
+})
 
 const bots = computed(() => {
-  return bitkuaBotsStore.bots.filter((x) => x.exchange === exchange);
-});
+  return bitkuaBotsStore.bots.filter(
+    (x) => x.exchange.toLowerCase() === exchange.toLowerCase(),
+  )
+})
 
 const balance = computed(() => {
-  return bingxBalanceStore.balance;
-});
+  return bingxBalanceStore.balance
+})
 
 const positions = computed(() => {
-  return bingxPositionsStore.positions;
-});
+  return bingxPositionsStore.positions
+})
 
 const trades = computed(() => {
-  return bingxTradesStore.trades;
-});
+  return bingxTradesStore.trades
+})
 
 const contracts = computed(() => {
-  return bingXContractsStore.contracts;
-});
+  return bingXContractsStore.contracts
+})
 
 const allSymbols = computed(() => {
-  return bingxTransactionsStore.allSymbols;
-});
+  return bingxTransactionsStore.allSymbols
+})
 
 const hidedSymbols = computed(() => {
-  return bingxPreferencesStore.hidedSymbols;
-});
+  return bingxPreferencesStore.hidedSymbols
+})
 
-const selectedSymbols = ref(bingxPreferencesStore.hidedSymbols);
+const selectedSymbols = ref(bingxPreferencesStore.hidedSymbols)
 
 const cleanHidedSymbols = () => {
-  selectedSymbols.value = [];
-};
+  selectedSymbols.value = []
+}
 
 watch(selectedSymbols, () => {
-  bingxPreferencesStore.hidedSymbols = selectedSymbols.value;
-});
+  bingxPreferencesStore.hidedSymbols = selectedSymbols.value
+})
 </script>
 
 <template>
@@ -117,7 +119,7 @@ watch(selectedSymbols, () => {
                     'bg-slate-600': !selected,
                   }"
                 >
-                  {{ symbol.replace("-USDT", "") }}
+                  {{ symbol }}
                 </li>
               </ListboxOption>
             </div>

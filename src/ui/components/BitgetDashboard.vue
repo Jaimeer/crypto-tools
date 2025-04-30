@@ -1,81 +1,83 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
-import { useBitkuaBotsStore } from "../store/bitkua/bitkuaBots.store";
-import { useBitgetBalanceStore } from "../store/bitget/bitgetBalance.store";
-import { useBitgetTransactionsStore } from "../store/bitget/bitgetTransactions.store";
-import { useBitgetPositionsStore } from "../store/bitget/bitgetPositions.store";
-import { useBitgetTradesStore } from "../store/bitget/bitgetTrades.store";
-import { useBitgetPreferencesStore } from "../store/bitget/bitgetPreferences.store";
+import { computed, ref, watch } from 'vue'
+import { useBitkuaBotsStore } from '../store/bitkua/bitkuaBots.store'
+import { useBitgetBalanceStore } from '../store/bitget/bitgetBalance.store'
+import { useBitgetTransactionsStore } from '../store/bitget/bitgetTransactions.store'
+import { useBitgetPositionsStore } from '../store/bitget/bitgetPositions.store'
+import { useBitgetTradesStore } from '../store/bitget/bitgetTrades.store'
+import { useBitgetPreferencesStore } from '../store/bitget/bitgetPreferences.store'
 
-import ProfitByDay from "./tables/ProfitByDay.vue";
-import Balance from "./tables/Balance.vue";
-import SymbolTrades from "./tables/SymbolTrades.vue";
-import SymbolTransactions from "./tables/SymbolTransactions.vue";
-import LastTrades from "./tables/LastTrades.vue";
-import TheHeader from "./TheHeader.vue";
-import ProfitRanking from "./tables/ProfitRanking.vue";
+import ProfitByDay from './tables/ProfitByDay.vue'
+import Balance from './tables/Balance.vue'
+import SymbolTrades from './tables/SymbolTrades.vue'
+import SymbolTransactions from './tables/SymbolTransactions.vue'
+import LastTrades from './tables/LastTrades.vue'
+import TheHeader from './TheHeader.vue'
+import ProfitRanking from './tables/ProfitRanking.vue'
 import {
   Listbox,
   ListboxButton,
   ListboxOptions,
   ListboxOption,
-} from "@headlessui/vue";
+} from '@headlessui/vue'
+import { Contract } from '../../server/data.dto'
 
-const exchange = "bitget";
-const bitgetTransactionsStore = useBitgetTransactionsStore();
-const bitgetBalanceStore = useBitgetBalanceStore();
-const bitgetTradesStore = useBitgetTradesStore();
-const bitkuaBotsStore = useBitkuaBotsStore();
-const bitgetPositionsStore = useBitgetPositionsStore();
-const bitgetPreferencesStore = useBitgetPreferencesStore();
+const exchange = 'bitget'
+const bitgetTransactionsStore = useBitgetTransactionsStore()
+const bitgetBalanceStore = useBitgetBalanceStore()
+const bitgetTradesStore = useBitgetTradesStore()
+const bitkuaBotsStore = useBitkuaBotsStore()
+const bitgetPositionsStore = useBitgetPositionsStore()
+const bitgetPreferencesStore = useBitgetPreferencesStore()
 
 const transactions = computed(() => {
-  return bitgetTransactionsStore.transactions.filter((x) => x.symbol);
-});
+  return bitgetTransactionsStore.transactions.filter((x) => x.symbol)
+})
 
 const incomeTransactions = computed(() => {
-  return bitgetTransactionsStore.transactions.filter((x) => !x.symbol);
-});
+  return bitgetTransactionsStore.transactions.filter((x) => !x.symbol)
+})
 
 const trades = computed(() => {
-  return bitgetTradesStore.trades;
-});
+  return bitgetTradesStore.trades
+})
 
 const bots = computed(() => {
-  return bitkuaBotsStore.bots.filter((x) => x.exchange === exchange);
-});
+  return bitkuaBotsStore.bots.filter(
+    (x) => x.exchange.toLowerCase() === exchange.toLowerCase(),
+  )
+})
 
 const balance = computed(() => {
-  console.log({ b: bitgetBalanceStore.balance });
-  return bitgetBalanceStore.balance;
-});
+  return bitgetBalanceStore.balance
+})
 
 const positions = computed(() => {
-  return bitgetPositionsStore.positions;
-});
+  return bitgetPositionsStore.positions
+})
 
 const contracts = computed(() => {
-  return [];
-});
+  return [] as Contract[]
+})
 
 const allSymbols = computed(() => {
-  console.log(bitgetTransactionsStore);
-  return bitgetTransactionsStore.allSymbols;
-});
+  console.log(bitgetTransactionsStore)
+  return bitgetTransactionsStore.allSymbols
+})
 
 const hidedSymbols = computed(() => {
-  return bitgetPreferencesStore.hidedSymbols;
-});
+  return bitgetPreferencesStore.hidedSymbols
+})
 
-const selectedSymbols = ref(bitgetPreferencesStore.hidedSymbols);
+const selectedSymbols = ref(bitgetPreferencesStore.hidedSymbols)
 
 const cleanHidedSymbols = () => {
-  selectedSymbols.value = [];
-};
+  selectedSymbols.value = []
+}
 
 watch(selectedSymbols, () => {
-  bitgetPreferencesStore.hidedSymbols = selectedSymbols.value;
-});
+  bitgetPreferencesStore.hidedSymbols = selectedSymbols.value
+})
 </script>
 
 <template>
@@ -117,7 +119,7 @@ watch(selectedSymbols, () => {
                     'bg-slate-600': !selected,
                   }"
                 >
-                  {{ symbol.replace("-USDT", "") }}
+                  {{ symbol }}
                 </li>
               </ListboxOption>
             </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import BitgetDashboard from "../components/BitgetDashboard.vue";
+import BitgetDashboard from '../components/BitgetDashboard.vue'
 </script>
 
 <template>

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import Table from "../Table.vue";
-import Price from "../Price.vue";
-import Symbol from "../Symbol.vue";
-import Rescue from "../Rescue.vue";
-import { Icon } from "@iconify/vue";
-import { BitkuaActionUpdateStatus } from "../../../server/bitkua/Bitkua.dto";
+import { computed } from 'vue'
+import Table from '../Table.vue'
+import Price from '../Price.vue'
+import Symbol from '../Symbol.vue'
+import Rescue from '../Rescue.vue'
+import { Icon } from '@iconify/vue'
+import { BitkuaActionUpdateStatus } from '../../../server/bitkua/Bitkua.dto'
 import {
   Balance,
   Bot,
@@ -13,54 +13,54 @@ import {
   Position,
   Trade,
   Transaction,
-} from "../../../server/data.dto";
+} from '../../../server/data.dto'
 
 const props = defineProps<{
-  exchange: string;
-  trades: Trade[];
-  positions: Position[];
-  balance: Balance;
-  bots: Bot[];
-  contracts: Contract[];
-  transactions: Transaction[];
-  allSymbols: string[];
-  hidedSymbols: string[];
-}>();
+  exchange: string
+  trades: Trade[]
+  positions: Position[]
+  balance: Balance
+  bots: Bot[]
+  contracts: Contract[]
+  transactions: Transaction[]
+  allSymbols: string[]
+  hidedSymbols: string[]
+}>()
 
 const transactions = computed(() => {
-  return props.transactions?.filter((x) => x.symbol) ?? [];
-});
+  return props.transactions?.filter((x) => x.symbol) ?? []
+})
 
 type TradesInfoSide = {
-  open: number;
-  close: number;
-  currentOpen: number;
-  amount: number;
-  botId: string;
-  strategy: string;
-  status: string;
-  orders: number;
-};
+  open: number
+  close: number
+  currentOpen: number
+  amount: number
+  botId: string
+  strategy: string
+  status: string
+  orders: number
+}
 type TradesInfo = {
-  num: number;
-  pnl: number;
-  all: number;
-  charges: number;
-  volume: number;
-  long: TradesInfoSide;
-  short: TradesInfoSide;
-};
+  num: number
+  pnl: number
+  all: number
+  charges: number
+  volume: number
+  long: TradesInfoSide
+  short: TradesInfoSide
+}
 
 const tradesInfo = computed(() => {
-  let closeLongDetected: Record<string, boolean> = {};
-  let closeShortDetected: Record<string, boolean> = {};
+  let closeLongDetected: Record<string, boolean> = {}
+  let closeShortDetected: Record<string, boolean> = {}
 
   const data = transactions.value.reduce(
     (acc, transaction) => {
       if (!usedSymbols.value.includes(transaction.symbol)) {
-        return acc;
+        return acc
       }
-      const symbol = transaction.symbol.replace("-USDT", "");
+      const symbol = transaction.symbol
       if (!acc[symbol]) {
         acc[symbol] = {
           num: 0,
@@ -73,9 +73,9 @@ const tradesInfo = computed(() => {
             close: 0,
             currentOpen: 0,
             amount: 0,
-            botId: "",
-            strategy: "",
-            status: "",
+            botId: '',
+            strategy: '',
+            status: '',
             orders: 0,
           },
           short: {
@@ -83,35 +83,35 @@ const tradesInfo = computed(() => {
             close: 0,
             currentOpen: 0,
             amount: 0,
-            botId: "",
-            strategy: "",
-            status: "",
+            botId: '',
+            strategy: '',
+            status: '',
             orders: 0,
           },
-        };
+        }
       }
 
       if (
-        ["REALIZED_PNL", "close_long", "close_short"].includes(
+        ['REALIZED_PNL', 'close_long', 'close_short'].includes(
           transaction.incomeType,
         )
       ) {
-        acc[symbol].num++;
-        acc[symbol].pnl += transaction.income;
+        acc[symbol].num++
+        acc[symbol].pnl += transaction.income
       } else {
-        acc[symbol].charges += transaction.income;
+        acc[symbol].charges += transaction.income
       }
-      acc[symbol].all += transaction.income;
-      return acc;
+      acc[symbol].all += transaction.income
+      return acc
     },
     {} as Record<string, TradesInfo>,
-  );
+  )
 
   props.trades?.reduce((acc, trade) => {
     if (!usedSymbols.value.includes(trade.symbol)) {
-      return acc;
+      return acc
     }
-    const symbol = trade.symbol.replace("-USDT", "");
+    const symbol = trade.symbol
     if (!acc[symbol]) {
       acc[symbol] = {
         num: 0,
@@ -124,9 +124,9 @@ const tradesInfo = computed(() => {
           close: 0,
           currentOpen: 0,
           amount: 0,
-          botId: "",
-          strategy: "",
-          status: "",
+          botId: '',
+          strategy: '',
+          status: '',
           orders: 0,
         },
         short: {
@@ -134,41 +134,38 @@ const tradesInfo = computed(() => {
           close: 0,
           currentOpen: 0,
           amount: 0,
-          botId: "",
-          strategy: "",
-          status: "",
+          botId: '',
+          strategy: '',
+          status: '',
           orders: 0,
         },
-      };
+      }
     }
 
-    if (trade.positionSide === "LONG") {
+    if (trade.positionSide === 'LONG') {
       if (!closeLongDetected[symbol] && trade.realisedPNL !== 0)
-        closeLongDetected[symbol] = true;
-      if (!closeLongDetected[symbol]) acc[symbol].long.currentOpen++;
+        closeLongDetected[symbol] = true
+      if (!closeLongDetected[symbol]) acc[symbol].long.currentOpen++
 
-      if (trade.realisedPNL === 0) acc[symbol].long.open++;
-      else acc[symbol].long.close++;
+      if (trade.realisedPNL === 0) acc[symbol].long.open++
+      else acc[symbol].long.close++
     } else {
       if (!closeShortDetected[symbol] && trade.realisedPNL !== 0)
-        closeShortDetected[symbol] = true;
-      if (!closeShortDetected[symbol]) acc[symbol].short.currentOpen++;
+        closeShortDetected[symbol] = true
+      if (!closeShortDetected[symbol]) acc[symbol].short.currentOpen++
 
-      if (trade.realisedPNL === 0) acc[symbol].short.open++;
-      else acc[symbol].short.close++;
+      if (trade.realisedPNL === 0) acc[symbol].short.open++
+      else acc[symbol].short.close++
     }
-    return acc;
-  }, data);
+    return acc
+  }, data)
 
   props.bots?.forEach((bot) => {
-    if (bot.exchange !== props.exchange) return;
-    const symbol = bot.symbol.replace("USDT", "");
-    const symbols = usedSymbols.value.map((x) =>
-      x.replace("-USDT", "").replace("USDT", ""),
-    );
-    if (!symbols.includes(symbol)) return;
+    const symbol = bot.symbol
+    const symbols = usedSymbols.value
+    if (!symbols.includes(symbol)) return
 
-    const isShort = bot.strategy.includes("short");
+    const isShort = bot.strategy.includes('short')
 
     if (!data[symbol]) {
       data[symbol] = {
@@ -182,9 +179,9 @@ const tradesInfo = computed(() => {
           close: 0,
           currentOpen: 0,
           amount: 0,
-          botId: "",
-          strategy: "",
-          status: "",
+          botId: '',
+          strategy: '',
+          status: '',
           orders: 0,
         },
         short: {
@@ -192,113 +189,113 @@ const tradesInfo = computed(() => {
           close: 0,
           currentOpen: 0,
           amount: 0,
-          botId: "",
-          strategy: "",
-          status: "",
+          botId: '',
+          strategy: '',
+          status: '',
           orders: 0,
         },
-      };
+      }
     }
-    const side = isShort ? "short" : "long";
+    const side = isShort ? 'short' : 'long'
     // console.log({
     //   symbol,
     //   side,
     //   bot,
     // });
-    data[symbol][side].amount = bot?.count ?? 0;
-    data[symbol][side].botId = bot?.id || "";
-    data[symbol][side].strategy = bot?.strategy || "";
-    data[symbol][side].status = bot?.status || "";
-    data[symbol][side].orders = bot?.count ?? 0;
-  });
+    data[symbol][side].amount = bot?.count ?? 0
+    data[symbol][side].botId = bot?.id || ''
+    data[symbol][side].strategy = bot?.strategy || ''
+    data[symbol][side].status = bot?.status || ''
+    data[symbol][side].orders = bot?.count ?? 0
+  })
 
   return Object.entries(data)
     .map(([key, value]) => ({ key, ...value }))
-    .sort((a, b) => a.key.localeCompare(b.key));
-});
+    .sort((a, b) => a.key.localeCompare(b.key))
+})
 
 const usedSymbols = computed(() => {
   return (
     props.allSymbols?.filter((x) => !props.hidedSymbols.includes(x)).sort() ??
     []
-  );
-});
+  )
+})
 
 const position = (symbol: string, side: string) => {
   return props.positions.find(
     (position) =>
-      position.symbol.replace("-USDT", "") === symbol &&
+      position.symbol === symbol &&
       position.positionSide === side.toUpperCase(),
-  );
-};
+  )
+}
 
 const strategyName = (strategy: string) => {
-  if (!strategy) return "---";
+  if (!strategy) return '---'
   return (
     {
-      ladominantkong: "HFT Long Dominant Kong Infinity F-∞",
-      shortladominantkong: "HFT Short Dominant Kong F-12",
-      shortalashitcoin: "HFT Short A La Shitcoin F-12",
-      longalashitcoin: "HFT Long A La Shitcoin F-13",
-      liquiditypool: "HFT Long Liquidity Pool F-120",
-      shortliquiditypool: "HFT Short Liquidity Pool F-120",
-      aiexpertavg: "HFT Long AI Expert F-14",
-      shortaiexpertavg: "HFT Short AI Expert F-12",
-      aiexpertavgplus: "HFT Long AI Expert Plus F-15",
-      shortaiexpertavgplus: "HFT Short AI Expert Plus F-15",
-      lamilagrosa: "HFT Long La Milagrosa F-15",
-      shortlamilagrosa: "HFT Short La Milagrosa F-15",
-      lamilagrosapro: "HFT Long La Milagrosa Pro F-15",
-      shortlamilagrosapro: "HFT Short La Milagrosa Pro F-15",
-      pmd: "HFT Short PMD F-15",
-      shortpmd: "HFT Long La Mialagrosa F-15",
-      degen: "HFT Long Degen F-15",
-      shortdegen: "HFT Short Degen F-15",
+      ladominantkong: 'HFT Long Dominant Kong Infinity F-∞',
+      shortladominantkong: 'HFT Short Dominant Kong F-12',
+      shortalashitcoin: 'HFT Short A La Shitcoin F-12',
+      longalashitcoin: 'HFT Long A La Shitcoin F-13',
+      liquiditypool: 'HFT Long Liquidity Pool F-120',
+      shortliquiditypool: 'HFT Short Liquidity Pool F-120',
+      aiexpertavg: 'HFT Long AI Expert F-14',
+      shortaiexpertavg: 'HFT Short AI Expert F-12',
+      aiexpertavgplus: 'HFT Long AI Expert Plus F-15',
+      shortaiexpertavgplus: 'HFT Short AI Expert Plus F-15',
+      lamilagrosa: 'HFT Long La Milagrosa F-15',
+      shortlamilagrosa: 'HFT Short La Milagrosa F-15',
+      lamilagrosapro: 'HFT Long La Milagrosa Pro F-15',
+      shortlamilagrosapro: 'HFT Short La Milagrosa Pro F-15',
+      pmd: 'HFT Short PMD F-15',
+      shortpmd: 'HFT Long La Mialagrosa F-15',
+      degen: 'HFT Long Degen F-15',
+      shortdegen: 'HFT Short Degen F-15',
     }[strategy] ?? strategy
-  );
-};
+  )
+}
 
 const strategyNameShort = (strategy: string) => {
-  if (!strategy) return "---";
+  if (!strategy) return '---'
   return (
     {
-      ladominantkong: "DOM",
-      shortladominantkong: "DOM",
-      shortalashitcoin: "LSH",
-      longalashitcoin: "LSH",
-      liquiditypool: "LLP",
-      shortliquiditypool: "LLP",
-      aiexpertavg: "AIE",
-      shortaiexpertavg: "AIE",
-      aiexpertavgplus: "AIP",
-      shortaiexpertavgplus: "AIP",
-      lamilagrosa: "LMG",
-      shortlamilagrosa: "LMG",
-      lamilagrosapro: "LMP",
-      shortlamilagrosapro: "LMP",
-      pmd: "PMD",
-      shortpmd: "PMD",
-      degen: "DGN",
-      shortdegen: "DGN",
+      ladominantkong: 'DOM',
+      shortladominantkong: 'DOM',
+      shortalashitcoin: 'LSH',
+      longalashitcoin: 'LSH',
+      liquiditypool: 'LLP',
+      shortliquiditypool: 'LLP',
+      aiexpertavg: 'AIE',
+      shortaiexpertavg: 'AIE',
+      aiexpertavgplus: 'AIP',
+      shortaiexpertavgplus: 'AIP',
+      lamilagrosa: 'LMG',
+      shortlamilagrosa: 'LMG',
+      lamilagrosapro: 'LMP',
+      shortlamilagrosapro: 'LMP',
+      pmd: 'PMD',
+      shortpmd: 'PMD',
+      degen: 'DGN',
+      shortdegen: 'DGN',
     }[strategy] ?? strategy
-  );
-};
+  )
+}
 
-const sides = ["long", "short"] as const;
-const status = ["active", "stop", "onlysell"] as const;
+const sides = ['long', 'short'] as const
+const status = ['active', 'stop', 'onlysell'] as const
 
 const sendAction = (
   botId: string,
-  status: "active" | "stop" | "onlysell",
+  status: 'active' | 'stop' | 'onlysell',
   amount?: number,
 ) => {
   const message: BitkuaActionUpdateStatus = {
-    action: "updateStatus",
+    action: 'updateStatus',
     botId,
     status,
-  };
-  window.electronAPI.sendBitkuaAction(message);
-};
+  }
+  window.electronAPI.sendBitkuaAction(message)
+}
 </script>
 
 <template>
@@ -319,7 +316,7 @@ const sendAction = (
     <template #default="{ item }">
       <td class="px-2 py-0.5">
         <Symbol
-          :value="item.key.replace('-USDT', '')"
+          :value="item.key"
           :exchange="exchange"
           :bots="bots"
           :trades="trades"
@@ -343,19 +340,17 @@ const sendAction = (
           <div v-if="!position(item.key, side)" class="text-slate-600">---</div>
           <div v-else class="flex gap-1">
             <Price
-              :value="parseFloat(position(item.key, side)?.positionValue)"
+              :value="position(item.key, side)?.positionValue"
               :decimals="2"
               color="violet"
             />
             <Price
-              :value="parseFloat(position(item.key, side)?.unrealizedProfit)"
+              :value="position(item.key, side)?.unrealizedProfit"
               :decimals="2"
             />
             <span class="text-slate-600">/</span>
             <Price
-              :value="
-                100 * parseFloat(position(item.key, side)?.pnlRatio ?? '0')
-              "
+              :value="100 * position(item.key, side)?.pnlRatio"
               :decimals="2"
               suffix="%"
             />
@@ -363,11 +358,7 @@ const sendAction = (
             <div class="flex items-center gap-0.5">
               <Icon
                 v-for="i in Math.floor(
-                  Math.abs(
-                    (100 *
-                      parseFloat(position(item.key, side)?.pnlRatio ?? '0')) /
-                      100,
-                  ),
+                  Math.abs((100 * position(item.key, side)?.pnlRatio) / 100),
                 )"
                 :key="i"
                 class="text-red-500"
@@ -375,11 +366,8 @@ const sendAction = (
               />
               <Icon
                 v-for="i in Math.floor(
-                  Math.abs(
-                    (100 *
-                      parseFloat(position(item.key, side)?.pnlRatio ?? '0')) %
-                      100,
-                  ) / 10,
+                  Math.abs((100 * position(item.key, side)?.pnlRatio) % 100) /
+                    10,
                 )"
                 :key="i"
                 class="text-yellow-400"
@@ -392,7 +380,7 @@ const sendAction = (
       <td class="px-2 py-0.5">
         <template v-for="side in sides" :key="side">
           <Rescue
-            :symbol="item.key.replace('-USDT', '')"
+            :symbol="item.key"
             :side="side"
             :allVisible="false"
             :gaps="[10]"

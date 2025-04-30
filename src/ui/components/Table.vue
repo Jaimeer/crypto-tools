@@ -1,9 +1,9 @@
 <script setup lang="ts" generic="T">
 const props = defineProps<{
-  headers: string[];
-  items: T[];
-  fullHeight?: boolean;
-}>();
+  headers: string[]
+  items: T[]
+  fullHeight?: boolean
+}>()
 </script>
 
 <template>

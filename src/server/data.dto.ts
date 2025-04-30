@@ -1,6 +1,6 @@
 export type Transaction = {
-  symbol: string;
-  incomeType: string;
+  symbol: string
+  incomeType: string
   // | "TRANSFER"
   // | "REALIZED_PNL"
   // | "FUNDING_FEE"
@@ -10,136 +10,136 @@ export type Transaction = {
   // | "ADL"
   // | "SYSTEM_DEDUCTION"
   // | "GTD_PRICE";
-  income: number;
-  asset: string;
-  info: string;
-  time: number;
-  tranId: string;
-  tradeId: string;
-};
+  income: number
+  asset: string
+  info: string
+  time: number
+  tranId: string
+  tradeId: string
+}
 
 export type Balance = {
-  symbol: string;
-  balance: string;
-  equity: string;
-  unrealizedPnl: string;
-  realisedPnl: string;
-  availableMargin: string;
-  usedMargin: string;
-  freezedMargin: string;
-};
+  symbol: string
+  balance: string
+  equity: string
+  unrealizedPnl: string
+  realisedPnl: string
+  availableMargin: string
+  usedMargin: string
+  freezedMargin: string
+}
 
 export type Trade = {
-  symbol: string;
-  qty: number;
-  price: number;
-  quoteQty: number;
-  commission: number;
-  commissionAsset: string;
-  orderId: string;
-  tradeId: "LONG" | "SHORT";
-  filledTime: Date;
-  side: "BUY" | "SELL";
-  positionSide: string;
-  role: string;
-  total: number;
-  realisedPNL: number;
-};
+  symbol: string
+  qty: number
+  price: number
+  quoteQty: number
+  commission: number
+  commissionAsset: string
+  orderId: string
+  tradeId: 'LONG' | 'SHORT'
+  filledTime: Date
+  side: 'BUY' | 'SELL'
+  positionSide: string
+  role: string
+  total: number
+  realisedPNL: number
+}
 
 export type Position = {
-  symbol: string;
-  positionId: string;
-  positionSide: string;
-  isolated: boolean;
-  positionAmt: string;
-  availableAmt: string;
-  unrealizedProfit: string;
-  realisedProfit: string;
-  initialMargin: string;
-  margin: string;
-  avgPrice: string;
-  liquidationPrice: number;
-  leverage: string;
-  positionValue: string;
-  markPrice: string;
-  riskRate: string;
-  maxMarginReduction: string;
-  pnlRatio: string;
-  updateTime: string;
-};
+  symbol: string
+  positionId: string
+  positionSide: 'LONG' | 'SHORT'
+  isolated: boolean
+  positionAmt: number
+  availableAmt: number
+  unrealizedProfit: number
+  realisedProfit: number
+  initialMargin: number
+  margin: number
+  avgPrice: number
+  liquidationPrice: number
+  leverage: number
+  positionValue: number
+  markPrice: number
+  riskRate: number
+  maxMarginReduction: number
+  pnlRatio: number
+  updateTime: number
+}
 
 export type KLine = {
-  open: string;
-  close: string;
-  high: string;
-  low: string;
-  volume: string;
-  time: number;
-};
+  open: number
+  close: number
+  high: number
+  low: number
+  volume: number
+  timestamp: number
+}
 
 export type Contract = {
-  contractId: string;
-  symbol: string;
-  quantityPrecision: number;
-  pricePrecision: number;
-  takerFeeRate: number;
-  makerFeeRate: number;
-  tradeMinQuantity: number;
-  tradeMinUSDT: number;
-  currency: string;
-  asset: string;
-  status: number;
-  apiStateOpen: string;
-  apiStateClose: string;
-  ensureTrigger: boolean;
-  triggerFeeRate: string;
-  brokerState: boolean;
-  launchTime: number;
-  maintainTime: number;
-  offTime: number;
-};
+  contractId: string
+  symbol: string
+  quantityPrecision: number
+  pricePrecision: number
+  takerFeeRate: number
+  makerFeeRate: number
+  tradeMinQuantity: number
+  tradeMinUSDT: number
+  currency: string
+  asset: string
+  status: number
+  apiStateOpen: string
+  apiStateClose: string
+  ensureTrigger: boolean
+  triggerFeeRate: string
+  brokerState: boolean
+  launchTime: number
+  maintainTime: number
+  offTime: number
+}
 
 export type Period =
-  | "1m"
-  | "3m"
-  | "5m"
-  | "15m"
-  | "30m"
-  | "1h"
-  | "2h"
-  | "4h"
-  | "6h"
-  | "8h"
-  | "12h"
-  | "1d"
-  | "3d"
-  | "1w"
-  | "1M";
+  | '1m'
+  | '3m'
+  | '5m'
+  | '15m'
+  | '30m'
+  | '1h'
+  | '2h'
+  | '4h'
+  | '6h'
+  | '8h'
+  | '12h'
+  | '1d'
+  | '3d'
+  | '1w'
+  | '1M'
 
 export type ListenKey = {
-  listenKey: string;
-};
+  listenKey: string
+}
 
 export type BitkuaBot = {
-  id: number;
-  symbol: string;
-  amount: number;
-  active: string;
-  exchange: string;
-  estrategia: string;
-  positionside: string;
-  username: string;
-  count: number;
-  created_at: Date;
-};
+  id: number
+  symbol: string
+  amount: number
+  active: string
+  exchange: string
+  estrategia: string
+  positionside: string
+  username: string
+  count: number
+  created_at: Date
+}
 
 export type Bot = {
-  id: string;
-  symbol: string;
-  amount: number;
-  status: string;
-  exchange: string;
-  strategy: string;
-  positionSide: string;
-  count: number;
-};
+  id: string
+  symbol: string
+  amount: number
+  status: string
+  exchange: string
+  strategy: string
+  positionSide: string
+  count: number
+}

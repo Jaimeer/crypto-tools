@@ -13,23 +13,36 @@ import {
 
 const props = defineProps<{
   symbols: string[]
-  data: { key: string; symbols: Record<string, { num: number; value: number; all: number }> }[]
+  data: {
+    key: string
+    symbols: Record<string, { num: number; value: number; all: number }>
+  }[]
 }>()
 
-ChartJS.register(Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale, PointElement)
+ChartJS.register(
+  Title,
+  Tooltip,
+  Legend,
+  LineElement,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+)
 
 const generateColor = (symbol: string) => {
-  const hash = symbol.split('').reduce((acc, char) => char.charCodeAt(0) + acc, 0)
+  const hash = symbol
+    .split('')
+    .reduce((acc, char) => char.charCodeAt(0) + acc, 0)
   const hue = hash % 360
   return `hsl(${hue}, 100%, 50%)`
 }
 
 const chartData = {
-  labels: props.data.map(x => x.key).reverse(),
+  labels: props.data.map((x) => x.key).reverse(),
   datasets: [
-    ...props.symbols.map(symbol => ({
-      label: symbol.replace('-USDT', ''),
-      data: props.data.map(x => x.symbols[symbol]?.all ?? 0).reverse(),
+    ...props.symbols.map((symbol) => ({
+      label: symbol,
+      data: props.data.map((x) => x.symbols[symbol]?.all ?? 0).reverse(),
       borderColor: generateColor(symbol),
       backgroundColor: generateColor(symbol),
       yAxisID: 'y',
@@ -72,6 +85,11 @@ const chartOptions = {
 
 <template>
   <div>
-    <Line id="my-chart-id" :options="chartOptions" :data="chartData" height="50px" />
+    <Line
+      id="my-chart-id"
+      :options="chartOptions"
+      :data="chartData"
+      height="50px"
+    />
   </div>
 </template>

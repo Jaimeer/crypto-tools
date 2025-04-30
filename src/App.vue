@@ -1,40 +1,40 @@
 <script setup lang="ts">
-import BingXTransactions from "./ui/components/BingxDashboard.vue";
-import Config from "./ui/components/Config.vue";
-import { useBingXConfigStore } from "./ui/store/bingx/bingxConfig.store";
-import { useBitkuaConfigStore } from "./ui/store/bitkua/bitkuaConfig.store";
-import { computed, resolveComponent } from "vue";
-import md5 from "md5";
-import { useDark } from "@vueuse/core";
-import { useBitgetConfigStore } from "./ui/store/bitget/bitgetConfig.store";
+import BingXTransactions from './ui/components/BingxDashboard.vue'
+import Config from './ui/components/Config.vue'
+import { useBingxConfigStore } from './ui/store/bingx/bingxConfig.store'
+import { useBitkuaConfigStore } from './ui/store/bitkua/bitkuaConfig.store'
+import { computed, resolveComponent } from 'vue'
+import md5 from 'md5'
+import { useDark } from '@vueuse/core'
+import { useBitgetConfigStore } from './ui/store/bitget/bitgetConfig.store'
 
-const isDark = useDark();
-isDark.value = true;
+const isDark = useDark()
+isDark.value = true
 
-const bingxConfig = useBingXConfigStore();
-const bitkuaConfig = useBitkuaConfigStore();
-const bitgetConfig = useBitgetConfigStore();
+const bingxConfig = useBingxConfigStore()
+const bitkuaConfig = useBitkuaConfigStore()
+const bitgetConfig = useBitgetConfigStore()
 
-resolveComponent;
+resolveComponent
 const hashKey = computed(() => {
   const hash = md5(
     JSON.stringify({
       apiKey: bingxConfig.apiKey,
       apiSecret: bingxConfig.apiSecret,
     }),
-  );
-  return hash;
-});
+  )
+  return hash
+})
 
 if (bingxConfig.apiKey && bingxConfig.apiSecret) {
   try {
     window.electronAPI.setBingXCredentials(
       bingxConfig.apiKey,
       bingxConfig.apiSecret,
-    );
-    console.log("BingX service initialized successfully");
+    )
+    console.log('BingX service initialized successfully')
   } catch (error) {
-    console.error("Failed to initialize BingX service:", error);
+    console.error('Failed to initialize BingX service:', error)
   }
 }
 
@@ -44,10 +44,10 @@ if (bitgetConfig.apiKey && bitgetConfig.apiSecret && bitgetConfig.password) {
       bitgetConfig.apiKey,
       bitgetConfig.apiSecret,
       bitgetConfig.password,
-    );
-    console.log("Bitget service initialized successfully");
+    )
+    console.log('Bitget service initialized successfully')
   } catch (error) {
-    console.error("Failed to initialize Bitget service:", error);
+    console.error('Failed to initialize Bitget service:', error)
   }
 }
 
@@ -56,10 +56,10 @@ if (bitkuaConfig.username && bitkuaConfig.token) {
     window.electronAPI.setBitkuaCredentials(
       bitkuaConfig.username,
       bitkuaConfig.token,
-    );
-    console.log("Bitkua service initialized successfully");
+    )
+    console.log('Bitkua service initialized successfully')
   } catch (error) {
-    console.error("Failed to initialize Bitkua service:", error);
+    console.error('Failed to initialize Bitkua service:', error)
   }
 }
 </script>

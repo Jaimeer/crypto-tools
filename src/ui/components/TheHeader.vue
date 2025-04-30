@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { useBingXTransactionsStore } from "../store/bingx/bingxTransactions.store";
-import { useBingXConfigStore } from "../store/bingx/bingxConfig.store";
+import { useBingxTransactionsStore } from '../store/bingx/bingxTransactions.store'
+import { useBingxConfigStore } from '../store/bingx/bingxConfig.store'
 
-import { RouterLink, useRoute, useRouter } from "vue-router";
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 
-defineProps<{ page: "bingx" | "bitget" | "charts" }>();
-const bingxConfig = useBingXConfigStore();
-const bingxTransactionsStore = useBingXTransactionsStore();
-const router = useRouter();
-const route = useRoute();
+defineProps<{ page: 'bingx' | 'bitget' | 'charts' }>()
+const bingxConfig = useBingxConfigStore()
+const bingxTransactionsStore = useBingxTransactionsStore()
+const router = useRouter()
+const route = useRoute()
 
 const openChartsWindow = () => {
-  window.electronAPI.openChartsWindow();
-  router.push("/");
-};
+  window.electronAPI.openChartsWindow()
+  router.push('/')
+}
 </script>
 
 <template>

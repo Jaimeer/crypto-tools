@@ -1,36 +1,36 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { differenceInDays, startOfDay } from "date-fns";
-import { Icon } from "@iconify/vue";
-import Price from "../Price.vue";
-import Table from "../Table.vue";
-import { Position, Transaction, Balance, Bot } from "../../../server/data.dto";
+import { computed } from 'vue'
+import { differenceInDays, startOfDay } from 'date-fns'
+import { Icon } from '@iconify/vue'
+import Price from '../Price.vue'
+import Table from '../Table.vue'
+import { Position, Transaction, Balance, Bot } from '../../../server/data.dto'
 
 const props = defineProps<{
-  transactions: Transaction[];
-  incomeTransactions: Transaction[];
-  positions: Position[];
-  balance: Balance;
-  bots: Bot[];
-}>();
+  transactions: Transaction[]
+  incomeTransactions: Transaction[]
+  positions: Position[]
+  balance: Balance
+  bots: Bot[]
+}>()
 
 const totalIncomeTransactions = computed(() => {
   return props.incomeTransactions
     .map((x) => x.income)
     .reduce((acc, value) => {
-      return acc + parseFloat(value);
-    }, 0);
-});
+      return acc + value
+    }, 0)
+})
 
 const riskRate = computed(() => {
-  return parseFloat(props.positions[0]?.riskRate ?? "0") * 100;
-});
+  return props.positions[0]?.riskRate * 100
+})
 
 const parseValue = (value: number | string | undefined) => {
-  if (!value) return "---";
-  if (typeof value === "string") return parseFloat(value).toFixed(4);
-  return value.toFixed(4);
-};
+  if (!value) return '---'
+  if (typeof value === 'string') return parseFloat(value).toFixed(4)
+  return value.toFixed(4)
+}
 </script>
 
 <template>
@@ -189,13 +189,13 @@ const parseValue = (value: number | string | undefined) => {
         <td class="px-2 py-0.5">DKBots - Num</td>
         <td class="flex gap-1 px-2 py-0.5">
           <span class="text-green-400">
-            {{ bots.filter((x) => x.status === "active").length }}
+            {{ bots.filter((x) => x.status === 'active').length }}
           </span>
           <span class="text-amber-400">
-            {{ bots.filter((x) => x.status === "onlysell").length }}
+            {{ bots.filter((x) => x.status === 'onlysell').length }}
           </span>
           <span class="text-red-400">
-            {{ bots.filter((x) => x.status === "stop").length }}
+            {{ bots.filter((x) => x.status === 'stop').length }}
           </span>
         </td>
       </tr>
@@ -207,8 +207,8 @@ const parseValue = (value: number | string | undefined) => {
           <Price
             :value="
               bots.reduce((acc, bot) => {
-                if (bot.status === 'stop') return acc;
-                return acc + bot.amount;
+                if (bot.status === 'stop') return acc
+                return acc + bot.amount
               }, 0)
             "
             :decimals="2"
@@ -223,7 +223,7 @@ const parseValue = (value: number | string | undefined) => {
           <Price
             :value="
               bots.reduce((acc, bot) => {
-                return acc + bot.amount * bot.count;
+                return acc + bot.amount * bot.count
               }, 0)
             "
             prefix="~"
@@ -239,8 +239,8 @@ const parseValue = (value: number | string | undefined) => {
           <Price
             :value="
               bots.reduce((acc, bot) => {
-                if (bot.status === 'stop') return acc;
-                return acc + bot.amount;
+                if (bot.status === 'stop') return acc
+                return acc + bot.amount
               }, 0) * 10
             "
             prefix="~"
@@ -256,16 +256,16 @@ const parseValue = (value: number | string | undefined) => {
           <Price
             :value="
               bots.reduce((acc, bot) => {
-                if (bot.status === 'stop') return acc;
-                return acc + bot.amount;
+                if (bot.status === 'stop') return acc
+                return acc + bot.amount
               }, 0) *
               10 *
               0.75
             "
             :color="
               bots.reduce((acc, bot) => {
-                if (bot.status === 'stop') return acc;
-                return acc + bot.amount;
+                if (bot.status === 'stop') return acc
+                return acc + bot.amount
               }, 0) *
                 10 *
                 0.75 >
@@ -279,8 +279,8 @@ const parseValue = (value: number | string | undefined) => {
           <Icon
             v-if="
               bots.reduce((acc, bot) => {
-                if (bot.status === 'stop') return acc;
-                return acc + bot.amount;
+                if (bot.status === 'stop') return acc
+                return acc + bot.amount
               }, 0) *
                 10 *
                 0.75 >

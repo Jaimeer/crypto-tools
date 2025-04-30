@@ -1,64 +1,63 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { Icon } from "@iconify/vue";
+import { computed, onUnmounted, ref } from 'vue'
+import { Icon } from '@iconify/vue'
 import {
   TransitionRoot,
   TransitionChild,
   Dialog,
   DialogPanel,
   DialogTitle,
-} from "@headlessui/vue";
-import KLineChart from "../components/KLineChart.vue";
-import { useBingXKLinesStore } from "../store/bingx/bingxKLines.store";
-import { Bot, Contract, Position, Trade } from "../../server/data.dto";
+} from '@headlessui/vue'
+import KLineChart from '../components/KLineChart.vue'
+import { useBingxKLinesStore } from '../store/bingx/bingxKLines.store'
+import { Bot, Contract, Position, Trade } from '../../server/data.dto'
+import { watch } from 'original-fs'
 
 const props = defineProps<{
-  value: string;
-  exchange: string;
-  trades: Trade[];
-  positions: Position[];
-  bots: Bot[];
-  contracts: Contract[];
-}>();
+  value: string
+  exchange: string
+  trades: Trade[]
+  positions: Position[]
+  bots: Bot[]
+  contracts: Contract[]
+}>()
 
 const symbol = computed(() => {
-  if (props.value.includes("USDT")) return props.value;
-  return props.value + "-USDT";
-});
+  return props.value
+})
 
-const bingxKLinesStore = useBingXKLinesStore();
+const bingxKLinesStore = useBingxKLinesStore()
 
-const isOpen = ref(false);
+const isOpen = ref(false)
 
 function closeModal() {
-  isOpen.value = false;
+  isOpen.value = false
+  bingxKLinesStore.unsubscribeKLines(props.value, '15m')
 }
 function openModal() {
-  isOpen.value = true;
-  bingxKLinesStore.fetchKLines(symbol.value, "15m");
+  isOpen.value = true
+  bingxKLinesStore.fetchKLines(symbol.value, '15m')
 }
 
 const botLong = computed(() => {
   return props.bots?.find(
-    (x) =>
-      x.exchange === props.exchange &&
-      x.symbol.replace("USDT", "") === symbol.value.replace("-USDT", "") &&
-      !x.strategy.includes("short"),
-  );
-});
+    (x) => x.symbol === symbol.value && !x.strategy.includes('short'),
+  )
+})
 
 const botShort = computed(() => {
   return props.bots?.find(
-    (x) =>
-      x.exchange === props.exchange &&
-      x.symbol.replace("USDT", "") === symbol.value.replace("-USDT", "") &&
-      x.strategy.includes("short"),
-  );
-});
+    (x) => x.symbol === symbol.value && x.strategy.includes('short'),
+  )
+})
 
 const contract = computed(() => {
-  return props.contracts?.find((x) => x.symbol === symbol.value);
-});
+  return props.contracts?.find((x) => x.symbol === symbol.value)
+})
+
+const klines = computed(() => {
+  return bingxKLinesStore.kLine(props.value, '15m') ?? []
+})
 </script>
 
 <template>
@@ -74,7 +73,7 @@ const contract = computed(() => {
             botLong?.status === 'stop' && botShort?.status === 'stop',
         }"
       >
-        {{ value }}
+        {{ value.replace('USDT', '') }}
       </span>
       <div class="relative">
         <Icon
@@ -164,7 +163,7 @@ const contract = computed(() => {
                   :symbol="symbol"
                   period="15m"
                   :hideTrades="false"
-                  :klines="bingxKLinesStore.kLine(symbol, '15m') ?? []"
+                  :klines="klines"
                   :trades="trades.filter((x) => x.symbol === symbol)"
                   :positions="positions.filter((x) => x.symbol === symbol)"
                   size="large"

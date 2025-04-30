@@ -1,13 +1,13 @@
-import { defineStore } from "pinia";
-import { Balance } from "../../../server/bitget/Bitget.dto";
+import { defineStore } from 'pinia'
+import { Balance } from '../../../server/data.dto'
 
 type State = {
-  balance: Balance | undefined;
-  loading: boolean;
-  error: string | null;
-};
+  balance: Balance | undefined
+  loading: boolean
+  error: string | null
+}
 
-export const useBitgetBalanceStore = defineStore("bitget.balance", {
+export const useBitgetBalanceStore = defineStore('bitget.balance', {
   state: (): State => ({
     balance: undefined,
     loading: false,
@@ -16,7 +16,7 @@ export const useBitgetBalanceStore = defineStore("bitget.balance", {
 
   actions: {
     processMessage(balance: Balance) {
-      this.balance = balance;
+      this.balance = balance
     },
   },
-});
+})

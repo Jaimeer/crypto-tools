@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import Price from "../Price.vue";
-import Table from "../Table.vue";
-import Symbol from "../Symbol.vue";
-import DateTime from "../DateTime.vue";
+import { computed } from 'vue'
+import Price from '../Price.vue'
+import Table from '../Table.vue'
+import Symbol from '../Symbol.vue'
+import DateTime from '../DateTime.vue'
 import {
   Balance,
   Bot,
@@ -11,32 +11,32 @@ import {
   Position,
   Trade,
   Transaction,
-} from "../../../server/data.dto";
-import { Icon } from "@iconify/vue";
+} from '../../../server/data.dto'
+import { Icon } from '@iconify/vue'
 
 const props = defineProps<{
-  exchange: string;
-  trades: Trade[];
-  positions: Position[];
-  balance: Balance;
-  bots: Bot[];
-  contracts: Contract[];
-  transactions: Transaction[];
-}>();
+  exchange: string
+  trades: Trade[]
+  positions: Position[]
+  balance: Balance
+  bots: Bot[]
+  contracts: Contract[]
+  transactions: Transaction[]
+}>()
 
 const transactions = computed(() => {
-  return props.transactions.filter((x) => x.symbol);
-});
+  return props.transactions.filter((x) => x.symbol)
+})
 
 const lastClosedTransactions = computed(() => {
   return transactions.value
     .filter((transaction) => {
-      return ["REALIZED_PNL", "close_long", "close_short"].includes(
+      return ['REALIZED_PNL', 'close_long', 'close_short'].includes(
         transaction.incomeType,
-      );
+      )
     })
-    .slice(0, 30);
-});
+    .slice(0, 30)
+})
 </script>
 
 <template>
@@ -45,7 +45,7 @@ const lastClosedTransactions = computed(() => {
       <td class="px-2 py-0.5"><DateTime :value="new Date(item.time)" /></td>
       <td class="px-2 py-0.5">
         <Symbol
-          :value="item.symbol.replace('-USDT', '')"
+          :value="item.symbol"
           :exchange="exchange"
           :bots="bots"
           :trades="trades"

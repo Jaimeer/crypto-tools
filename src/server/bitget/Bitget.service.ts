@@ -1,5 +1,5 @@
-import { BrowserWindow } from "electron";
-import { NotifyMessage } from "../messages.dto";
+import { BrowserWindow } from 'electron'
+import { NotifyMessage } from '../messages.dto'
 import {
   Balance,
   Contract,
@@ -7,15 +7,16 @@ import {
   Position,
   Trade,
   Transaction,
-} from "../data.dto";
-import { BitgetRestClient } from "./BitgetRest.client";
+} from '../data.dto'
+import { BitgetRestClient } from './BitgetRest.client'
 import {
   FuturesAccountsV2,
   FuturesAccountBillV2,
   FuturesOrderFillV2,
-} from "bitget-api";
-import { BitgetCacheService } from "./Bitget.cache";
-import { CacheService } from "../Cache.service";
+} from 'bitget-api'
+import { BitgetCacheService } from './Bitget.cache'
+import { CacheService } from '../Cache.service'
+import { BitgetTransformer } from './Bitget.transformer'
 // import {
 //   Balance,
 //   Contract,
@@ -35,30 +36,30 @@ import { CacheService } from "../Cache.service";
 // const klineRegex = /^([A-Z0-9]*-[A-Z0-9]*)?@kline_([1-9]*[mhdwM]*)?$/;
 
 export class BitgetService {
-  private readonly restClient: BitgetRestClient;
+  private readonly restClient: BitgetRestClient
   // private readonly wsClient: BitgetWebSocket;
-  private readonly cacheService: BitgetCacheService;
+  private readonly cacheService: BitgetCacheService
   // private refreshInterval: NodeJS.Timeout | null = null;
   private originalData: {
-    transactions: FuturesAccountBillV2[];
-    trades: FuturesOrderFillV2[];
+    transactions: FuturesAccountBillV2[]
+    trades: FuturesOrderFillV2[]
   } = {
     transactions: [],
     trades: [],
-  };
+  }
   private data: {
-    transactions: Transaction[];
-    trades: Trade[];
+    transactions: Transaction[]
+    trades: Trade[]
     kLines: Record<
       string,
       {
-        socketId: string;
-        data: KLine[];
+        socketId: string
+        data: KLine[]
       }
-    >;
-    balance: Balance | undefined;
-    positions: Position[];
-    contracts: Contract[];
+    >
+    balance: Balance | undefined
+    positions: Position[]
+    contracts: Contract[]
   } = {
     transactions: [],
     trades: [],
@@ -66,26 +67,26 @@ export class BitgetService {
     balance: undefined,
     positions: [],
     contracts: [],
-  };
+  }
 
   constructor(apiKey: string, apiSecret: string, password: string) {
-    console.log("[Bitget] BitgetService constructor ");
+    console.log('[Bitget] BitgetService constructor ')
     if (!this.restClient) {
-      this.restClient = new BitgetRestClient(apiKey, apiSecret, password);
+      this.restClient = new BitgetRestClient(apiKey, apiSecret, password)
     }
     // if (!this.wsClient)
     //   this.wsClient = new BitgetWebSocket(
     //     this.restClient,
     //     this.handleWebSocketMessage.bind(this),
     //   );
-    this.cacheService = new BitgetCacheService(new CacheService());
+    this.cacheService = new BitgetCacheService(new CacheService())
     if (apiKey && apiSecret && password) {
-      this.cacheService.setHashCode(this.restClient.hashCode);
+      this.cacheService.setHashCode(this.restClient.hashCode)
     }
   }
 
   setCredentials(apiKey: string, apiSecret: string, password: string) {
-    console.log("[Bitget]", { apiKey, apiSecret, password });
+    console.log('[Bitget]', { apiKey, apiSecret, password })
     // this.restClient.setCredentials(apiKey, apiSecret);
     // this.wsClient.updateListenKey();
     // this.cacheService.setHashCode(this.restClient.hashCode);
@@ -93,7 +94,7 @@ export class BitgetService {
 
   startAutoRefresh(intervalMs = 60000) {
     // this.stopAutoRefresh();
-    this.loadData();
+    this.loadData()
     // this.refreshInterval = setInterval(async () => {
     //   try {
     //     await this.loadData();
@@ -119,101 +120,54 @@ export class BitgetService {
   }
 
   private async loadData() {
-    console.log("[Bitget] loadData");
+    console.log('[Bitget] loadData')
     if (!this.originalData.transactions.length) {
-      const cachedData = await this.cacheService.loadBitgetTransactions();
-      this.originalData.transactions = cachedData?.data ?? [];
-      console.log("[Bitget] Cache", {
+      const cachedData = await this.cacheService.loadBitgetTransactions()
+      this.originalData.transactions = cachedData?.data ?? []
+      console.log('[Bitget] Cache', {
         transactions: this.originalData.transactions.length,
-      });
+      })
     }
     if (!this.originalData.trades.length) {
-      const cachedData = await this.cacheService.loadBitgetTrades();
-      this.originalData.trades = cachedData?.data ?? [];
+      const cachedData = await this.cacheService.loadBitgetTrades()
+      this.originalData.trades = cachedData?.data ?? []
 
-      console.log("[Bitget] Cache", {
+      console.log('[Bitget] Cache', {
         trades: this.originalData.trades.length,
-      });
+      })
     }
 
     this.originalData.transactions = await this.restClient.fetchTransactions(
       this.originalData.transactions,
-    );
+    )
     this.originalData.trades = await this.restClient.fetchTrades(
       this.originalData.trades,
-    );
-    const bitgetBalance = await this.restClient.fetchBalance();
+    )
+    const bitgetBalance = await this.restClient.fetchBalance()
     // this.data.positions = await this.restClient.fetchPositions();
     // this.data.contracts = await this.restClient.fetchContracts();
 
     await this.cacheService.saveBitgetTransactions(
       this.originalData.transactions,
-    );
-    await this.cacheService.saveBitgetTrades(this.originalData.trades);
+    )
+    await this.cacheService.saveBitgetTrades(this.originalData.trades)
 
-    this.data.transactions = this.transactionsTransform(
+    this.data.transactions = BitgetTransformer.transactionsTransform(
       this.originalData.transactions,
-    );
-    this.data.trades = this.tradesTransform(this.originalData.trades);
-    this.data.balance = this.balanceTransform(bitgetBalance);
+    )
+    this.data.trades = BitgetTransformer.tradesTransform(
+      this.originalData.trades,
+    )
+    this.data.balance = BitgetTransformer.balanceTransform(bitgetBalance)
 
     this.notifyClients({
-      store: "bitget.transactions",
+      store: 'bitget.transactions',
       transactions: this.data.transactions,
-    });
-    this.notifyClients({ store: "bitget.trades", trades: this.data.trades });
-    this.notifyClients({ store: "bitget.balance", balance: this.data.balance });
+    })
+    this.notifyClients({ store: 'bitget.trades', trades: this.data.trades })
+    this.notifyClients({ store: 'bitget.balance', balance: this.data.balance })
     // this.notifyClients({ store: "bitget.positions", positions: this.data.positions });
     // this.notifyClients({ store: "bitget.contracts", contracts: this.data.contracts });
-  }
-
-  private balanceTransform(balance: FuturesAccountsV2): Balance {
-    return {
-      symbol: balance.marginCoin.replace("USDT", ""),
-      availableMargin: balance.crossedMaxAvailable,
-      balance: balance.available + balance.locked,
-      equity: balance.accountEquity,
-      freezedMargin: balance.locked,
-      realisedPnl: "0",
-      unrealizedPnl: balance.unrealizedPL,
-      usedMargin: balance.crossedMargin,
-    };
-  }
-
-  private transactionsTransform(
-    transactions: FuturesAccountBillV2[],
-  ): Transaction[] {
-    return transactions.map((transaction) => ({
-      symbol: transaction.symbol.replace("USDT", ""),
-      incomeType: transaction.businessType,
-      income: parseFloat(transaction.amount) + parseFloat(transaction.fee),
-      asset: transaction.coin,
-      info: transaction.businessType,
-      time: parseInt(transaction.cTime),
-      tranId: transaction.billId,
-      tradeId: transaction.billId,
-    }));
-  }
-
-  private tradesTransform(trades: FuturesOrderFillV2[]): Trade[] {
-    return trades.map((trade) => {
-      return {
-        symbol: trade.symbol.replace("USDT", ""),
-        qty: parseFloat("0"),
-        price: parseFloat(trade.price),
-        quoteQty: parseFloat(trade.quoteVolume),
-        commission: 0,
-        commissionAsset: "",
-        orderId: trade.orderId,
-        tradeId: trade.side === "buy" ? "LONG" : "SHORT",
-        filledTime: new Date(trade.cTime),
-        side: trade.side.toUpperCase() as "BUY" | "SELL",
-        positionSide: trade.side.toUpperCase(),
-        role: trade.tradeScope.toUpperCase(),
-        total: parseFloat(trade.quoteVolume),
-        realisedPNL: parseFloat(trade.profit),
-      };
-    });
   }
 
   // async loadSymbolKLines(symbol: string, period: Period) {
@@ -321,8 +275,8 @@ export class BitgetService {
     // console.log("notifyClients", message.store);
     BrowserWindow.getAllWindows().forEach((window) => {
       if (!window.isDestroyed()) {
-        window.webContents.send(`update-data`, message);
+        window.webContents.send(`update-data`, message)
       }
-    });
+    })
   }
 }

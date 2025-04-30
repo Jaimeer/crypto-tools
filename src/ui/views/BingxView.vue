@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import BingxDashboard from "../components/BingxDashboard.vue";
+import BingxDashboard from '../components/BingxDashboard.vue'
 </script>
 
 <template>

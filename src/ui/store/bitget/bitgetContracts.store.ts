@@ -1,13 +1,13 @@
-import { defineStore } from "pinia";
-import { Contract } from "../../../server/bitget/Bitget.dto";
+import { defineStore } from 'pinia'
+import { Contract } from '../../../server/data.dto'
 
 type State = {
-  contracts: Contract[];
-  loading: boolean;
-  error: string | null;
-};
+  contracts: Contract[]
+  loading: boolean
+  error: string | null
+}
 
-export const useBitgetContractsStore = defineStore("bitget.contracts", {
+export const useBitgetContractsStore = defineStore('bitget.contracts', {
   state: (): State => ({
     contracts: [],
     loading: false,
@@ -16,7 +16,7 @@ export const useBitgetContractsStore = defineStore("bitget.contracts", {
 
   actions: {
     processMessage(contracts: Contract[]) {
-      this.contracts = contracts;
+      this.contracts = contracts
     },
   },
-});
+})

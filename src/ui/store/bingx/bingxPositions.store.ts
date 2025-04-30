@@ -1,13 +1,13 @@
-import { defineStore } from "pinia";
-import { Position } from "../../../server/data.dto";
+import { defineStore } from 'pinia'
+import { Position } from '../../../server/data.dto'
 
 type State = {
-  positions: Position[];
-  loading: boolean;
-  error: string | null;
-};
+  positions: Position[]
+  loading: boolean
+  error: string | null
+}
 
-export const useBingXPositionsStore = defineStore("bingx.positions", {
+export const useBingxPositionsStore = defineStore('bingx.positions', {
   state: (): State => ({
     positions: [],
     loading: false,
@@ -16,7 +16,7 @@ export const useBingXPositionsStore = defineStore("bingx.positions", {
 
   actions: {
     processMessage(positions: Position[]) {
-      this.positions = positions;
+      this.positions = positions
     },
   },
-});
+})

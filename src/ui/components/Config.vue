@@ -1,40 +1,37 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { useBingXConfigStore } from "../store/bingx/bingxConfig.store";
-import { useBitkuaConfigStore } from "../store/bitkua/bitkuaConfig.store";
-import { useBitgetConfigStore } from "../store/bitget/bitgetConfig.store";
+import { ref } from 'vue'
+import { useBingxConfigStore } from '../store/bingx/bingxConfig.store'
+import { useBitkuaConfigStore } from '../store/bitkua/bitkuaConfig.store'
+import { useBitgetConfigStore } from '../store/bitget/bitgetConfig.store'
 
-const bingxConfig = useBingXConfigStore();
-const bitkuaConfig = useBitkuaConfigStore();
-const bitgetConfig = useBitgetConfigStore();
+const bingxConfig = useBingxConfigStore()
+const bitkuaConfig = useBitkuaConfigStore()
+const bitgetConfig = useBitgetConfigStore()
 
-const inputBingxApiKey = ref(bingxConfig.apiKey);
-const inputBingxApiSecret = ref(bingxConfig.apiSecret);
+const inputBingxApiKey = ref(bingxConfig.apiKey)
+const inputBingxApiSecret = ref(bingxConfig.apiSecret)
 
-const inputBitgetApiKey = ref(bitgetConfig.apiKey);
-const inputBitgetApiSecret = ref(bitgetConfig.apiSecret);
-const inputBitgetPassword = ref(bitgetConfig.password);
+const inputBitgetApiKey = ref(bitgetConfig.apiKey)
+const inputBitgetApiSecret = ref(bitgetConfig.apiSecret)
+const inputBitgetPassword = ref(bitgetConfig.password)
 
-const inputBitkuaUserName = ref(bitkuaConfig.username);
-const inputBitkuaToken = ref(bitkuaConfig.token);
+const inputBitkuaUserName = ref(bitkuaConfig.username)
+const inputBitkuaToken = ref(bitkuaConfig.token)
 
 const save = async () => {
-  await bingxConfig.setConfig(
-    inputBingxApiKey.value,
-    inputBingxApiSecret.value,
-  );
+  await bingxConfig.setConfig(inputBingxApiKey.value, inputBingxApiSecret.value)
   await bitkuaConfig.setConfig(
     inputBitkuaUserName.value,
     inputBitkuaToken.value,
-  );
+  )
   await bitgetConfig.setConfig(
     inputBitgetApiKey.value,
     inputBitgetApiSecret.value,
     inputBitgetPassword.value,
-  );
+  )
 
-  bingxConfig.toggleViewConfig();
-};
+  bingxConfig.toggleViewConfig()
+}
 </script>
 
 <template>

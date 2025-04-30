@@ -45,6 +45,7 @@
     "shortliquiditypool",
     "shortpmd",
     "TOTP",
+    "unsub",
     "uuidv",
     "vueuse"
   ]

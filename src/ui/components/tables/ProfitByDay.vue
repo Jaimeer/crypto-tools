@@ -1,70 +1,70 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { differenceInHours, format, startOfDay } from "date-fns";
-import Price from "../Price.vue";
-import Table from "../Table.vue";
-import { Trade, Transaction } from "../../../server/data.dto";
+import { computed } from 'vue'
+import { differenceInHours, format, startOfDay } from 'date-fns'
+import Price from '../Price.vue'
+import Table from '../Table.vue'
+import { Trade, Transaction } from '../../../server/data.dto'
 
 const props = defineProps<{
-  exchange: string;
-  trades: Trade[];
-  transactions: Transaction[];
-}>();
+  exchange: string
+  trades: Trade[]
+  transactions: Transaction[]
+}>()
 
 type PriceData = {
-  num: number;
-  pnl: number;
-  all: number;
-  charges: number;
-  volume: number;
-};
+  num: number
+  pnl: number
+  all: number
+  charges: number
+  volume: number
+}
 
 const transactions = computed(() => {
-  return props.transactions.filter((x) => x.symbol);
-});
+  return props.transactions.filter((x) => x.symbol)
+})
 
 const trades = computed(() => {
-  return props.trades;
-});
+  return props.trades
+})
 
 const transactionsByDay = computed(() => {
   const data = transactions.value.reduce(
     (acc, transaction) => {
-      const date = format(new Date(transaction.time), "yyyy-MM-dd");
+      const date = format(new Date(transaction.time), 'yyyy-MM-dd')
       if (!acc[date]) {
-        acc[date] = { num: 0, pnl: 0, all: 0, charges: 0, volume: 0 };
+        acc[date] = { num: 0, pnl: 0, all: 0, charges: 0, volume: 0 }
       }
       if (
-        ["REALIZED_PNL", "close_long", "close_short"].includes(
+        ['REALIZED_PNL', 'close_long', 'close_short'].includes(
           transaction.incomeType,
         )
       ) {
-        acc[date].num++;
-        acc[date].pnl += transaction.income;
+        acc[date].num++
+        acc[date].pnl += transaction.income
       } else {
-        acc[date].charges += transaction.income;
+        acc[date].charges += transaction.income
       }
-      acc[date].all += transaction.income;
-      return acc;
+      acc[date].all += transaction.income
+      return acc
     },
     {} as Record<string, PriceData>,
-  );
+  )
 
   trades.value.reduce((acc, trade) => {
-    const date = format(new Date(trade.filledTime), "yyyy-MM-dd");
+    const date = format(new Date(trade.filledTime), 'yyyy-MM-dd')
     if (!acc[date]) {
-      acc[date] = { num: 0, pnl: 0, all: 0, charges: 0, volume: 0 };
+      acc[date] = { num: 0, pnl: 0, all: 0, charges: 0, volume: 0 }
     }
-    if (trade.realisedPNL !== 0) return acc;
-    acc[date].volume += trade.quoteQty;
-    return acc;
-  }, data);
+    if (trade.realisedPNL !== 0) return acc
+    acc[date].volume += trade.quoteQty
+    return acc
+  }, data)
 
   // return array of objects sorted by value
   return Object.entries(data)
     .map(([key, value]) => ({ key, ...value }))
-    .sort((a, b) => b.key.localeCompare(a.key));
-});
+    .sort((a, b) => b.key.localeCompare(a.key))
+})
 </script>
 
 <template>

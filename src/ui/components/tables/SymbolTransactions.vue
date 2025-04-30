@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { format } from "date-fns";
-import Price from "../Price.vue";
-import Table from "../Table.vue";
-import Symbol from "../Symbol.vue";
-import DateTime from "../DateTime.vue";
-import NumTrades from "../NumTrades.vue";
+import { computed, ref } from 'vue'
+import { format } from 'date-fns'
+import Price from '../Price.vue'
+import Table from '../Table.vue'
+import Symbol from '../Symbol.vue'
+import DateTime from '../DateTime.vue'
+import NumTrades from '../NumTrades.vue'
 import {
   Balance,
   Bot,
@@ -13,43 +13,43 @@ import {
   Position,
   Trade,
   Transaction,
-} from "../../../server/data.dto";
-import { Icon } from "@iconify/vue";
+} from '../../../server/data.dto'
+import { Icon } from '@iconify/vue'
 
 const props = defineProps<{
-  exchange: string;
-  dateFormat: string;
-  trades: Trade[];
-  positions: Position[];
-  balance: Balance;
-  bots: Bot[];
-  contracts: Contract[];
-  transactions: Transaction[];
-  allSymbols: string[];
-  hidedSymbols: string[];
-}>();
+  exchange: string
+  dateFormat: string
+  trades: Trade[]
+  positions: Position[]
+  balance: Balance
+  bots: Bot[]
+  contracts: Contract[]
+  transactions: Transaction[]
+  allSymbols: string[]
+  hidedSymbols: string[]
+}>()
 
 type PriceData = {
-  num: number;
-  numLong: number;
-  numShort: number;
-  pnl: number;
-  all: number;
-  charges: number;
-  volume: number;
-  transactions: Transaction[];
-};
+  num: number
+  numLong: number
+  numShort: number
+  pnl: number
+  all: number
+  charges: number
+  volume: number
+  transactions: Transaction[]
+}
 
 const transactions = computed(() => {
-  return props.transactions?.filter((x) => x.symbol) ?? [];
-});
+  return props.transactions?.filter((x) => x.symbol) ?? []
+})
 
 const transactionsBySymbol = computed(() => {
   const data = transactions.value.reduce(
     (acc, transaction) => {
-      const date = format(new Date(transaction.time), props.dateFormat);
-      const symbol = transaction.symbol;
-      if (!acc[date]) acc[date] = {};
+      const date = format(new Date(transaction.time), props.dateFormat)
+      const symbol = transaction.symbol
+      if (!acc[date]) acc[date] = {}
       if (!acc[date][symbol])
         acc[date][symbol] = {
           num: 0,
@@ -60,55 +60,55 @@ const transactionsBySymbol = computed(() => {
           charges: 0,
           volume: 0,
           transactions: [],
-        };
+        }
       if (
-        ["REALIZED_PNL", "close_long", "close_short"].includes(
+        ['REALIZED_PNL', 'close_long', 'close_short'].includes(
           transaction.incomeType,
         )
       ) {
-        acc[date][symbol].num++;
+        acc[date][symbol].num++
         if (
-          transaction.info.startsWith("Sell") ||
-          transaction.incomeType.endsWith("long")
+          transaction.info.startsWith('Sell') ||
+          transaction.incomeType.endsWith('long')
         )
-          acc[date][symbol].numLong++;
+          acc[date][symbol].numLong++
         if (
-          transaction.info.startsWith("Buy") ||
-          transaction.incomeType.endsWith("short")
+          transaction.info.startsWith('Buy') ||
+          transaction.incomeType.endsWith('short')
         )
-          acc[date][symbol].numShort++;
-        acc[date][symbol].pnl += transaction.income;
+          acc[date][symbol].numShort++
+        acc[date][symbol].pnl += transaction.income
       } else {
-        acc[date][symbol].charges += transaction.income;
+        acc[date][symbol].charges += transaction.income
       }
-      acc[date][symbol].transactions.push(transaction);
-      acc[date][symbol].all += transaction.income;
-      return acc;
+      acc[date][symbol].transactions.push(transaction)
+      acc[date][symbol].all += transaction.income
+      return acc
     },
     {} as Record<string, Record<string, PriceData>>,
-  );
+  )
 
   // return array of objects sorted by value
   return Object.entries(data)
     .map(([key, value]) => ({
       key,
       total: Object.values(value).reduce((acc, value) => {
-        return acc + value.all;
+        return acc + value.all
       }, 0),
       num: Object.values(value).reduce((acc, value) => {
-        return acc + value.num;
+        return acc + value.num
       }, 0),
       symbols: value,
     }))
-    .sort((a, b) => b.key.localeCompare(a.key));
-});
+    .sort((a, b) => b.key.localeCompare(a.key))
+})
 
 const usedSymbols = computed(() => {
   return (
     props.allSymbols?.filter((x) => !props.hidedSymbols.includes(x)).sort() ??
     []
-  );
-});
+  )
+})
 </script>
 
 <template>
@@ -117,10 +117,7 @@ const usedSymbols = computed(() => {
       <th class="px-2 py-0.5" v-for="header of ['date', 'total']">
         {{ header }}
       </th>
-      <th
-        class="px-2 py-0.5"
-        v-for="header of usedSymbols.map((x) => x.replace('-USDT', ''))"
-      >
+      <th class="px-2 py-0.5" v-for="header of usedSymbols">
         <Symbol
           :value="header"
           :exchange="exchange"

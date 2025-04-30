@@ -1,13 +1,13 @@
-import { defineStore } from "pinia";
-import { Bot } from "../../../server/data.dto";
+import { defineStore } from 'pinia'
+import { Bot } from '../../../server/data.dto'
 
 type State = {
-  bots: Bot[];
-  loading: boolean;
-  error: string | null;
-};
+  bots: Bot[]
+  loading: boolean
+  error: string | null
+}
 
-export const useBitkuaBotsStore = defineStore("bitkua-bots", {
+export const useBitkuaBotsStore = defineStore('bitkua-bots', {
   state: (): State => ({
     bots: [],
     loading: false,
@@ -16,7 +16,7 @@ export const useBitkuaBotsStore = defineStore("bitkua-bots", {
 
   actions: {
     processMessage(bots: Bot[]) {
-      this.bots = bots;
+      this.bots = bots
     },
   },
-});
+})

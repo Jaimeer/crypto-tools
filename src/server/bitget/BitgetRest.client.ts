@@ -1,38 +1,38 @@
 // eslint-disable-next-line import/no-unresolved
-import { subDays } from "date-fns";
-import { HashLib } from "../../utils/HashLib";
+import { subDays } from 'date-fns'
+import { HashLib } from '../../utils/HashLib'
 import {
   FuturesAccountBillV2,
   FuturesAccountsV2,
   FuturesHistoryOrderV2,
   FuturesOrderFillV2,
   RestClientV2,
-} from "bitget-api";
+} from 'bitget-api'
 
 export class BitgetRestClient {
   //   private bingX: bitget
-  private API_KEY: string;
-  private API_SECRET: string;
-  private PASSWORD: string;
-  private restClients: Record<string, RestClientV2> = {};
+  private API_KEY: string
+  private API_SECRET: string
+  private PASSWORD: string
+  private restClients: Record<string, RestClientV2> = {}
 
   constructor(apiKey: string, apiSecret: string, password: string) {
     if (apiKey && apiSecret && password)
-      this.setCredentials(apiKey, apiSecret, password);
+      this.setCredentials(apiKey, apiSecret, password)
   }
 
   setCredentials(apiKey: string, apiSecret: string, password: string) {
-    this.API_KEY = apiKey;
-    this.API_SECRET = apiSecret;
-    this.PASSWORD = password;
+    this.API_KEY = apiKey
+    this.API_SECRET = apiSecret
+    this.PASSWORD = password
 
-    const hash = this.hashCode;
+    const hash = this.hashCode
     if (!this.restClients[hash])
       this.restClients[hash] = new RestClientV2({
         apiKey: this.API_KEY,
         apiSecret: this.API_SECRET,
         apiPass: this.PASSWORD,
-      });
+      })
   }
 
   get hashCode() {
@@ -42,39 +42,39 @@ export class BitgetRestClient {
         API_SECRET: this.API_SECRET,
         PASSWORD: this.PASSWORD,
       }),
-    );
+    )
   }
 
   private get client() {
     // console.log(this.restClients);
-    const client = this.restClients[this.hashCode];
+    const client = this.restClients[this.hashCode]
     if (!client) {
-      console.log("[Bitget] No client found");
-      return null;
+      console.log('[Bitget] No client found')
+      return null
     }
-    return client;
+    return client
   }
 
   private sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 
   async fetchTransactions(
     currentTransactions: FuturesAccountBillV2[],
   ): Promise<FuturesAccountBillV2[]> {
-    if (!this.client) return [];
-    const allTransactions: FuturesAccountBillV2[] = currentTransactions;
+    if (!this.client) return []
+    const allTransactions: FuturesAccountBillV2[] = currentTransactions
 
     const newestTransaction = allTransactions.length
       ? Math.max(...allTransactions.map((t) => parseInt(t.cTime)))
-      : undefined;
+      : undefined
     const startTime = newestTransaction
       ? newestTransaction + 1000
-      : subDays(new Date(), 30).getTime();
-    let hasMoreData = true;
-    let page = 1;
-    const limit = 100;
-    let idLessThan = "";
+      : subDays(new Date(), 30).getTime()
+    let hasMoreData = true
+    let page = 1
+    const limit = 100
+    let idLessThan = ''
 
     do {
       try {
@@ -82,64 +82,64 @@ export class BitgetRestClient {
           `[Bitget][fetchTransactions] Fetching page ${page}, ` +
             `idLessThan ${idLessThan} ` +
             `transactions so far: ${allTransactions.length}`,
-        );
+        )
 
         const response = await this.client.getFuturesAccountBills({
-          productType: "USDT-FUTURES",
+          productType: 'USDT-FUTURES',
           limit: limit.toString(),
           idLessThan,
           startTime: startTime.toString(),
-        });
+        })
 
-        const transactions = response.data.bills;
-        idLessThan = response.data.endId;
+        const transactions = response.data.bills
+        idLessThan = response.data.endId
 
         if (!transactions || transactions.length === 0) {
-          hasMoreData = false;
-          continue;
+          hasMoreData = false
+          continue
         }
 
-        allTransactions.push(...transactions);
+        allTransactions.push(...transactions)
 
-        page++;
+        page++
 
         if (transactions.length < limit) {
-          hasMoreData = false;
-          continue;
+          hasMoreData = false
+          continue
         }
-        await this.sleep(1000);
+        await this.sleep(1000)
       } catch (error) {
-        console.error("Error during pagination:", error);
-        hasMoreData = false;
+        console.error('Error during pagination:', error)
+        hasMoreData = false
       }
 
-      console.log({ hasMoreData });
-    } while (hasMoreData);
+      console.log({ hasMoreData })
+    } while (hasMoreData)
 
     console.log(
       `[Bitget] Total transactions fetched: ${allTransactions.length}`,
-    );
+    )
     return allTransactions.toSorted(
       (a, b) => parseInt(b.cTime) - parseInt(a.cTime),
-    );
+    )
   }
 
   async fetchTrades(
     currentTrades: FuturesOrderFillV2[],
   ): Promise<FuturesOrderFillV2[]> {
-    if (!this.client) return [];
-    const allTrades: FuturesOrderFillV2[] = currentTrades;
+    if (!this.client) return []
+    const allTrades: FuturesOrderFillV2[] = currentTrades
 
     const newestTransaction = allTrades.length
       ? Math.max(...allTrades.map((t) => parseInt(t.cTime)))
-      : undefined;
+      : undefined
     const startTime = newestTransaction
       ? newestTransaction + 1000
-      : subDays(new Date(), 30).getTime();
-    let hasMoreData = true;
-    let page = 1;
-    const limit = 100;
-    let idLessThan = "";
+      : subDays(new Date(), 30).getTime()
+    let hasMoreData = true
+    let page = 1
+    const limit = 100
+    let idLessThan = ''
 
     do {
       try {
@@ -147,57 +147,57 @@ export class BitgetRestClient {
           `[Bitget][fetchTrades] Fetching page ${page}, ` +
             `idLessThan ${idLessThan} ` +
             `trades so far: ${allTrades.length}`,
-        );
+        )
 
         const response = await this.client.getFuturesHistoricOrderFills({
-          productType: "USDT-FUTURES",
+          productType: 'USDT-FUTURES',
           limit: limit.toString(),
           idLessThan,
           startTime: startTime.toString(),
-        });
+        })
 
-        const trades = response.data.fillList;
-        idLessThan = response.data.endId;
+        const trades = response.data.fillList
+        idLessThan = response.data.endId
 
         if (!trades || trades.length === 0) {
-          hasMoreData = false;
-          continue;
+          hasMoreData = false
+          continue
         }
 
-        allTrades.push(...trades);
+        allTrades.push(...trades)
 
-        page++;
+        page++
 
         if (trades.length < limit) {
-          hasMoreData = false;
-          continue;
+          hasMoreData = false
+          continue
         }
-        await this.sleep(1000);
+        await this.sleep(1000)
       } catch (error) {
-        console.error("Error during pagination:", error);
-        hasMoreData = false;
+        console.error('Error during pagination:', error)
+        hasMoreData = false
       }
 
-      console.log({ hasMoreData });
-    } while (hasMoreData);
+      console.log({ hasMoreData })
+    } while (hasMoreData)
 
-    console.log(`[Bitget] Total trades fetched: ${allTrades.length}`);
-    return allTrades.toSorted((a, b) => parseInt(b.cTime) - parseInt(a.cTime));
+    console.log(`[Bitget] Total trades fetched: ${allTrades.length}`)
+    return allTrades.toSorted((a, b) => parseInt(b.cTime) - parseInt(a.cTime))
   }
 
   async fetchBalance(): Promise<FuturesAccountsV2> {
-    if (!this.client) return undefined;
+    if (!this.client) return undefined
 
     try {
       const response = await this.client.getFuturesAccountAssets({
-        productType: "USDT-FUTURES",
-      });
+        productType: 'USDT-FUTURES',
+      })
 
-      const data = response.data.find((x) => x.marginCoin === "USDT");
-      return data;
+      const data = response.data.find((x) => x.marginCoin === 'USDT')
+      return data
     } catch (error) {
-      console.error("Error fetching balance:", error.body);
-      return undefined;
+      console.error('Error fetching balance:', error.body)
+      return undefined
     }
   }
 

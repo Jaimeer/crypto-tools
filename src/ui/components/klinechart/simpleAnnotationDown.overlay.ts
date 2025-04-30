@@ -4,7 +4,9 @@ export function isValid<T>(value: T | null | undefined): value is T {
   return value !== null && value !== undefined
 }
 
-export function isFunction<T = (...args: unknown[]) => unknown>(value: unknown): value is T {
+export function isFunction<T = (...args: unknown[]) => unknown>(
+  value: unknown,
+): value is T {
   return typeof value === 'function'
 }
 
@@ -51,7 +53,13 @@ export const simpleAnnotationDown: OverlayTemplate = {
       },
       {
         type: 'text',
-        attrs: { x: startX, y: arrowEndY + 20, text, align: 'center', baseline: 'bottom' },
+        attrs: {
+          x: startX,
+          y: arrowEndY + 20,
+          text,
+          align: 'center',
+          baseline: 'bottom',
+        },
         ignoreEvent: true,
       },
     ]
