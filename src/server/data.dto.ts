@@ -131,6 +131,7 @@ export type BitkuaBot = {
   username: string
   count: number
   created_at: Date
+  safe: 'yes' | 'no'
 }
 
 export type Bot = {
@@ -142,4 +143,6 @@ export type Bot = {
   strategy: string
   positionSide: string
   count: number
+  safe: boolean
+  createdAt: Date
 }

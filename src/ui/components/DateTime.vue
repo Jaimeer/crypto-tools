@@ -5,7 +5,7 @@ defineProps<{ value: Date }>()
 </script>
 
 <template>
-  <span v-tooltip="value.toISOString()">
+  <span v-tooltip="value.toLocaleString()">
     {{ formatDistanceToNow(value) }}
   </span>
 </template>

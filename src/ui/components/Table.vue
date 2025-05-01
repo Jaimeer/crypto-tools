@@ -3,6 +3,7 @@ const props = defineProps<{
   headers: string[]
   items: T[]
   fullHeight?: boolean
+  headerClass?: string
 }>()
 </script>
 
@@ -23,7 +24,12 @@ const props = defineProps<{
       >
         <tr>
           <slot name="headers">
-            <th class="px-2 py-0.5" v-for="header of headers" :key="header">
+            <th
+              class="px-2 py-0.5"
+              :class="headerClass"
+              v-for="header of headers"
+              :key="header"
+            >
               {{ header }}
             </th>
           </slot>

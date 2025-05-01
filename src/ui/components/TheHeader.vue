@@ -4,7 +4,7 @@ import { useBingxConfigStore } from '../store/bingx/bingxConfig.store'
 
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
-defineProps<{ page: 'bingx' | 'bitget' | 'charts' }>()
+defineProps<{ page: 'bingx' | 'bitget' | 'charts' | 'bots' }>()
 const bingxConfig = useBingxConfigStore()
 const bingxTransactionsStore = useBingxTransactionsStore()
 const router = useRouter()
@@ -40,6 +40,16 @@ const openChartsWindow = () => {
       >
         Bitget
       </RouterLink>
+      <RouterLink
+        to="/bots"
+        class="rounded bg-slate-500 px-4 py-1 transition hover:bg-slate-600"
+        :class="{
+          'bg-slate-500 text-white': page === 'bots',
+          'bg-slate-700 text-slate-400': page !== 'bots',
+        }"
+      >
+        Bots
+      </RouterLink>
       <!-- <RouterLink
         to="/charts"
         class="rounded bg-slate-500 px-4 py-1 text-white transition hover:bg-slate-600"
@@ -53,6 +63,9 @@ const openChartsWindow = () => {
         New Window
       </button> -->
       <slot name="left" />
+    </div>
+    <div>
+      <slot name="center" />
     </div>
     <div class="flex items-center gap-2">
       <slot name="right" />

@@ -284,11 +284,7 @@ const strategyNameShort = (strategy: string) => {
 const sides = ['long', 'short'] as const
 const status = ['active', 'stop', 'onlysell'] as const
 
-const sendAction = (
-  botId: string,
-  status: 'active' | 'stop' | 'onlysell',
-  amount?: number,
-) => {
+const sendAction = (botId: string, status: 'active' | 'stop' | 'onlysell') => {
   const message: BitkuaActionUpdateStatus = {
     action: 'updateStatus',
     botId,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import {
   TransitionRoot,
@@ -11,7 +11,6 @@ import {
 import KLineChart from '../components/KLineChart.vue'
 import { useBingxKLinesStore } from '../store/bingx/bingxKLines.store'
 import { Bot, Contract, Position, Trade } from '../../server/data.dto'
-import { watch } from 'original-fs'
 
 const props = defineProps<{
   value: string
