@@ -13,8 +13,12 @@ import DateTime from './general/DateTime.vue'
 import { BitkuaActionUpdateSafe } from 'src/server/bitkua/Bitkua.dto'
 import { subDays } from 'date-fns'
 import BotAmount from './bitkua/BotAmount.vue'
+import BingxChartManager from './trading/BingxChartManager.vue'
+import { useBingxChartStore } from '../store/bingx/bingxChart.store'
+import { Bot } from '../../server/data.dto'
 
 const bitkuaBotsStore = useBitkuaBotsStore()
+const bingxChartStore = useBingxChartStore()
 
 const search = ref('')
 const bots = computed(() => {
@@ -46,6 +50,16 @@ const activeSafeForAll = () => {
       window.electronAPI.sendBitkuaAction(message)
     }
   })
+}
+
+const loadSymbolChart = (bot: Bot) => {
+  if (bot.exchange.toLowerCase() === 'bingx') {
+    bingxChartStore.setSymbol(bot.symbol)
+  } else {
+    console.log(
+      `loadSymbolChart not implemented for this ${bot.exchange} exchange`,
+    )
+  }
 }
 </script>
 
@@ -124,12 +138,15 @@ const activeSafeForAll = () => {
           </div>
         </td>
         <td
-          class="px-2 py-0.5 text-[10px] font-bold"
+          class="cursor-pointer px-2 py-0.5 text-[10px] font-bold"
           :class="{
-            'bg-green-600 text-green-950': item.status === 'active',
-            'bg-red-600 text-red-950': item.status === 'stop',
-            'bg-yellow-600 text-yellow-950': item.status === 'onlysell',
+            'bg-green-600 text-green-950 hover:bg-green-500':
+              item.status === 'active',
+            'bg-red-600 text-red-950 hover:bg-red-500': item.status === 'stop',
+            'bg-yellow-600 text-yellow-950 hover:bg-yellow-500':
+              item.status === 'onlysell',
           }"
+          @click="loadSymbolChart(item)"
         >
           {{ item.symbol }}
         </td>
@@ -178,5 +195,6 @@ const activeSafeForAll = () => {
         </td>
       </template>
     </Table>
+    <BingxChartManager />
   </div>
 </template>

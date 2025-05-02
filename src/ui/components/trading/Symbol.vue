@@ -19,8 +19,6 @@ const symbol = computed(() => {
 
 const bingxChartStore = useBingxChartStore()
 
-const isOpen = ref(false)
-
 function loadSymbol() {
   bingxChartStore.setSymbol(symbol.value)
 }
