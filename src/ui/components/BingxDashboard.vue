@@ -13,7 +13,7 @@ import Balance from './tables/Balance.vue'
 import SymbolTrades from './tables/SymbolTrades.vue'
 import SymbolTransactions from './tables/SymbolTransactions.vue'
 import LastTrades from './tables/LastTrades.vue'
-import TheHeader from './TheHeader.vue'
+import TheHeader from './general/TheHeader.vue'
 import ProfitRanking from './tables/ProfitRanking.vue'
 import {
   Listbox,
@@ -21,6 +21,7 @@ import {
   ListboxOptions,
   ListboxOption,
 } from '@headlessui/vue'
+import BingxChartManager from './trading/BingxChartManager.vue'
 
 const exchange = 'bingx'
 const bingxTransactionsStore = useBingxTransactionsStore()
@@ -30,6 +31,8 @@ const bingxPositionsStore = useBingxPositionsStore()
 const bingxTradesStore = useBingxTradesStore()
 const bingXContractsStore = useBingxContractsStore()
 const bingxPreferencesStore = useBingxPreferencesStore()
+
+const search = ref('')
 
 const transactions = computed(() => {
   return bingxTransactionsStore.transactions.filter((x) => x.symbol)
@@ -82,7 +85,7 @@ watch(selectedSymbols, () => {
 
 <template>
   <div class="p-4">
-    <TheHeader :page="exchange">
+    <TheHeader :page="exchange" v-model="search">
       <template #right>
         <Listbox v-model="selectedSymbols" multiple>
           <ListboxButton
@@ -154,6 +157,7 @@ watch(selectedSymbols, () => {
           :bots="bots"
           :contracts="contracts"
           :transactions="transactions"
+          :search="search"
         />
         <ProfitRanking
           :exchange="exchange"
@@ -164,6 +168,7 @@ watch(selectedSymbols, () => {
           :contracts="contracts"
           :transactions="transactions"
           :hidedSymbols="hidedSymbols"
+          :search="search"
         />
       </div>
       <div class="">
@@ -177,6 +182,7 @@ watch(selectedSymbols, () => {
           :transactions="transactions"
           :allSymbols="allSymbols"
           :hidedSymbols="hidedSymbols"
+          :search="search"
         />
       </div>
       <SymbolTransactions
@@ -190,8 +196,10 @@ watch(selectedSymbols, () => {
         :transactions="transactions"
         :allSymbols="allSymbols"
         :hidedSymbols="hidedSymbols"
+        :search="search"
       />
       <!-- <SymbolTransactions date-format="yyyy-MM-dd HH" /> -->
+      <BingxChartManager />
     </div>
   </div>
 </template>

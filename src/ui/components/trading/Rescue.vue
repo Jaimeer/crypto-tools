@@ -4,7 +4,7 @@ import Price from './Price.vue'
 
 import { useElementHover } from '@vueuse/core'
 import { useTemplateRef } from 'vue'
-import { Position } from '../../server/data.dto'
+import { Position } from '../../../server/data.dto'
 
 const props = defineProps<{
   symbol: string

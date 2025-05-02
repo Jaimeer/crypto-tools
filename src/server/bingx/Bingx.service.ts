@@ -195,12 +195,12 @@ export class BingXService {
         period,
         klines: this.data.kLines[symbol].data,
       })
-    }
 
-    await this.wsClient.unsubscribe(
-      this.data.kLines[symbol].socketId,
-      `${symbol.replace('USDT', '-USDT')}@kline_${period}`,
-    )
+      await this.wsClient.unsubscribe(
+        this.data.kLines[symbol].socketId,
+        `${symbol.replace('USDT', '-USDT')}@kline_${period}`,
+      )
+    }
   }
 
   private processWSEventKline(message: KLineDataEvent) {

@@ -12,7 +12,7 @@ import Balance from './tables/Balance.vue'
 import SymbolTrades from './tables/SymbolTrades.vue'
 import SymbolTransactions from './tables/SymbolTransactions.vue'
 import LastTrades from './tables/LastTrades.vue'
-import TheHeader from './TheHeader.vue'
+import TheHeader from './general/TheHeader.vue'
 import ProfitRanking from './tables/ProfitRanking.vue'
 import {
   Listbox,
@@ -29,6 +29,8 @@ const bitgetTradesStore = useBitgetTradesStore()
 const bitkuaBotsStore = useBitkuaBotsStore()
 const bitgetPositionsStore = useBitgetPositionsStore()
 const bitgetPreferencesStore = useBitgetPreferencesStore()
+
+const search = ref('')
 
 const transactions = computed(() => {
   return bitgetTransactionsStore.transactions.filter((x) => x.symbol)
@@ -153,6 +155,7 @@ watch(selectedSymbols, () => {
           :bots="bots"
           :contracts="contracts"
           :transactions="transactions"
+          :search="search"
         />
         <ProfitRanking
           :exchange="exchange"
@@ -163,6 +166,7 @@ watch(selectedSymbols, () => {
           :contracts="contracts"
           :transactions="transactions"
           :hidedSymbols="hidedSymbols"
+          :search="search"
         />
       </div>
       <div class="">
@@ -176,6 +180,7 @@ watch(selectedSymbols, () => {
           :transactions="transactions"
           :allSymbols="allSymbols"
           :hidedSymbols="hidedSymbols"
+          :search="search"
         />
       </div>
       <SymbolTransactions
@@ -189,6 +194,7 @@ watch(selectedSymbols, () => {
         :transactions="transactions"
         :allSymbols="allSymbols"
         :hidedSymbols="hidedSymbols"
+        :search="search"
       />
       <!-- <SymbolTransactions date-format="yyyy-MM-dd HH" /> -->
     </div>

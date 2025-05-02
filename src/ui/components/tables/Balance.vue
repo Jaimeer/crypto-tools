@@ -2,8 +2,8 @@
 import { computed } from 'vue'
 import { differenceInDays, startOfDay } from 'date-fns'
 import { Icon } from '@iconify/vue'
-import Price from '../Price.vue'
-import Table from '../Table.vue'
+import Price from '../trading/Price.vue'
+import Table from '../general/Table.vue'
 import { Position, Transaction, Balance, Bot } from '../../../server/data.dto'
 
 const props = defineProps<{

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { subDays, subHours, subWeeks } from 'date-fns'
-import Table from '../Table.vue'
-import Price from '../Price.vue'
-import Symbol from '../Symbol.vue'
+import Table from '../general/Table.vue'
+import Price from '../trading/Price.vue'
+import Symbol from '../trading/Symbol.vue'
 import {
   Trade,
   Balance,
@@ -22,6 +22,7 @@ const props = defineProps<{
   contracts: Contract[]
   transactions: Transaction[]
   hidedSymbols: string[]
+  search: string
 }>()
 
 type RankingData = {
@@ -68,6 +69,9 @@ const symbolRanking = computed(() => {
   // return array of objects sorted by value
   return Object.entries(data)
     .map(([key, value]) => ({ key, ...value }))
+    .filter((items) =>
+      items.key.toLowerCase().includes(props.search.toLowerCase()),
+    )
     .sort((a, b) => {
       if (sortBy.value === '4h') return b.profit4h - a.profit4h
       if (sortBy.value === '24h') return b.profit24h - a.profit24h

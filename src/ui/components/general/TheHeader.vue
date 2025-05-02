@@ -1,19 +1,12 @@
 <script setup lang="ts">
-import { useBingxTransactionsStore } from '../store/bingx/bingxTransactions.store'
-import { useBingxConfigStore } from '../store/bingx/bingxConfig.store'
-
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { Icon } from '@iconify/vue'
+import { useBingxConfigStore } from '../../store/bingx/bingxConfig.store'
+import { RouterLink } from 'vue-router'
 
 defineProps<{ page: 'bingx' | 'bitget' | 'charts' | 'bots' }>()
 const bingxConfig = useBingxConfigStore()
-const bingxTransactionsStore = useBingxTransactionsStore()
-const router = useRouter()
-const route = useRoute()
 
-const openChartsWindow = () => {
-  window.electronAPI.openChartsWindow()
-  router.push('/')
-}
+const search = defineModel()
 </script>
 
 <template>
@@ -50,22 +43,26 @@ const openChartsWindow = () => {
       >
         Bots
       </RouterLink>
-      <!-- <RouterLink
-        to="/charts"
-        class="rounded bg-slate-500 px-4 py-1 text-white transition hover:bg-slate-600"
-      >
-        Charts
-      </RouterLink>
-      <button
-        class="cursor-pointer rounded bg-blue-400 px-4 py-1 text-white transition hover:bg-blue-600"
-        @click="openChartsWindow"
-      >
-        New Window
-      </button> -->
       <slot name="left" />
     </div>
     <div>
-      <slot name="center" />
+      <div class="flex items-center gap-2">
+        <slot name="pre-search" />
+        <input
+          v-model="search"
+          type="text"
+          placeholder="Search..."
+          class="w-96 rounded border border-slate-600 bg-slate-700 px-2 py-1 text-slate-200 focus:border-slate-500 focus:outline-none"
+        />
+        <Icon
+          icon="mdi:remove"
+          class="cursor-pointer text-slate-400 hover:text-slate-200"
+          width="20"
+          height="20"
+          @click="search = ''"
+        />
+        <slot name="post-search" />
+      </div>
     </div>
     <div class="flex items-center gap-2">
       <slot name="right" />

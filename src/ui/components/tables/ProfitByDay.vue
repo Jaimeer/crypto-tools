@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { differenceInHours, format, startOfDay } from 'date-fns'
-import Price from '../Price.vue'
-import Table from '../Table.vue'
+import Price from '../trading/Price.vue'
+import Table from '../general/Table.vue'
 import { Trade, Transaction } from '../../../server/data.dto'
 
 const props = defineProps<{

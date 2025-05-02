@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useBitkuaBotsStore } from '../store/bitkua/bitkuaBots.store'
-import TheHeader from './TheHeader.vue'
-import Table from './Table.vue'
+import TheHeader from './general/TheHeader.vue'
+import Table from './general/Table.vue'
 import BotStatus from './bitkua/BotStatus.vue'
 import BotSafe from './bitkua/BotSafe.vue'
 import PositionSide from './trading/PositionSide.vue'
 import BotStrategy from './bitkua/BotStrategy.vue'
 import BotDelete from './bitkua/BotDelete.vue'
 import BotReset from './bitkua/BotReset.vue'
-import DateTime from './DateTime.vue'
+import DateTime from './general/DateTime.vue'
 import { BitkuaActionUpdateSafe } from 'src/server/bitkua/Bitkua.dto'
 import { subDays } from 'date-fns'
+import BotAmount from './bitkua/BotAmount.vue'
 
 const bitkuaBotsStore = useBitkuaBotsStore()
 
@@ -50,15 +51,9 @@ const activeSafeForAll = () => {
 
 <template>
   <div class="p-4">
-    <TheHeader page="bots">
-      <template #center>
+    <TheHeader page="bots" v-model="search">
+      <template #post-search>
         <div class="flex items-center gap-2">
-          <input
-            v-model="search"
-            type="text"
-            placeholder="Search symbol..."
-            class="w-96 rounded border border-slate-600 bg-slate-700 px-2 py-1 text-slate-200 focus:border-slate-500 focus:outline-none"
-          />
           <div class="text-slate-400">
             <template v-if="bots.length !== bitkuaBotsStore.bots.length">
               {{ bots.length }}/{{ bitkuaBotsStore.bots.length }} bots
@@ -142,9 +137,7 @@ const activeSafeForAll = () => {
           <PositionSide :positionSide="item.positionSide as 'SHORT' | 'LONG'" />
         </td>
         <td class="flex px-2 py-0.5">
-          <div class="w-fit rounded bg-slate-600 px-2 py-0.5 text-[10px]">
-            {{ item.amount }}
-          </div>
+          <BotAmount :bot="item" />
         </td>
         <td class="px-2 py-0.5">
           <div

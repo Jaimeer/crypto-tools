@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import Price from '../Price.vue'
-import Table from '../Table.vue'
-import Symbol from '../Symbol.vue'
-import DateTime from '../DateTime.vue'
+import Price from '../trading/Price.vue'
+import Table from '../general/Table.vue'
+import Symbol from '../trading/Symbol.vue'
+import DateTime from '../general/DateTime.vue'
 import {
   Balance,
   Bot,
@@ -22,6 +22,7 @@ const props = defineProps<{
   bots: Bot[]
   contracts: Contract[]
   transactions: Transaction[]
+  search: string
 }>()
 
 const transactions = computed(() => {
@@ -35,6 +36,9 @@ const lastClosedTransactions = computed(() => {
         transaction.incomeType,
       )
     })
+    .filter((transaction) =>
+      transaction.symbol.toLowerCase().includes(props.search.toLowerCase()),
+    )
     .slice(0, 30)
 })
 </script>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useBingxTransactionsStore } from '../store/bingx/bingxTransactions.store'
-import KLineChart from '../components/KLineChart.vue'
-import TheHeader from '../components/TheHeader.vue'
+import KLineChart from '../components/trading/KLineChart.vue'
+import TheHeader from '../components/general/TheHeader.vue'
 import { useBingxTradesStore } from '../store/bingx/bingxTrades.store'
 import { useBingxPositionsStore } from '../store/bingx/bingxPositions.store'
 import { useBingxKLinesStore } from '../store/bingx/bingxKLines.store'

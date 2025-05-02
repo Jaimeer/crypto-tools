@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { format } from 'date-fns'
-import Price from '../Price.vue'
-import Table from '../Table.vue'
-import Symbol from '../Symbol.vue'
-import DateTime from '../DateTime.vue'
-import NumTrades from '../NumTrades.vue'
+import Price from '../trading/Price.vue'
+import Table from '../general/Table.vue'
+import Symbol from '../trading/Symbol.vue'
+import DateTime from '../general/DateTime.vue'
+import NumTrades from '../trading/NumTrades.vue'
 import {
   Balance,
   Bot,
@@ -27,6 +27,7 @@ const props = defineProps<{
   transactions: Transaction[]
   allSymbols: string[]
   hidedSymbols: string[]
+  search: string
 }>()
 
 type PriceData = {
@@ -105,8 +106,10 @@ const transactionsBySymbol = computed(() => {
 
 const usedSymbols = computed(() => {
   return (
-    props.allSymbols?.filter((x) => !props.hidedSymbols.includes(x)).sort() ??
-    []
+    props.allSymbols
+      ?.filter((x) => !props.hidedSymbols.includes(x))
+      .filter((x) => x.toLowerCase().includes(props.search.toLowerCase()))
+      .sort() ?? []
   )
 })
 </script>

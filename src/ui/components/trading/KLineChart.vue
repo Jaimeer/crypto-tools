@@ -4,17 +4,17 @@ import { init, dispose, registerOverlay } from 'klinecharts'
 import { vElementSize } from '@vueuse/components'
 import { addMonths, subDays, subHours } from 'date-fns'
 import { Icon } from '@iconify/vue'
-import { simpleAnnotationDown } from './klinechart/simpleAnnotationDown.overlay'
-import { rectangle } from './klinechart/rectangle.overlay'
-import { KLine, Period, Position, Trade } from '../../server/data.dto'
-import { useBingxTransactionsStore } from '../store/bingx/bingxTransactions.store'
-import { useBingxTradesStore } from '../store/bingx/bingxTrades.store'
-import { useBingxPositionsStore } from '../store/bingx/bingxPositions.store'
+import { simpleAnnotationDown } from '../klinechart/simpleAnnotationDown.overlay'
+import { rectangle } from '../klinechart/rectangle.overlay'
+import { KLine, Period, Position, Trade } from '../../../server/data.dto'
+import { useBingxTransactionsStore } from '../../store/bingx/bingxTransactions.store'
+import { useBingxTradesStore } from '../../store/bingx/bingxTrades.store'
+import { useBingxPositionsStore } from '../../store/bingx/bingxPositions.store'
 import Price from './Price.vue'
 import Rescue from './Rescue.vue'
 import NumTrades from './NumTrades.vue'
-import { BitkuaActionUpdateStatus } from '../../server/bitkua/Bitkua.dto'
-import { useBitkuaBotsStore } from '../store/bitkua/bitkuaBots.store'
+import { BitkuaActionUpdateStatus } from '../../../server/bitkua/Bitkua.dto'
+import { useBitkuaBotsStore } from '../../store/bitkua/bitkuaBots.store'
 
 registerOverlay(rectangle)
 registerOverlay(simpleAnnotationDown)
@@ -37,16 +37,13 @@ const props = defineProps<{
 }>()
 
 const printData = (start: boolean) => {
-  console.log('AAAAA-1')
   if (chart.value) {
-    console.log('AAAAA-2')
     const priceSample = props.klines[0]?.close
     const decimals =
       priceSample > 1000 ? 0 : priceSample > 10 ? 2 : priceSample > 0 ? 4 : 6
 
     const data = props.klines.toReversed() ?? []
     if (start) {
-      console.log('printData', { decimals, data })
       chart.value.setPrecision({ price: decimals })
       chart.value.applyNewData(data)
     } else {
@@ -349,7 +346,6 @@ const strategyName = (strategy: string) => {
 }
 
 onMounted(async () => {
-  console.log('BBB-1')
   chart.value = init(`chart-${props.symbol}`, {
     styles: {
       grid: {
@@ -363,7 +359,6 @@ onMounted(async () => {
     },
   })
 
-  console.log('BBB-2')
   printData(true)
 })
 
@@ -374,7 +369,6 @@ onUnmounted(() => {
 watch(
   () => props.klines[0].close,
   () => {
-    console.log('CCCC')
     printData(false)
   },
 )
@@ -382,7 +376,6 @@ watch(
 watch(
   () => props.hideTrades,
   () => {
-    console.log('DDDD')
     draw()
   },
 )
@@ -390,7 +383,7 @@ watch(
 
 <template>
   <div
-    class="relative flex flex-col rounded border border-gray-600 p-4 text-slate-400"
+    class="relative flex h-full flex-1 flex-col rounded border border-gray-600 p-4 text-slate-400"
     v-element-size="updateChartSize"
     :class="{
       'border-t-green-600 border-l-green-600': bot.long?.status === 'active',
@@ -426,14 +419,7 @@ watch(
       </div>
     </div>
 
-    <div
-      :id="`chart-${symbol}`"
-      class="w-full"
-      :class="{
-        'h-[20rem]': size === 'small',
-        'h-[40rem]': size === 'large',
-      }"
-    />
+    <div :id="`chart-${symbol}`" class="h-full w-full" />
     <div class="t-2 flex items-center justify-between">
       <div class="grid w-full grid-cols-2 items-center justify-between">
         <div v-for="side in sides" class="flex flex-col">

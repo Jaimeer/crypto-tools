@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import Table from '../Table.vue'
-import Price from '../Price.vue'
-import Symbol from '../Symbol.vue'
-import Rescue from '../Rescue.vue'
+import Table from '../general/Table.vue'
+import Price from '../trading/Price.vue'
+import Symbol from '../trading/Symbol.vue'
+import Rescue from '../trading/Rescue.vue'
 import { Icon } from '@iconify/vue'
 import { BitkuaActionUpdateStatus } from '../../../server/bitkua/Bitkua.dto'
 import {
@@ -25,6 +25,7 @@ const props = defineProps<{
   transactions: Transaction[]
   allSymbols: string[]
   hidedSymbols: string[]
+  search: string
 }>()
 
 const transactions = computed(() => {
@@ -211,6 +212,9 @@ const tradesInfo = computed(() => {
 
   return Object.entries(data)
     .map(([key, value]) => ({ key, ...value }))
+    .filter((items) =>
+      items.key.toLowerCase().includes(props.search.toLowerCase()),
+    )
     .sort((a, b) => a.key.localeCompare(b.key))
 })
 

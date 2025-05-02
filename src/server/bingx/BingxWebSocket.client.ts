@@ -118,7 +118,7 @@ export class BingXWebSocket {
   stop() {
     this.stopExtendKeyInterval()
     if (this.socket) {
-      this.socket.close()
+      if (this.socket.readyState === WebSocket.OPEN) this.socket.close()
       this.socket = undefined
     }
   }
