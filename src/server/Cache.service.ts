@@ -2,6 +2,7 @@ import { app } from 'electron'
 import fs from 'fs/promises'
 import path from 'node:path'
 import { CompressLib } from '../utils/CompressLib'
+import { LoggerService } from '../utils/Logger'
 
 export interface CachedData<T> {
   lastUpdated: number
@@ -10,10 +11,15 @@ export interface CachedData<T> {
 
 export class CacheService {
   private cacheDir: string
+  private readonly logger: LoggerService
+
+  constructor() {
+    this.logger = new LoggerService(CacheService.name)
+  }
 
   setHashCode(hashCode: string): void {
     this.cacheDir = path.join(app.getPath('userData'), 'data-cache', hashCode)
-    console.log('Cache dir: ', this.cacheDir)
+    this.logger.debug(`Cache dir: ${this.cacheDir}`)
     this.ensureCacheDirectory()
   }
 
@@ -21,7 +27,7 @@ export class CacheService {
     try {
       await fs.mkdir(this.cacheDir, { recursive: true })
     } catch (error) {
-      console.error('Failed to create cache directory:', error)
+      this.logger.error(`Failed to create cache directory: ${error.message}`)
     }
   }
 
@@ -33,9 +39,11 @@ export class CacheService {
         await CompressLib.compressString(JSON.stringify(data)),
         'utf8',
       )
-      console.log(`Cache saved to ${filePath}`)
+      this.logger.debug(`Cache saved to ${filePath}`)
     } catch (error) {
-      console.error(`Failed to write cache to ${filePath}:`, error)
+      this.logger.error(
+        `Failed to write cache to ${filePath}: ${error.message}`,
+      )
     }
   }
 
@@ -48,7 +56,7 @@ export class CacheService {
       ) as CachedData<T>
     } catch (error) {
       // File doesn't exist or contains invalid JSON
-      console.log(`No valid cache found at ${filePath}`)
+      this.logger.debug(`No valid cache found at ${filePath}: ${error.message}`)
       return null
     }
   }
@@ -59,9 +67,9 @@ export class CacheService {
       await Promise.all(
         files.map((file) => fs.unlink(path.join(this.cacheDir, file))),
       )
-      console.log('Cache cleared successfully')
+      this.logger.debug('Cache cleared successfully')
     } catch (error) {
-      console.error('Failed to clear cache:', error)
+      this.logger.error(`Failed to clear cache: ${error.message}`)
     }
   }
 }

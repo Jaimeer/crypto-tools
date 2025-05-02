@@ -1,3 +1,4 @@
+import { ExchangeTransformer } from '../base/ExchangeTransformer.type'
 import {
   Balance,
   Contract,
@@ -16,15 +17,22 @@ import {
 } from './Bingx.dto'
 import { KLineDataEvent } from './Bingx.ws.dto'
 
-export class BingxTransformer {
-  private static parseSymbol(symbol: string) {
-    return symbol.replace('-', '')
-  }
-  static transactionsTransform(
-    transactions: BingxTransaction[],
-  ): Transaction[] {
+function parseSymbol(symbol: string) {
+  return symbol.replace('-', '')
+}
+
+export const BingxTransformer: ExchangeTransformer<
+  BingxTransaction,
+  BingxTrade,
+  BingxBalance,
+  BingxContract,
+  BingxPosition,
+  BingxKLine,
+  KLineDataEvent['data']
+> = {
+  transactionsTransform(transactions: BingxTransaction[]): Transaction[] {
     return transactions.map((transaction) => ({
-      symbol: this.parseSymbol(transaction.symbol),
+      symbol: parseSymbol(transaction.symbol),
       incomeType: transaction.incomeType,
       income: parseFloat(transaction.income),
       asset: transaction.asset,
@@ -33,11 +41,11 @@ export class BingxTransformer {
       tranId: transaction.tranId,
       tradeId: transaction.tradeId,
     }))
-  }
+  },
 
-  static tradesTransform(trades: BingxTrade[]): Trade[] {
+  tradesTransform(trades: BingxTrade[]): Trade[] {
     return trades.map((trade) => ({
-      symbol: this.parseSymbol(trade.symbol),
+      symbol: parseSymbol(trade.symbol),
       qty: parseFloat(trade.qty),
       price: parseFloat(trade.price),
       quoteQty: parseFloat(trade.quoteQty),
@@ -52,11 +60,11 @@ export class BingxTransformer {
       total: trade.total,
       realisedPNL: parseFloat(trade.realisedPNL),
     }))
-  }
+  },
 
-  static balanceTransform(balance: BingxBalance): Balance {
+  balanceTransform(balance: BingxBalance): Balance {
     return {
-      symbol: this.parseSymbol(balance.asset),
+      symbol: parseSymbol(balance.asset),
       availableMargin: balance.availableMargin,
       balance: balance.balance,
       equity: balance.equity,
@@ -65,11 +73,11 @@ export class BingxTransformer {
       unrealizedPnl: balance.unrealizedProfit,
       usedMargin: balance.usedMargin,
     }
-  }
+  },
 
-  static positionsTransform(positions: BingxPosition[]): Position[] {
+  positionsTransform(positions: BingxPosition[]): Position[] {
     return positions.map((position) => ({
-      symbol: this.parseSymbol(position.symbol),
+      symbol: parseSymbol(position.symbol),
       positionId: position.positionId,
       positionSide: position.positionSide === 'LONG' ? 'LONG' : 'SHORT',
       isolated: position.isolated,
@@ -87,35 +95,57 @@ export class BingxTransformer {
       riskRate: parseFloat(position.riskRate),
       maxMarginReduction: parseFloat(position.maxMarginReduction),
       pnlRatio: parseFloat(position.pnlRatio),
+      createTime: parseFloat(position.createTime),
       updateTime: parseFloat(position.updateTime),
     }))
-  }
+  },
 
-  static contractsTransform(contracts: BingxContract[]): Contract[] {
-    return contracts.map((contract) => ({
-      contractId: contract.contractId,
-      symbol: this.parseSymbol(contract.symbol),
-      quantityPrecision: contract.quantityPrecision,
-      pricePrecision: contract.pricePrecision,
-      takerFeeRate: contract.takerFeeRate,
-      makerFeeRate: contract.makerFeeRate,
-      tradeMinQuantity: contract.tradeMinQuantity,
-      tradeMinUSDT: contract.tradeMinUSDT,
-      currency: contract.currency,
-      asset: contract.asset,
-      status: contract.status,
-      apiStateOpen: contract.apiStateOpen,
-      apiStateClose: contract.apiStateClose,
-      ensureTrigger: contract.ensureTrigger,
-      triggerFeeRate: contract.triggerFeeRate,
-      brokerState: contract.brokerState,
-      launchTime: contract.launchTime,
-      maintainTime: contract.maintainTime,
-      offTime: contract.offTime,
-    }))
-  }
+  contractsTransform(contracts: BingxContract[]): Contract[] {
+    const statusConfig = {
+      '1': 'normal', //online,
+      '25': 'restrictedAPI', // forbidden to open positions,
+      '5': 'preOnline', // pre-online,
+      '0': 'off', //' offline
+      '-1': 'unknown',
+    } as const
 
-  static klineTransform(klines: BingxKLine[]): KLine[] {
+    type ContractStatus = (typeof statusConfig)[keyof typeof statusConfig]
+    type Status = keyof typeof statusConfig
+
+    return contracts.map((contract) => {
+      const statusKey = contract.status.toString() as Status
+      const status: ContractStatus = Object.keys(statusConfig).includes(
+        statusKey,
+      )
+        ? (statusConfig[statusKey] as ContractStatus)
+        : 'unknown'
+
+      const item: Contract = {
+        contractId: contract.contractId,
+        symbol: parseSymbol(contract.symbol),
+        quantityPrecision: contract.quantityPrecision,
+        pricePrecision: contract.pricePrecision,
+        takerFeeRate: contract.takerFeeRate,
+        makerFeeRate: contract.makerFeeRate,
+        tradeMinQuantity: contract.tradeMinQuantity,
+        tradeMinUSDT: contract.tradeMinUSDT,
+        currency: contract.currency,
+        asset: contract.asset,
+        status,
+        apiStateOpen: contract.apiStateOpen === 'true',
+        apiStateClose: contract.apiStateClose === 'true',
+        ensureTrigger: contract.ensureTrigger,
+        triggerFeeRate: parseFloat(contract.triggerFeeRate),
+        brokerState: contract.brokerState,
+        launchTime: contract.launchTime,
+        maintainTime: contract.maintainTime,
+        offTime: contract.offTime,
+      }
+      return item
+    })
+  },
+
+  klineTransform(klines: BingxKLine[]): KLine[] {
     return klines.map((kline) => ({
       open: parseFloat(kline.open),
       close: parseFloat(kline.close),
@@ -124,9 +154,9 @@ export class BingxTransformer {
       volume: parseFloat(kline.volume),
       timestamp: kline.time,
     }))
-  }
+  },
 
-  static wsKlineTransform(klines: KLineDataEvent['data']): KLine[] {
+  wsKlineTransform(klines: KLineDataEvent['data']): KLine[] {
     return klines.map((kline) => ({
       open: parseFloat(kline.o),
       close: parseFloat(kline.c),
@@ -135,5 +165,5 @@ export class BingxTransformer {
       volume: parseFloat(kline.v),
       timestamp: kline.T,
     }))
-  }
+  },
 }

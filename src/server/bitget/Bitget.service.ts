@@ -4,19 +4,18 @@ import {
   Balance,
   Contract,
   KLine,
+  Period,
   Position,
   Trade,
   Transaction,
 } from '../data.dto'
 import { BitgetRestClient } from './BitgetRest.client'
-import {
-  FuturesAccountsV2,
-  FuturesAccountBillV2,
-  FuturesOrderFillV2,
-} from 'bitget-api'
+import { FuturesAccountBillV2, FuturesOrderFillV2 } from 'bitget-api'
 import { BitgetCacheService } from './Bitget.cache'
 import { CacheService } from '../Cache.service'
 import { BitgetTransformer } from './Bitget.transformer'
+import { LoggerService } from '../../utils/Logger'
+import { ExchangeService } from '../base/Exchange.service'
 // import {
 //   Balance,
 //   Contract,
@@ -35,11 +34,12 @@ import { BitgetTransformer } from './Bitget.transformer'
 
 // const klineRegex = /^([A-Z0-9]*-[A-Z0-9]*)?@kline_([1-9]*[mhdwM]*)?$/;
 
-export class BitgetService {
+export class BitgetService implements ExchangeService {
+  private readonly logger: LoggerService
   private readonly restClient: BitgetRestClient
   // private readonly wsClient: BitgetWebSocket;
   private readonly cacheService: BitgetCacheService
-  // private refreshInterval: NodeJS.Timeout | null = null;
+  private refreshInterval: NodeJS.Timeout | null = null
   private originalData: {
     transactions: FuturesAccountBillV2[]
     trades: FuturesOrderFillV2[]
@@ -70,7 +70,8 @@ export class BitgetService {
   }
 
   constructor(apiKey: string, apiSecret: string, password: string) {
-    console.log('[Bitget] BitgetService constructor ')
+    this.logger = new LoggerService(BitgetService.name)
+    this.logger.debug('BitgetService constructor ')
     if (!this.restClient) {
       this.restClient = new BitgetRestClient(apiKey, apiSecret, password)
     }
@@ -86,55 +87,52 @@ export class BitgetService {
   }
 
   setCredentials(apiKey: string, apiSecret: string, password: string) {
-    console.log('[Bitget]', { apiKey, apiSecret, password })
-    // this.restClient.setCredentials(apiKey, apiSecret);
+    this.restClient.setCredentials(apiKey, apiSecret, password)
     // this.wsClient.updateListenKey();
     // this.cacheService.setHashCode(this.restClient.hashCode);
   }
 
   startAutoRefresh(intervalMs = 60000) {
-    // this.stopAutoRefresh();
+    this.stopAutoRefresh()
     this.loadData()
-    // this.refreshInterval = setInterval(async () => {
-    //   try {
-    //     await this.loadData();
-    //   } catch (error) {
-    //     console.error("BitgetService auto-refresh failed:", error);
-    //   }
-    // }, intervalMs);
-    // console.log(
-    //   `BitgetService auto-refresh started: every ${intervalMs / 1000} seconds`,
-    // );
+    this.refreshInterval = setInterval(async () => {
+      try {
+        await this.loadData()
+      } catch (error) {
+        console.error('BitgetService auto-refresh failed:', error)
+      }
+    }, intervalMs)
+    this.logger.debug(
+      `BitgetService auto-refresh started: every ${intervalMs / 1000} seconds`,
+    )
   }
 
   stopWebSocket() {
     // this.wsClient.stop();
   }
   stopAutoRefresh() {
-    // this.stopWebSocket();
-    // if (this.refreshInterval) {
-    //   clearInterval(this.refreshInterval);
-    //   this.refreshInterval = null;
-    //   console.log("BitgetService auto-refresh stopped");
-    // }
+    this.stopWebSocket()
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval)
+      this.refreshInterval = null
+      this.logger.debug('BitgetService auto-refresh stopped')
+    }
   }
 
   private async loadData() {
-    console.log('[Bitget] loadData')
+    this.logger.debug('loadData')
     if (!this.originalData.transactions.length) {
       const cachedData = await this.cacheService.loadBitgetTransactions()
       this.originalData.transactions = cachedData?.data ?? []
-      console.log('[Bitget] Cache', {
-        transactions: this.originalData.transactions.length,
-      })
+      this.logger.debug(
+        `Cache transactions ${this.originalData.transactions.length}`,
+      )
     }
     if (!this.originalData.trades.length) {
       const cachedData = await this.cacheService.loadBitgetTrades()
       this.originalData.trades = cachedData?.data ?? []
 
-      console.log('[Bitget] Cache', {
-        trades: this.originalData.trades.length,
-      })
+      this.logger.debug(`Cache trades ${this.originalData.trades.length}`)
     }
 
     this.originalData.transactions = await this.restClient.fetchTransactions(
@@ -144,8 +142,8 @@ export class BitgetService {
       this.originalData.trades,
     )
     const bitgetBalance = await this.restClient.fetchBalance()
-    // this.data.positions = await this.restClient.fetchPositions();
-    // this.data.contracts = await this.restClient.fetchContracts();
+    const bitgetPositions = await this.restClient.fetchPositions()
+    const bitgetContracts = await this.restClient.fetchContracts()
 
     await this.cacheService.saveBitgetTransactions(
       this.originalData.transactions,
@@ -159,6 +157,8 @@ export class BitgetService {
       this.originalData.trades,
     )
     this.data.balance = BitgetTransformer.balanceTransform(bitgetBalance)
+    this.data.positions = BitgetTransformer.positionsTransform(bitgetPositions)
+    this.data.contracts = BitgetTransformer.contractsTransform(bitgetContracts)
 
     this.notifyClients({
       store: 'bitget.transactions',
@@ -166,10 +166,27 @@ export class BitgetService {
     })
     this.notifyClients({ store: 'bitget.trades', trades: this.data.trades })
     this.notifyClients({ store: 'bitget.balance', balance: this.data.balance })
-    // this.notifyClients({ store: "bitget.positions", positions: this.data.positions });
-    // this.notifyClients({ store: "bitget.contracts", contracts: this.data.contracts });
+    this.notifyClients({
+      store: 'bitget.positions',
+      positions: this.data.positions,
+    })
+    this.notifyClients({
+      store: 'bitget.contracts',
+      contracts: this.data.contracts,
+    })
   }
 
+  async loadSymbolKLines(symbol: string, period: Period) {
+    this.logger.error(
+      `loadSymbolKLines not implemented symbol[${symbol}] period[${period}]`,
+    )
+  }
+
+  async removeSymbolKLines(symbol: string, period: Period) {
+    this.logger.error(
+      `removeSymbolKLines not implemented symbol[${symbol}] period[${period}]`,
+    )
+  }
   // async loadSymbolKLines(symbol: string, period: Period) {
   //   if (!this.data.kLines[symbol])
   //     this.data.kLines[symbol] = { socketId: uuidv4(), data: [] };
@@ -215,7 +232,7 @@ export class BitgetService {
   //         }
   //       });
 
-  //       // console.log(symbol, {
+  //       // this.logger.debug(symbol, {
   //       //   ini: this.data.kLines[symbol].data[0].close,
   //       //   end: this.data.kLines[symbol].data[
   //       //     this.data.kLines[symbol].data.length - 1
@@ -235,11 +252,11 @@ export class BitgetService {
   //   const logMessage = false;
   //   if ("e" in message) {
   //     if (message.e === "SNAPSHOT") {
-  //       //console.log("TODO", message.e);
+  //       //this.logger.debug("TODO", message.e);
   //       return;
   //     }
   //     if (message.e === "TRADE_UPDATE") {
-  //       console.log(
+  //       this.logger.debug(
   //         "TODO[TRADE_UPDATE]",
   //         logMessage && JSON.stringify(message, null, 2),
   //       );
@@ -247,7 +264,7 @@ export class BitgetService {
   //       return;
   //     }
   //     if (message.e === "ORDER_TRADE_UPDATE") {
-  //       console.log(
+  //       this.logger.debug(
   //         "TODO[ORDER_TRADE_UPDATE]",
   //         logMessage && JSON.stringify(message, null, 2),
   //       );
@@ -255,7 +272,7 @@ export class BitgetService {
   //       return;
   //     }
   //     if (message.e === "ACCOUNT_UPDATE") {
-  //       console.log(
+  //       this.logger.debug(
   //         "TODO[ACCOUNT_UPDATE]",
   //         logMessage && JSON.stringify(message, null, 2),
   //       );
@@ -268,11 +285,11 @@ export class BitgetService {
   //       return this.processWSEventKline(message as KLineDataEvent);
   //     }
   //   }
-  //   console.log("handleWebSocketMessage", message);
+  //   this.logger.debug("handleWebSocketMessage", message);
   // }
 
   private notifyClients(message: NotifyMessage) {
-    // console.log("notifyClients", message.store);
+    // this.logger.debug("notifyClients", message.store);
     BrowserWindow.getAllWindows().forEach((window) => {
       if (!window.isDestroyed()) {
         window.webContents.send(`update-data`, message)

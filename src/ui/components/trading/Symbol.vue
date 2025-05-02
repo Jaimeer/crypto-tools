@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import { Bot, Contract, Position, Trade } from '../../../server/data.dto'
 import { useBingxChartStore } from '../../store/bingx/bingxChart.store'
+import { s } from 'vite/dist/node/types.d-aGj9QkWt'
 
 const props = defineProps<{
   value: string
@@ -81,12 +82,8 @@ const contract = computed(() => {
 
     <span v-if="!contract" class="text-red-400"> no contract </span>
     <template v-else>
-      <span v-if="contract?.apiStateOpen === 'false'" class="text-red-400">
-        open
-      </span>
-      <span v-if="contract?.apiStateClose === 'false'" class="text-red-400">
-        close
-      </span>
+      <span v-if="!contract?.apiStateOpen" class="text-red-400"> open </span>
+      <span v-if="!contract?.apiStateClose" class="text-red-400"> close </span>
     </template>
   </div>
 </template>

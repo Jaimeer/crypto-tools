@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import BingXTransactions from './ui/components/BingxDashboard.vue'
 import Config from './ui/components/Config.vue'
 import { useBingxConfigStore } from './ui/store/bingx/bingxConfig.store'
 import { useBitkuaConfigStore } from './ui/store/bitkua/bitkuaConfig.store'
-import { computed, resolveComponent } from 'vue'
+import { computed } from 'vue'
 import md5 from 'md5'
 import { useDark } from '@vueuse/core'
 import { useBitgetConfigStore } from './ui/store/bitget/bitgetConfig.store'
@@ -15,7 +14,6 @@ const bingxConfig = useBingxConfigStore()
 const bitkuaConfig = useBitkuaConfigStore()
 const bitgetConfig = useBitgetConfigStore()
 
-resolveComponent
 const hashKey = computed(() => {
   const hash = md5(
     JSON.stringify({
@@ -32,6 +30,7 @@ if (bingxConfig.apiKey && bingxConfig.apiSecret) {
       bingxConfig.apiKey,
       bingxConfig.apiSecret,
     )
+
     console.log('BingX service initialized successfully')
   } catch (error) {
     console.error('Failed to initialize BingX service:', error)

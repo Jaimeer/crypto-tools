@@ -68,6 +68,7 @@ export type BingxPosition = {
   riskRate: string
   maxMarginReduction: string
   pnlRatio: string
+  createTime: string
   updateTime: string
 }
 

@@ -1,40 +1,36 @@
 // eslint-disable-next-line import/no-unresolved
 import WebSocket from 'ws'
 import zlib from 'zlib'
-import { BingXRestClient } from './BingxRest.client'
+import { BingxRestClient } from './BingxRest.client'
 import { WebSocketMessage } from './Bingx.ws.dto'
+import { LoggerService } from '../../utils/Logger'
 
 export type HandleMessageFn = (message: WebSocketMessage) => void
 
-export class BingXWebSocket {
-  private readonly restClient: BingXRestClient
+export class BingxWebSocket {
+  private readonly logger: LoggerService
+  private readonly restClient: BingxRestClient
   private readonly handleMessageFn: HandleMessageFn
   private socket: WebSocket
   private extendKeyInterval: NodeJS.Timeout | undefined
   private listenKey: string
   private date = new Date()
 
-  constructor(restClient: BingXRestClient, handleMessageFn: HandleMessageFn) {
+  constructor(restClient: BingxRestClient, handleMessageFn: HandleMessageFn) {
+    this.logger = new LoggerService(BingxWebSocket.name)
     this.restClient = restClient
     this.handleMessageFn = handleMessageFn
     this.startSocket()
     // this.test();
   }
 
-  test() {
-    console.log('test', this.date.toISOString())
-    setTimeout(() => {
-      this.test()
-    }, 1000)
-  }
-
   updateListenKey() {
-    console.log('TODO')
+    this.logger.debug('TODO')
     this.startSocket(true)
   }
 
   async subscribe(socketId: string, channel: string) {
-    console.log('Subscribing to', channel)
+    this.logger.debug(`Subscribing to ${channel}`)
     await this.startSocket()
     const CHANNEL = {
       id: socketId,
@@ -45,7 +41,7 @@ export class BingXWebSocket {
   }
 
   async unsubscribe(socketId: string, channel: string) {
-    console.log('Unsubscribing from', channel)
+    this.logger.debug(`Unsubscribing from ${channel}`)
     await this.startSocket()
     const CHANNEL = {
       id: socketId,
@@ -62,14 +58,14 @@ export class BingXWebSocket {
     }
     const buf = Buffer.from(message)
     const decodedMsg = zlib.gunzipSync(buf).toString('utf-8')
-    // console.log("onMessage", decodedMsg);
+    // this.logger.debug("onMessage", decodedMsg);
     if (decodedMsg === 'Ping') {
       this.socket.send('Pong')
-      console.log('Pong')
+      this.logger.debug('Pong')
       return
     }
     const messageData = JSON.parse(decodedMsg) as WebSocketMessage
-    // console.log(
+    // this.logger.debug(
     //   "WS MSG: ",
     //   "dataType" in messageData
     //     ? messageData.dataType
@@ -82,20 +78,20 @@ export class BingXWebSocket {
   }
 
   private onClose() {
-    console.log('WebSocket closed')
+    this.logger.debug('WebSocket closed')
     this.stop()
   }
 
   private startExtendKeyInterval() {
-    console.log('>> startExtendKeyInterval')
+    this.logger.debug('>> startExtendKeyInterval')
     this.stopExtendKeyInterval()
 
     this.extendKeyInterval = setInterval(
       async () => {
         try {
-          console.log('>> extendKeyInterval')
+          this.logger.debug('>> extendKeyInterval')
           if (this.listenKey) {
-            console.log('>> Extending WebSocket listen key')
+            this.logger.debug('>> Extending WebSocket listen key')
             await this.restClient.extendWSListenKey(this.listenKey)
           }
         } catch (error) {
@@ -105,7 +101,7 @@ export class BingXWebSocket {
       30 * 60 * 1000,
     )
 
-    console.log('>> WebSocket key extension scheduled every 30 minutes')
+    this.logger.debug('>> WebSocket key extension scheduled every 30 minutes')
   }
 
   private stopExtendKeyInterval() {
@@ -124,10 +120,10 @@ export class BingXWebSocket {
   }
 
   private async startSocket(force = false) {
-    // console.log("startSocket", { force });
+    // this.logger.debug("startSocket", { force });
     if (!this.socket || force) {
       this.stop()
-      console.log('starting socket')
+      this.logger.debug('starting socket')
       if (!this.listenKey || force)
         this.listenKey = await this.restClient.getWSListenKey()
       const path = `wss://open-api-swap.bingx.com/swap-market?listenKey=${this.listenKey}`
@@ -135,12 +131,12 @@ export class BingXWebSocket {
       const startWS = new Promise((resolve, reject) => {
         this.socket = new WebSocket(path)
         this.socket.on('open', () => {
-          console.log('WebSocket open')
+          this.logger.debug('WebSocket open')
           resolve(undefined)
         })
         this.socket.on('message', (message: string) => this.onMessage(message))
         this.socket.on('error', (error: Error) => {
-          console.log('WebSocket error:', error)
+          this.logger.debug(`WebSocket error: ${error.message}`)
           reject(error)
         })
         this.socket.on('close', () => this.onClose())

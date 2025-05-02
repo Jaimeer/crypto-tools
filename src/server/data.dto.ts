@@ -48,23 +48,24 @@ export type Trade = {
 
 export type Position = {
   symbol: string
-  positionId: string
+  positionId: string | undefined
   positionSide: 'LONG' | 'SHORT'
   isolated: boolean
   positionAmt: number
   availableAmt: number
   unrealizedProfit: number
   realisedProfit: number
-  initialMargin: number
+  initialMargin: number | undefined
   margin: number
   avgPrice: number
   liquidationPrice: number
   leverage: number
-  positionValue: number
+  positionValue: number | undefined
   markPrice: number
-  riskRate: number
-  maxMarginReduction: number
-  pnlRatio: number
+  riskRate: number | undefined
+  maxMarginReduction: number | undefined
+  pnlRatio: number | undefined
+  createTime: number
   updateTime: number
 }
 
@@ -88,13 +89,21 @@ export type Contract = {
   tradeMinUSDT: number
   currency: string
   asset: string
-  status: number
-  apiStateOpen: string
-  apiStateClose: string
+  status:
+    | 'listed'
+    | 'normal'
+    | 'maintain'
+    | 'limit_open'
+    | 'restrictedAPI'
+    | 'preOnline'
+    | 'off'
+    | 'unknown'
+  apiStateOpen: boolean
+  apiStateClose: boolean
   ensureTrigger: boolean
-  triggerFeeRate: string
+  triggerFeeRate: number
   brokerState: boolean
-  launchTime: number
+  launchTime: number | undefined
   maintainTime: number
   offTime: number
 }

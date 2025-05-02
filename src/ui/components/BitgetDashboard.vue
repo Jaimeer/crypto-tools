@@ -21,6 +21,7 @@ import {
   ListboxOption,
 } from '@headlessui/vue'
 import { Contract } from '../../server/data.dto'
+import { useBitgetContractsStore } from '../store/bitget/bitgetContracts.store'
 
 const exchange = 'bitget'
 const bitgetTransactionsStore = useBitgetTransactionsStore()
@@ -29,6 +30,7 @@ const bitgetTradesStore = useBitgetTradesStore()
 const bitkuaBotsStore = useBitkuaBotsStore()
 const bitgetPositionsStore = useBitgetPositionsStore()
 const bitgetPreferencesStore = useBitgetPreferencesStore()
+const bitgetContractsStore = useBitgetContractsStore()
 
 const search = ref('')
 
@@ -55,15 +57,14 @@ const balance = computed(() => {
 })
 
 const positions = computed(() => {
-  return bitgetPositionsStore.positions
+  return bitgetPositionsStore.positions ?? []
 })
 
 const contracts = computed(() => {
-  return [] as Contract[]
+  return bitgetContractsStore.contracts ?? []
 })
 
 const allSymbols = computed(() => {
-  console.log(bitgetTransactionsStore)
   return bitgetTransactionsStore.allSymbols
 })
 

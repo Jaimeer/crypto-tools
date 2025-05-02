@@ -4,12 +4,27 @@ import { HashLib } from '../../utils/HashLib'
 import {
   FuturesAccountBillV2,
   FuturesAccountsV2,
-  FuturesHistoryOrderV2,
+  FuturesContractConfigV2,
   FuturesOrderFillV2,
+  FuturesPositionV2,
   RestClientV2,
 } from 'bitget-api'
+import { LoggerService } from '../../utils/Logger'
+import { ExchangeRestService } from '../base/ExchangeRest.service'
+import { Period } from '../data.dto'
 
-export class BitgetRestClient {
+export class BitgetRestClient
+  implements
+    ExchangeRestService<
+      FuturesAccountBillV2,
+      FuturesOrderFillV2,
+      FuturesAccountsV2,
+      FuturesContractConfigV2,
+      FuturesPositionV2,
+      unknown //BitgetKLine
+    >
+{
+  private readonly logger: LoggerService
   //   private bingX: bitget
   private API_KEY: string
   private API_SECRET: string
@@ -17,6 +32,7 @@ export class BitgetRestClient {
   private restClients: Record<string, RestClientV2> = {}
 
   constructor(apiKey: string, apiSecret: string, password: string) {
+    this.logger = new LoggerService(BitgetRestClient.name)
     if (apiKey && apiSecret && password)
       this.setCredentials(apiKey, apiSecret, password)
   }
@@ -46,10 +62,10 @@ export class BitgetRestClient {
   }
 
   private get client() {
-    // console.log(this.restClients);
+    // this.logger.debug(this.restClients);
     const client = this.restClients[this.hashCode]
     if (!client) {
-      console.log('[Bitget] No client found')
+      this.logger.debug('No client found')
       return null
     }
     return client
@@ -78,8 +94,8 @@ export class BitgetRestClient {
 
     do {
       try {
-        console.log(
-          `[Bitget][fetchTransactions] Fetching page ${page}, ` +
+        this.logger.debug(
+          `[fetchTransactions] Fetching page ${page}, ` +
             `idLessThan ${idLessThan} ` +
             `transactions so far: ${allTransactions.length}`,
         )
@@ -113,12 +129,10 @@ export class BitgetRestClient {
         hasMoreData = false
       }
 
-      console.log({ hasMoreData })
+      this.logger.debug(`hasMoreData ${hasMoreData}`)
     } while (hasMoreData)
 
-    console.log(
-      `[Bitget] Total transactions fetched: ${allTransactions.length}`,
-    )
+    this.logger.debug(`Total transactions fetched: ${allTransactions.length}`)
     return allTransactions.toSorted(
       (a, b) => parseInt(b.cTime) - parseInt(a.cTime),
     )
@@ -143,8 +157,8 @@ export class BitgetRestClient {
 
     do {
       try {
-        console.log(
-          `[Bitget][fetchTrades] Fetching page ${page}, ` +
+        this.logger.debug(
+          `[fetchTrades] Fetching page ${page}, ` +
             `idLessThan ${idLessThan} ` +
             `trades so far: ${allTrades.length}`,
         )
@@ -178,10 +192,10 @@ export class BitgetRestClient {
         hasMoreData = false
       }
 
-      console.log({ hasMoreData })
+      this.logger.debug(`hasMoreData ${hasMoreData}`)
     } while (hasMoreData)
 
-    console.log(`[Bitget] Total trades fetched: ${allTrades.length}`)
+    this.logger.debug(`Total trades fetched: ${allTrades.length}`)
     return allTrades.toSorted((a, b) => parseInt(b.cTime) - parseInt(a.cTime))
   }
 
@@ -201,77 +215,72 @@ export class BitgetRestClient {
     }
   }
 
-  // async fetchContracts(): Promise<Contract[]> {
-  //   return [];
-  //   // const API: BingXApiRequest = {
-  //   //   path: "/openApi/swap/v2/quote/contracts",
-  //   //   method: "GET",
-  //   //   payload: {},
-  //   //   protocol: "https",
-  //   // };
-  //   // const contracts = await this.bitgetRequest<Contract[]>(API);
-  //   // console.log(`[fetchContracts] Fetched contracts ${!!contracts}`);
-  //   // return contracts;
-  // }
+  async fetchContracts(): Promise<FuturesContractConfigV2[]> {
+    const response = await this.client.getFuturesContractConfig({
+      productType: 'USDT-FUTURES',
+    })
+    const contracts = response.data
+    this.logger.debug(`[fetchContracts] Fetched contracts ${contracts.length}`)
+    return contracts
+  }
 
-  // async fetchPositions(): Promise<Position[]> {
-  //   return [];
-  //   // const API: BingXApiRequest = {
-  //   //   path: "/openApi/swap/v2/user/positions",
-  //   //   method: "GET",
-  //   //   payload: {},
-  //   //   protocol: "https",
-  //   // };
-  //   // const positions = await this.bitgetRequest<Position[]>(API);
-  //   // console.log(`[fetchPositions] Fetched positions ${!!positions}`);
-  //   // return positions;
-  // }
+  async fetchPositions(): Promise<FuturesPositionV2[]> {
+    const response = await this.client.getFuturesPositions({
+      productType: 'USDT-FUTURES',
+      marginCoin: 'USDT',
+    })
+    const positions = response.data
+    this.logger.debug(`[fetchPositions] Fetched positions ${positions.length}`)
+    console.log(positions.filter((x) => x.symbol.includes('MAGIC')))
+    return positions
+  }
 
-  //   async fetchKLines(symbol: string, period: Period): Promise<KLine[]> {
-  //     return [];
-  //     // const API: BingXApiRequest = {
-  //     //   path: "/openApi/swap/v3/quote/klines",
-  //     //   method: "GET",
-  //     //   payload: {
-  //     //     symbol,
-  //     //     interval: period,
-  //     //     limit: "1000",
-  //     //   },
-  //     //   protocol: "https",
-  //     // };
-  //     // const klines = await this.bitgetRequest<KLine[]>(API);
-  //     // console.log(
-  //     //   `[fetchKlines][${symbol}][${period}] Fetched klines ${klines?.length ?? "ERROR"}`,
-  //     // );
-  //     // if (!klines) return [];
+  async fetchKLines(symbol: string, period: Period): Promise<unknown[]> {
+    return []
+    // const API: BingXApiRequest = {
+    //   path: "/openApi/swap/v3/quote/klines",
+    //   method: "GET",
+    //   payload: {
+    //     symbol,
+    //     interval: period,
+    //     limit: "1000",
+    //   },
+    //   protocol: "https",
+    // };
+    // const klines = await this.bitgetRequest<KLine[]>(API);
+    // this.logger.debug(
+    //   `[fetchKlines][${symbol}][${period}] Fetched klines ${klines?.length ?? "ERROR"}`,
+    // );
+    // if (!klines) return [];
 
-  //     // return klines;
-  //   }
+    // return klines;
+  }
 
-  //   // async getWSListenKey(): Promise<string> {
-  //   //   const API: BingXApiRequest = {
-  //   //     path: "/openApi/user/auth/userDataStream",
-  //   //     method: "POST",
-  //   //     payload: {},
-  //   //     protocol: "https",
-  //   //   };
-  //   //   const listenKeyData = await this.bitgetRequest<ListenKey>(API);
-  //   //   console.log(
-  //   //     `[fetchBalance] Fetched getWSListenKey ${listenKeyData?.listenKey}`,
-  //   //   );
-  //   //   return listenKeyData.listenKey;
-  //   // }
+  async getWSListenKey(): Promise<string> {
+    return ''
+    //   const API: BingXApiRequest = {
+    //     path: "/openApi/user/auth/userDataStream",
+    //     method: "POST",
+    //     payload: {},
+    //     protocol: "https",
+    //   };
+    //   const listenKeyData = await this.bitgetRequest<ListenKey>(API);
+    //   this.logger.debug(
+    //     `[fetchBalance] Fetched getWSListenKey ${listenKeyData?.listenKey}`,
+    //   );
+    //   return listenKeyData.listenKey;
+  }
 
-  //   // async extendWSListenKey(listenKey: string): Promise<void> {
-  //   //   const API: BingXApiRequest = {
-  //   //     path: "/openApi/user/auth/userDataStream",
-  //   //     method: "PUT",
-  //   //     payload: {
-  //   //       listenKey,
-  //   //     },
-  //   //     protocol: "https",
-  //   //   };
-  //   //   await this.bitgetRequest<ListenKey>(API);
-  //   //   console.log(`[fetchBalance] Extended listenKey`);
-  //   // }
+  async extendWSListenKey(listenKey: string): Promise<void> {
+    //   const API: BingXApiRequest = {
+    //     path: "/openApi/user/auth/userDataStream",
+    //     method: "PUT",
+    //     payload: {
+    //       listenKey,
+    //     },
+    //     protocol: "https",
+    //   };
+    //   await this.bitgetRequest<ListenKey>(API);
+    //   this.logger.debug(`[fetchBalance] Extended listenKey`);
+  }
 }

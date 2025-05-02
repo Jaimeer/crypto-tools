@@ -14,6 +14,8 @@ import {
   BingxTransaction,
 } from './Bingx.dto'
 import { subYears } from 'date-fns'
+import { LoggerService } from '../../utils/Logger'
+import { ExchangeRestService } from '../base/ExchangeRest.service'
 
 export type BingXApiRequest = {
   path: string
@@ -22,13 +24,25 @@ export type BingXApiRequest = {
   protocol: 'https'
 }
 
-export class BingXRestClient {
+export class BingxRestClient
+  implements
+    ExchangeRestService<
+      BingxTransaction,
+      BingxTrade,
+      BingxBalance,
+      BingxContract,
+      BingxPosition,
+      BingxKLine
+    >
+{
+  private readonly logger: LoggerService
   //   private bingX: bingx
   private API_KEY: string
   private API_SECRET: string
   private readonly HOST = 'open-api.bingx.com'
 
   constructor(apiKey: string, apiSecret: string) {
+    this.logger = new LoggerService(BingxRestClient.name)
     this.API_KEY = apiKey
     this.API_SECRET = apiSecret
   }
@@ -82,17 +96,12 @@ export class BingXRestClient {
     )
     const params = this.getParameters(API.payload, timestamp, true)
     const url = `${API.protocol}://${this.HOST}${API.path}?${params}&signature=${sign}`
-    // console.log(
-    //   `[BingXRestClientService] ${API.method} ${url} ` +
-    //     `${JSON.stringify(API.payload)}`,
-    // );
+
     const config = {
       method: API.method,
       url,
       headers: { 'X-BX-APIKEY': this.API_KEY },
-      // data: API.method === "POST" ? API.payload : undefined,
     }
-    // console.log(config);
     return await limiter.schedule(async (): Promise<T> => {
       try {
         const resp = await axios.request<{
@@ -100,14 +109,6 @@ export class BingXRestClient {
           msg: string
           data: T
         }>(config)
-
-        // console.log(resp.data);
-        // console.log({
-        //   status: resp.status,
-        //   code: resp.data.code,
-        //   msg: resp.data.msg,
-        //   data: resp.data.data,
-        // });
 
         if (API.method === 'POST') {
           if (resp.status !== 200) {
@@ -156,10 +157,6 @@ export class BingXRestClient {
   async fetchTransactions(
     currentTransactions: BingxTransaction[],
   ): Promise<BingxTransaction[]> {
-    // console.log('fetchTrades', {
-    //   apiKey: this.API_KEY,
-    //   apiSecret: this.API_SECRET,
-    // })
     const allTransactions: BingxTransaction[] = currentTransactions
 
     // Start with the current time
@@ -174,17 +171,10 @@ export class BingXRestClient {
     let page = 1
     const limit = 1000
 
-    // console.log({
-    //   page,
-    //   startTime,
-    //   endTime,
-    //   newestTransaction,
-    //   allTransactions: allTransactions.length,
-    // });
     do {
       try {
-        console.log(
-          `[Bingx][fetchTransactions] Fetching page ${page}, startTime ${startTime} ` +
+        this.logger.debug(
+          `[fetchTransactions] Fetching page ${page}, startTime ${startTime} ` +
             `${new Date(startTime).toISOString()}, endTime ${endTime} ` +
             `${new Date(endTime).toISOString()} transactions so far: ${allTransactions.length}`,
         )
@@ -228,12 +218,12 @@ export class BingXRestClient {
       }
     } while (hasMoreData)
 
-    console.log(`[Bingx] Total transactions fetched: ${allTransactions.length}`)
+    this.logger.debug(` Total transactions fetched: ${allTransactions.length}`)
     return allTransactions.toSorted((a, b) => b.time - a.time)
   }
 
   async fetchTrades(currentTrades: BingxTrade[]): Promise<BingxTrade[]> {
-    // console.log('fetchTrades', {
+    // this.logger.debug('fetchTrades', {
     //   apiKey: this.API_KEY,
     //   apiSecret: this.API_SECRET,
     // })
@@ -251,8 +241,8 @@ export class BingXRestClient {
 
     do {
       try {
-        console.log(
-          `[Bingx][fetchTrades] Fetching page ${page}, startTime ${startTime} ` +
+        this.logger.debug(
+          `[fetchTrades] Fetching page ${page}, startTime ${startTime} ` +
             `${new Date(startTime).toISOString()}, endTime ${endTime} ` +
             `${new Date(endTime).toISOString()} transactions so far: ${allTrades.length}`,
         )
@@ -302,7 +292,7 @@ export class BingXRestClient {
       }
     } while (hasMoreData)
 
-    console.log(`[Bingx] Total trades fetched: ${allTrades?.length ?? 'ERROR'}`)
+    this.logger.debug(`Total trades fetched: ${allTrades?.length ?? 'ERROR'}`)
     return allTrades.toSorted(
       (a, b) =>
         new Date(b.filledTime).getTime() - new Date(a.filledTime).getTime(),
@@ -317,7 +307,7 @@ export class BingXRestClient {
       protocol: 'https',
     }
     const balance = await this.bingxRequest<BingxBalance[]>(API)
-    console.log(`[Bingx][fetchBalance] Fetched balance ${!!balance}`)
+    this.logger.debug(`[fetchBalance] Fetched balance ${!!balance}`)
     return balance.find((x) => x.asset === 'USDT')
   }
 
@@ -329,7 +319,7 @@ export class BingXRestClient {
       protocol: 'https',
     }
     const contracts = await this.bingxRequest<BingxContract[]>(API)
-    console.log(`[Bingx][fetchContracts] Fetched contracts ${!!contracts}`)
+    this.logger.debug(`[fetchContracts] Fetched contracts ${!!contracts}`)
     return contracts
   }
 
@@ -341,7 +331,8 @@ export class BingXRestClient {
       protocol: 'https',
     }
     const positions = await this.bingxRequest<BingxPosition[]>(API)
-    console.log(`[Bingx][fetchPositions] Fetched positions ${!!positions}`)
+    this.logger.debug(`[fetchPositions] Fetched positions ${!!positions}`)
+    console.log(positions.filter((x) => x.symbol.includes('MAGIC')))
     return positions
   }
 
@@ -360,8 +351,8 @@ export class BingXRestClient {
       protocol: 'https',
     }
     const klines = await this.bingxRequest<BingxKLine[]>(API)
-    console.log(
-      `[Bingx][fetchLines][${symbol}][${period}] Fetched klines ${klines?.length ?? 'ERROR'}`,
+    this.logger.debug(
+      `[fetchLines][${symbol}][${period}] Fetched klines ${klines?.length ?? 'ERROR'}`,
     )
     if (!klines) return []
 
@@ -376,8 +367,8 @@ export class BingXRestClient {
       protocol: 'https',
     }
     const listenKeyData = await this.bingxRequest<BingxListenKey>(API)
-    console.log(
-      `[Bingx][fetchBalance] Fetched getWSListenKey ${listenKeyData?.listenKey}`,
+    this.logger.debug(
+      `[fetchBalance] Fetched getWSListenKey ${listenKeyData?.listenKey}`,
     )
     return listenKeyData.listenKey
   }
@@ -392,6 +383,6 @@ export class BingXRestClient {
       protocol: 'https',
     }
     await this.bingxRequest<BingxListenKey>(API)
-    console.log(`[Bingx][fetchBalance] Extended listenKey`)
+    this.logger.debug(`[fetchBalance] Extended listenKey`)
   }
 }

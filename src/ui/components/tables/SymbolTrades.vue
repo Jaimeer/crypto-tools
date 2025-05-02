@@ -325,6 +325,7 @@ const sendAction = (botId: string, status: 'active' | 'stop' | 'onlysell') => {
           :contracts="contracts"
         />
       </td>
+
       <td class="px-2 py-0.5">{{ item.num }}</td>
       <td class="px-2 py-0.5"><Price :value="item.pnl" :decimals="2" /></td>
       <td class="px-2 py-0.5">
@@ -358,7 +359,9 @@ const sendAction = (botId: string, status: 'active' | 'stop' | 'onlysell') => {
             <div class="flex items-center gap-0.5">
               <Icon
                 v-for="i in Math.floor(
-                  Math.abs((100 * position(item.key, side)?.pnlRatio) / 100),
+                  Math.abs(
+                    (100 * (position(item.key, side)?.pnlRatio ?? 0)) / 100,
+                  ),
                 )"
                 :key="i"
                 class="text-red-500"
@@ -366,8 +369,9 @@ const sendAction = (botId: string, status: 'active' | 'stop' | 'onlysell') => {
               />
               <Icon
                 v-for="i in Math.floor(
-                  Math.abs((100 * position(item.key, side)?.pnlRatio) % 100) /
-                    10,
+                  Math.abs(
+                    (100 * (position(item.key, side)?.pnlRatio ?? 0)) % 100,
+                  ) / 10,
                 )"
                 :key="i"
                 class="text-yellow-400"
@@ -377,6 +381,7 @@ const sendAction = (botId: string, status: 'active' | 'stop' | 'onlysell') => {
           </div>
         </template>
       </td>
+
       <td class="px-2 py-0.5">
         <template v-for="side in sides" :key="side">
           <Rescue
@@ -392,10 +397,6 @@ const sendAction = (botId: string, status: 'active' | 'stop' | 'onlysell') => {
       <td class="px-2 py-0.5">
         <template v-for="side in sides" :key="side">
           <div class="flex gap-0.5">
-            <!-- <span class="text-amber-400">{{ item[side].open }}</span>
-            <span class="text-slate-600">/</span>
-            <span class="text-lime-400">{{ item[side].close }}</span>
-            <span class="text-slate-600">/</span> -->
             <span
               :class="{
                 'text-slate-400': item[side].currentOpen === 0,

@@ -1,11 +1,12 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'node:path'
 import started from 'electron-squirrel-startup'
-import { BingXService } from './server/bingx/Bingx.service'
+import { BingxService } from './server/bingx/Bingx.service'
 import { BitkuaService } from './server/bitkua/Bitkua.service'
 import { BitgetService } from './server/bitget/Bitget.service'
 import { Period } from './server/data.dto'
 import { BitkuaAction } from './server/bitkua/Bitkua.dto'
+import { LoggerService } from './utils/Logger'
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -13,6 +14,8 @@ if (started) {
 }
 
 let chartsWindow: BrowserWindow | null = null
+
+const logger = new LoggerService('MainProcess')
 
 function createChartsWindow() {
   // If window already exists, just focus it
@@ -51,7 +54,7 @@ function createChartsWindow() {
 }
 
 // Initialize BingX service
-let bingxService: BingXService | undefined
+let bingxService: BingxService | undefined
 let bitgetService: BitgetService | undefined
 let bitkuaService: BitkuaService | undefined
 
@@ -61,9 +64,9 @@ ipcMain.handle(
     event,
     { apiKey, apiSecret }: { apiKey: string; apiSecret: string },
   ) => {
-    console.log('Setting BingX credentials')
+    logger.debug('Setting BingX credentials')
 
-    if (!bingxService) bingxService = new BingXService(apiKey, apiSecret)
+    if (!bingxService) bingxService = new BingxService(apiKey, apiSecret)
     else bingxService.setCredentials(apiKey, apiSecret)
 
     await bingxService.startAutoRefresh()
@@ -81,7 +84,7 @@ ipcMain.handle(
       password,
     }: { apiKey: string; apiSecret: string; password: string },
   ) => {
-    console.log('Setting Bitget credentials')
+    logger.debug('Setting Bitget credentials')
 
     if (!bitgetService)
       bitgetService = new BitgetService(apiKey, apiSecret, password)
@@ -95,7 +98,7 @@ ipcMain.handle(
 ipcMain.handle(
   'set-bitkua-credentials',
   async (event, { username, token }: { username: string; token: string }) => {
-    console.log('Setting Bitkua credentials')
+    logger.debug('Setting Bitkua credentials')
 
     if (!bitkuaService) bitkuaService = new BitkuaService(username, token)
     else bitkuaService.setCredentials(username, token)

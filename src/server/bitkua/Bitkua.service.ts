@@ -12,8 +12,10 @@ import {
 } from './Bitkua.dto'
 import { NotifyMessage } from '../messages.dto'
 import { BitkuaBot, Bot } from '../data.dto'
+import { LoggerService } from '../../utils/Logger'
 
 export class BitkuaService {
+  private readonly logger: LoggerService
   private username: string
   private token: string
   private refreshInterval: NodeJS.Timeout | null = null
@@ -22,6 +24,7 @@ export class BitkuaService {
   private jar = new CookieJar()
 
   constructor(username: string, token: string) {
+    this.logger = new LoggerService(BitkuaService.name)
     this.username = username
     this.token = token
     this.client = axios.create({
@@ -46,7 +49,7 @@ export class BitkuaService {
       }
     }, intervalMs)
 
-    console.log(
+    this.logger.debug(
       `BitkuaService auto-refresh started: every ${intervalMs / 1000} seconds`,
     )
   }
@@ -55,7 +58,7 @@ export class BitkuaService {
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval)
       this.refreshInterval = null
-      console.log('BitkuaService auto-refresh stopped')
+      this.logger.debug('BitkuaService auto-refresh stopped')
     }
   }
 
@@ -80,7 +83,7 @@ export class BitkuaService {
 
   private async getBots() {
     try {
-      console.log('Fetching dk-bots...')
+      this.logger.debug('Fetching dk-bots...')
       const response = await this.client.request<{
         success: boolean
         data: BitkuaBot[]
@@ -109,7 +112,7 @@ export class BitkuaService {
         createdAt: new Date(bot.created_at),
       }))
 
-      console.log('Scraped bot data:', bots.length)
+      this.logger.debug(`Scraped bot data: ${bots.length}`)
 
       this.notifyClients({
         store: 'bots',
@@ -135,7 +138,7 @@ export class BitkuaService {
           status: message.status,
         },
       })
-      console.log('Bot status updated successfully:', message.botId)
+      this.logger.debug(`Bot status updated successfully: ${message.botId}`)
       this.startAutoRefresh()
     } catch (error) {
       console.error('Error updating bot status:', error.message)
@@ -157,7 +160,7 @@ export class BitkuaService {
           safe: message.safe ? 'yes' : 'no',
         },
       })
-      console.log('Bot safe  updated successfully:', message.botId)
+      this.logger.debug(`Bot safe  updated successfully: ${message.botId}`)
       this.startAutoRefresh()
     } catch (error) {
       console.error('Error updating bot safe:', error.message)
@@ -179,7 +182,7 @@ export class BitkuaService {
           estrategia: message.strategy,
         },
       })
-      console.log('Bot strategy updated successfully:', message.botId)
+      this.logger.debug(`Bot strategy updated successfully: ${message.botId}`)
       this.startAutoRefresh()
     } catch (error) {
       console.error('Error updating bot strategy:', error.message)
@@ -201,7 +204,7 @@ export class BitkuaService {
           amount: message.amount,
         },
       })
-      console.log('Bot amount updated successfully:', message.botId)
+      this.logger.debug(`Bot amount updated successfully: ${message.botId}`)
       this.startAutoRefresh()
     } catch (error) {
       console.error('Error updating bot amount:', error.message)
@@ -222,7 +225,7 @@ export class BitkuaService {
           id: message.botId,
         },
       })
-      console.log('Bot deleted successfully:', message.botId)
+      this.logger.debug(`Bot deleted successfully: ${message.botId}`)
       this.startAutoRefresh()
     } catch (error) {
       console.error('Error deleting bot:', error.message)
@@ -244,7 +247,7 @@ export class BitkuaService {
           positionSide: message.positionSide,
         },
       })
-      console.log('Bot reset successfully:', message.symbol)
+      this.logger.debug(`Bot reset successfully: ${message.symbol}`)
       this.startAutoRefresh()
     } catch (error) {
       console.error('Error resetting bot:', error.message)
@@ -252,7 +255,7 @@ export class BitkuaService {
   }
 
   private notifyClients(message: NotifyMessage) {
-    // console.log("notifyClients", message.store);
+    // this.logger.debug("notifyClients", message.store);
     BrowserWindow.getAllWindows().forEach((window) => {
       if (!window.isDestroyed()) {
         window.webContents.send(`update-data`, message)
