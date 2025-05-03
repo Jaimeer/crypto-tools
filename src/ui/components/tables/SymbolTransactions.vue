@@ -134,7 +134,7 @@ const usedSymbols = computed(() => {
     </template>
     <template #default="{ item }">
       <td class="px-2 py-0.5">{{ item.key }}</td>
-      <td class="flex items-center gap-1 bg-slate-900 px-2 py-0.5">
+      <td class="flex items-center gap-1 bg-slate-900/50 px-2 py-0.5">
         <Price :value="item.total" />
         <NumTrades :num="item.num" />
       </td>

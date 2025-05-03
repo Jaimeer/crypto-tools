@@ -332,7 +332,7 @@ export class BingxRestClient
     }
     const positions = await this.bingxRequest<BingxPosition[]>(API)
     this.logger.debug(`[fetchPositions] Fetched positions ${!!positions}`)
-    console.log(positions.filter((x) => x.symbol.includes('MAGIC')))
+    // console.log(positions.filter((x) => x.symbol.includes('MAGIC')))
     return positions
   }
 

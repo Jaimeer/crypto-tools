@@ -19,6 +19,7 @@ import { BingxCacheService } from './Bingx.cache'
 import { BingxTransformer } from './Bingx.transformer'
 import { LoggerService } from '../../utils/Logger'
 import { ExchangeService } from '../base/Exchange.service'
+import { ObjectSize } from '../../utils/ObjectSize'
 
 const klineRegex = /^([A-Z0-9]*-[A-Z0-9]*)?@kline_([1-9]*[mhdwM]*)?$/
 
@@ -167,6 +168,10 @@ export class BingxService implements ExchangeService {
       store: 'bingx.contracts',
       contracts: this.data.contracts,
     })
+
+    this.logger.info(
+      `Data loaded: ${ObjectSize.calculate(this.data)} originalData: ${ObjectSize.calculate(this.originalData)}`,
+    )
   }
 
   async loadSymbolKLines(symbol: string, period: Period) {

@@ -16,6 +16,7 @@ import { CacheService } from '../Cache.service'
 import { BitgetTransformer } from './Bitget.transformer'
 import { LoggerService } from '../../utils/Logger'
 import { ExchangeService } from '../base/Exchange.service'
+import { ObjectSize } from '../../utils/ObjectSize'
 // import {
 //   Balance,
 //   Contract,
@@ -174,6 +175,10 @@ export class BitgetService implements ExchangeService {
       store: 'bitget.contracts',
       contracts: this.data.contracts,
     })
+
+    this.logger.info(
+      `Data loaded: ${ObjectSize.calculate(this.data)} originalData: ${ObjectSize.calculate(this.originalData)}`,
+    )
   }
 
   async loadSymbolKLines(symbol: string, period: Period) {

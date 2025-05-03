@@ -231,7 +231,7 @@ export class BitgetRestClient
     })
     const positions = response.data
     this.logger.debug(`[fetchPositions] Fetched positions ${positions.length}`)
-    console.log(positions.filter((x) => x.symbol.includes('MAGIC')))
+    // console.log(positions.filter((x) => x.symbol.includes('MAGIC')))
     return positions
   }
 
