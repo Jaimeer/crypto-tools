@@ -19,8 +19,8 @@ const klines15m = computed(() => {
   return bingxKLinesStore.kLine(bingxChartStore.symbol, '15m') ?? []
 })
 
-const klines1h = computed(() => {
-  return bingxKLinesStore.kLine(bingxChartStore.symbol, '1h') ?? []
+const klines4h = computed(() => {
+  return bingxKLinesStore.kLine(bingxChartStore.symbol, '4h') ?? []
 })
 
 const klines1d = computed(() => {
@@ -36,11 +36,11 @@ watch(
   (newSymbol, oldSymbol) => {
     if (newSymbol) {
       bingxKLinesStore.fetchKLines(newSymbol, '15m')
-      bingxKLinesStore.fetchKLines(newSymbol, '1h')
+      bingxKLinesStore.fetchKLines(newSymbol, '4h')
       bingxKLinesStore.fetchKLines(newSymbol, '1d')
     } else {
       if (oldSymbol) bingxKLinesStore.unsubscribeKLines(oldSymbol, '15m')
-      if (oldSymbol) bingxKLinesStore.unsubscribeKLines(oldSymbol, '1h')
+      if (oldSymbol) bingxKLinesStore.unsubscribeKLines(oldSymbol, '4h')
       if (oldSymbol) bingxKLinesStore.unsubscribeKLines(oldSymbol, '1d')
     }
   },
@@ -50,7 +50,7 @@ watch(
 onUnmounted(() => {
   if (bingxChartStore.symbol) {
     bingxKLinesStore.unsubscribeKLines(bingxChartStore.symbol, '15m')
-    bingxKLinesStore.unsubscribeKLines(bingxChartStore.symbol, '1h')
+    bingxKLinesStore.unsubscribeKLines(bingxChartStore.symbol, '4h')
     bingxKLinesStore.unsubscribeKLines(bingxChartStore.symbol, '1d')
   }
 })
@@ -90,17 +90,17 @@ onUnmounted(() => {
         <div>
           <div class="h-1/2">
             <div
-              v-if="!klines1h.length"
+              v-if="!klines4h.length"
               class="flex h-full w-full items-center justify-center rounded border border-gray-600 p-4 text-slate-600"
             >
-              {{ bingxChartStore.symbol }} Fetching data 1h...
+              {{ bingxChartStore.symbol }} Fetching data 4h...
             </div>
             <KLineChart
               v-else
               :symbol="bingxChartStore.symbol"
-              period="1h"
+              period="4h"
               :hideTrades="false"
-              :klines="klines1h"
+              :klines="klines4h"
               :trades="
                 trades.filter((x) => x.symbol === bingxChartStore.symbol)
               "

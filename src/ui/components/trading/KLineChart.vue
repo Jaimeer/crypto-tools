@@ -188,7 +188,11 @@ const draw = () => {
       const fillColor = color(20, isLong)
 
       for (const percentage of [5, 10, 50]) {
-        const price = calculateNewAvgOpenPrice(position, percentage)
+        const price = calculateNewAvgOpenPrice(
+          currentPrice,
+          position,
+          percentage,
+        )
 
         chart.value.createOverlay({
           name: 'priceLine',
@@ -213,9 +217,13 @@ const draw = () => {
   })
 }
 
-const calculateNewAvgOpenPrice = (position: Position, desiredGap: number) => {
+const calculateNewAvgOpenPrice = (
+  markPrice: number,
+  position: Position,
+  desiredGap: number,
+) => {
   if (!position) return 0
-  const markPrice = position.markPrice
+  // const markPrice = position.markPrice
   const avgOpenPrice = position.avgPrice
 
   const offset = (avgOpenPrice - markPrice) * (desiredGap / 100)
@@ -368,10 +376,11 @@ onUnmounted(() => {
 })
 
 watch(
-  () => props.klines[0]?.close,
+  () => props.klines,
   () => {
     printData(false)
   },
+  { deep: true },
 )
 
 watch(
