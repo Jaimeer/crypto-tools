@@ -18,7 +18,7 @@ export const useBingxTransactionsStore = defineStore('bingx-transactions', {
     allSymbols: (state) => {
       return [
         ...new Set(state.transactions.map((x) => x.symbol).filter(Boolean)),
-      ]
+      ].sort((a, b) => a.localeCompare(b))
     },
   },
   actions: {

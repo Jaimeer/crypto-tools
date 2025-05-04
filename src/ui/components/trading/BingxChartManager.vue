@@ -1,15 +1,22 @@
 <script setup lang="ts">
-import { computed, onUnmounted, watch } from 'vue'
+import { computed, onUnmounted, watch, watchEffect } from 'vue'
+import { useMagicKeys } from '@vueuse/core'
 import { useBingxKLinesStore } from '../../store/bingx/bingxKLines.store'
 import { useBingxChartStore } from '../../store/bingx/bingxChart.store'
 import { useBingxPositionsStore } from '../../store/bingx/bingxPositions.store'
 import { useBingxTradesStore } from '../../store/bingx/bingxTrades.store'
+import { useBingxTransactionsStore } from '../../store/bingx/bingxTransactions.store'
+import { useBingxPreferencesStore } from '../../store/bingx/bingxPreferences.store'
 import KLineChart from './KLineChart.vue'
 
 const bingxChartStore = useBingxChartStore()
 const bingxKLinesStore = useBingxKLinesStore()
 const bingxPositionsStore = useBingxPositionsStore()
 const bingxTradesStore = useBingxTradesStore()
+const bingxTransactionsStore = useBingxTransactionsStore()
+const bingxPreferencesStore = useBingxPreferencesStore()
+
+const { escape, arrowup, arrowright, arrowdown, arrowleft } = useMagicKeys()
 
 const positions = computed(() => {
   return bingxPositionsStore.positions
@@ -35,6 +42,12 @@ watch(
   () => bingxChartStore.symbol,
   (newSymbol, oldSymbol) => {
     if (newSymbol) {
+      if (oldSymbol && newSymbol !== oldSymbol) {
+        bingxKLinesStore.unsubscribeKLines(oldSymbol, '15m')
+        bingxKLinesStore.unsubscribeKLines(oldSymbol, '4h')
+        bingxKLinesStore.unsubscribeKLines(oldSymbol, '1d')
+      }
+
       bingxKLinesStore.fetchKLines(newSymbol, '15m')
       bingxKLinesStore.fetchKLines(newSymbol, '4h')
       bingxKLinesStore.fetchKLines(newSymbol, '1d')
@@ -46,6 +59,45 @@ watch(
   },
   { immediate: true },
 )
+
+const allSymbolsFiltered = computed(() => {
+  return bingxTransactionsStore.allSymbols.filter(
+    (symbol) =>
+      !bingxPreferencesStore.hidedSymbols
+        .map((x) => x.toLowerCase())
+        .includes(symbol.toLowerCase()),
+  )
+})
+
+const loadNextSymbol = () => {
+  const index = allSymbolsFiltered.value.findIndex(
+    (x) => x === bingxChartStore.symbol,
+  )
+  const newIndex = (index + 1) % allSymbolsFiltered.value.length
+  const newSymbol = allSymbolsFiltered.value[newIndex]
+  bingxChartStore.setSymbol(newSymbol)
+}
+
+const loadPrevSymbol = () => {
+  const index = allSymbolsFiltered.value.findIndex(
+    (x) => x === bingxChartStore.symbol,
+  )
+  const newIndex =
+    (index - 1 + allSymbolsFiltered.value.length) %
+    allSymbolsFiltered.value.length
+  const newSymbol = allSymbolsFiltered.value[newIndex]
+  bingxChartStore.setSymbol(newSymbol)
+}
+
+watchEffect(() => {
+  if (bingxChartStore.symbol) {
+    if (escape.value) bingxChartStore.resetSymbol()
+    if (arrowup.value) loadPrevSymbol
+    if (arrowleft.value) loadPrevSymbol()
+    if (arrowdown.value) loadNextSymbol()
+    if (arrowright.value) loadNextSymbol()
+  }
+})
 
 onUnmounted(() => {
   if (bingxChartStore.symbol) {

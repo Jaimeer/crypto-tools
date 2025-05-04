@@ -106,7 +106,7 @@ watch(selectedSymbols, () => {
               Active all
             </ListboxOption>
 
-            <div class="grid grid-cols-2 gap-1">
+            <div class="grid grid-cols-4 gap-1">
               <ListboxOption
                 v-for="symbol in bitgetTransactionsStore.allSymbols.sort()"
                 v-model="selectedSymbols"
@@ -122,7 +122,7 @@ watch(selectedSymbols, () => {
                     'bg-slate-600': !selected,
                   }"
                 >
-                  {{ symbol }}
+                  {{ symbol.replace('USDT', '') }}
                 </li>
               </ListboxOption>
             </div>

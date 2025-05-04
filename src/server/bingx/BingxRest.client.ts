@@ -87,7 +87,7 @@ export class BingxRestClient
   }
 
   private async bingxRequest<T>(API: BingXApiRequest) {
-    const timestamp = new Date().getTime()
+    const timestamp = Date.now() - (Date.now() % 1000)
     const sign = CryptoJS.enc.Hex.stringify(
       CryptoJS.HmacSHA256(
         this.getParameters(API.payload, timestamp),
@@ -163,7 +163,7 @@ export class BingxRestClient
     const newestTransaction = allTransactions.length
       ? Math.max(...allTransactions.map((t) => t.time))
       : undefined
-    let endTime = Date.now()
+    let endTime = Date.now() - (Date.now() % 1000)
     const startTime = newestTransaction
       ? newestTransaction + 1000
       : subYears(new Date(), 10).getTime()
@@ -233,7 +233,7 @@ export class BingxRestClient
     const newestTransaction = allTrades.length
       ? Math.max(...allTrades.map((t) => new Date(t.filledTime).getTime()))
       : undefined
-    let endTime = Date.now()
+    let endTime = Date.now() - (Date.now() % 1000)
     const startTime = newestTransaction ?? subYears(new Date(), 10).getTime()
     let hasMoreData = true
     let page = 1
@@ -292,6 +292,8 @@ export class BingxRestClient
       }
     } while (hasMoreData)
 
+    // console.log(allTrades.filter((x) => x.symbol.includes('AERGO')))
+
     this.logger.debug(`Total trades fetched: ${allTrades?.length ?? 'ERROR'}`)
     return allTrades.toSorted(
       (a, b) =>
@@ -332,7 +334,7 @@ export class BingxRestClient
     }
     const positions = await this.bingxRequest<BingxPosition[]>(API)
     this.logger.debug(`[fetchPositions] Fetched positions ${!!positions}`)
-    // console.log(positions.filter((x) => x.symbol.includes('MAGIC')))
+    // console.log(positions.filter((x) => x.symbol.includes('AERGO')))
     return positions
   }
 

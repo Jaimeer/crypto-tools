@@ -445,51 +445,73 @@ watch(
               'justify-end': side === 'short',
             }"
           >
-            <div>
-              <span
-                class="font-bold uppercase"
-                :class="{
-                  'text-[#6666ff]': side === 'long',
-                  'text-[#ff33cc]': side === 'short',
-                }"
-              >
-                {{ side }}
-              </span>
-              <span class="text-blue-400">[{{ bot[side]?.amount }}]</span>
-              <span
-                :class="{
-                  'text-slate-400': bot[side]?.count === 0,
-                  'text-lime-400':
-                    bot[side]?.count > 0 && bot[side]?.count < 14,
-                  'text-red-400': bot[side]?.count >= 13,
-                }"
-              >
-                [{{ bot[side]?.count }}]
-              </span>
+            <div
+              class="font-bold uppercase"
+              :class="{
+                'text-[#6666ff]': side === 'long',
+                'text-[#ff33cc]': side === 'short',
+              }"
+            >
+              {{ side }}
             </div>
-            <div class="text-slate-400">
-              {{ strategyName(bot[side]?.strategy) }}
+            <div v-if="!bot[side]?.id" class="text-right text-slate-600">
+              ---
             </div>
-            <div>
-              <button
-                v-for="status in status"
-                class="cursor-pointer rounded text-xs transition disabled:cursor-default"
-                :class="{
-                  'px-1 text-green-600 hover:text-green-400 disabled:bg-green-900 disabled:text-green-200':
-                    status === 'active',
-                  'px-1 text-red-600 hover:text-red-400 disabled:bg-red-900 disabled:text-red-200':
-                    status === 'stop',
-                  'px-1 text-amber-600 hover:text-amber-400 disabled:bg-amber-900 disabled:text-amber-200':
-                    status === 'onlysell',
-                }"
-                :disabled="bot[side]?.status === status"
-                @click="sendAction(bot[side]?.id, status)"
-              >
-                {{ status.slice(0, 1).toUpperCase() }}
-              </button>
-            </div>
+            <template v-else>
+              <div>
+                <span class="text-blue-400">[{{ bot[side]?.amount }}]</span>
+                <span
+                  :class="{
+                    'text-slate-400': bot[side]?.count === 0,
+                    'text-lime-400':
+                      bot[side]?.count > 0 && bot[side]?.count < 14,
+                    'text-red-400': bot[side]?.count >= 13,
+                  }"
+                >
+                  [{{ bot[side]?.count }}]
+                </span>
+              </div>
+              <div class="text-slate-400">
+                {{ strategyName(bot[side]?.strategy) }}
+              </div>
+              <div>
+                <button
+                  v-for="status in status"
+                  class="cursor-pointer rounded text-xs transition disabled:cursor-default"
+                  :class="{
+                    'px-1 text-green-600 hover:text-green-400 disabled:bg-green-900 disabled:text-green-200':
+                      status === 'active',
+                    'px-1 text-red-600 hover:text-red-400 disabled:bg-red-900 disabled:text-red-200':
+                      status === 'stop',
+                    'px-1 text-amber-600 hover:text-amber-400 disabled:bg-amber-900 disabled:text-amber-200':
+                      status === 'onlysell',
+                  }"
+                  :disabled="bot[side]?.status === status"
+                  @click="sendAction(bot[side]?.id, status)"
+                >
+                  {{ status.slice(0, 1).toUpperCase() }}
+                </button>
+              </div>
+            </template>
           </div>
           <div
+            v-if="
+              !bingxPositionsStore.positions.filter((position) => {
+                return (
+                  position.symbol === symbol &&
+                  position.positionSide === side.toUpperCase()
+                )
+              })[0]
+            "
+            class="text-[10px] text-slate-600"
+            :class="{
+              'justify-end text-end': side === 'short',
+            }"
+          >
+            ---
+          </div>
+          <div
+            v-else
             class="text-[10px]"
             :class="{
               'justify-end text-end': side === 'short',
