@@ -34,36 +34,37 @@ const props = defineProps<{
   trades: Trade[]
   positions: Position[]
   size: 'small' | 'large'
+  onlyChart?: boolean
 }>()
 
 const printData = (start: boolean) => {
-  if (chart.value) {
-    const priceSample = props.klines[0]?.close
-    const decimals =
-      priceSample > 1000 ? 0 : priceSample > 10 ? 2 : priceSample > 0 ? 4 : 6
+  if (!chart.value || !props.klines.length) return
 
-    const data = props.klines.toReversed() ?? []
-    if (start) {
-      chart.value.setPrecision({ price: decimals })
-      chart.value.applyNewData(data)
+  const priceSample = props.klines[0]?.close
+  const decimals =
+    priceSample > 1000 ? 0 : priceSample > 10 ? 2 : priceSample > 0 ? 4 : 6
+
+  const data = props.klines.toReversed() ?? []
+  if (start) {
+    chart.value.setPrecision({ price: decimals })
+    chart.value.applyNewData(data)
+  } else {
+    const latestPoint = data[data.length - 1]
+    const currentData = chart.value.getDataList()
+    const lastChartTimestamp =
+      currentData.length > 0
+        ? (currentData[currentData.length - 1]?.timestamp ?? 0)
+        : 0
+
+    if (latestPoint?.timestamp !== lastChartTimestamp) {
+      const latestPoint2 = data[data.length - 2]
+      chart.value.updateData(latestPoint2) // Update the previous last candle with the last info
+      chart.value.updateData(latestPoint)
     } else {
-      const latestPoint = data[data.length - 1]
-      const currentData = chart.value.getDataList()
-      const lastChartTimestamp =
-        currentData.length > 0
-          ? currentData[currentData.length - 1].timestamp
-          : 0
-
-      if (latestPoint.timestamp !== lastChartTimestamp) {
-        const latestPoint2 = data[data.length - 2]
-        chart.value.updateData(latestPoint2) // Update the previous last candle with the last info
-        chart.value.updateData(latestPoint)
-      } else {
-        chart.value.updateData(latestPoint)
-      }
+      chart.value.updateData(latestPoint)
     }
-    draw()
   }
+  draw()
 }
 
 const filteredTrades = computed(() => {
@@ -83,7 +84,7 @@ const draw = () => {
   chart.value.removeOverlay({ groupId: 'positions' })
 
   // Buys & Sells
-  if (!props.hideTrades) {
+  if (!props.hideTrades && !props.onlyChart) {
     filteredTrades.value.forEach((trade) => {
       const tradeTime = new Date(trade.filledTime).getTime()
       const tradePrice = trade.price
@@ -223,7 +224,7 @@ const calculateNewAvgOpenPrice = (position: Position, desiredGap: number) => {
 }
 
 const updateChartSize = () => {
-  // const chartContainer = document.getElementById(`chart-${props.symbol}`)
+  // const chartContainer = document.getElementById(`chart-${props.symbol}-${props.period}`)
   if (chart.value) {
     chart.value.resize(chart.value.clientWidth, chart.value.clientHeight)
   }
@@ -346,7 +347,7 @@ const strategyName = (strategy: string) => {
 }
 
 onMounted(async () => {
-  chart.value = init(`chart-${props.symbol}`, {
+  chart.value = init(`chart-${props.symbol}-${props.period}`, {
     styles: {
       grid: {
         horizontal: {
@@ -363,11 +364,11 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  dispose(`chart-${props.symbol}`)
+  dispose(`chart-${props.symbol}-${props.period}`)
 })
 
 watch(
-  () => props.klines[0].close,
+  () => props.klines[0]?.close,
   () => {
     printData(false)
   },
@@ -394,15 +395,21 @@ watch(
       'border-r-amber-600 border-b-amber-600': bot.short?.status === 'onlysell',
     }"
   >
-    <div class="absolute bottom-20 text-lg font-bold text-slate-700 uppercase">
-      {{ symbol }} - {{ period }} - {{ size }}
-    </div>
     <div
-      class="absolute top-10 right-16 text-lg font-bold text-slate-700 uppercase"
+      class="absolute text-lg font-bold text-slate-700 uppercase"
+      :class="{
+        'bottom-20': !onlyChart,
+        'bottom-10': onlyChart,
+      }"
     >
       {{ symbol }} - {{ period }}
     </div>
-    <div class="flex items-center justify-between text-xs">
+    <div
+      class="absolute top-10 right-18 text-lg font-bold text-slate-700 uppercase"
+    >
+      {{ symbol }} - {{ period }}
+    </div>
+    <div v-if="!onlyChart" class="flex items-center justify-between text-xs">
       <div>{{ symbol }} - {{ period }}</div>
       <div class="mr-12 flex justify-end gap-2">
         <span class="text-slate-400">Last24h</span>
@@ -419,8 +426,8 @@ watch(
       </div>
     </div>
 
-    <div :id="`chart-${symbol}`" class="h-full w-full" />
-    <div class="t-2 flex items-center justify-between">
+    <div :id="`chart-${symbol}-${period}`" class="h-full w-full" />
+    <div v-if="!onlyChart" class="t-2 flex items-center justify-between">
       <div class="grid w-full grid-cols-2 items-center justify-between">
         <div v-for="side in sides" class="flex flex-col">
           <div

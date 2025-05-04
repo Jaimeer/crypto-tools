@@ -44,6 +44,8 @@ export const useBingxKLinesStore = defineStore('bingx-klines', {
     processMessage(symbol: string, period: Period, klines: KLine[]) {
       const key = `${symbol}-${period}`
 
+      // console.log(this.klines)
+
       if (!this.klines[key] || this.klines[key].length === 0) {
         this.klines[key] = klines
         return
