@@ -10,6 +10,7 @@
     "debug": "electron-forge start --inspect-electron",
     "package": "electron-forge package",
     "make": "electron-forge make",
+    "make:windows": "set DEBUG=electron-forge:* && electron-forge make --platform win32",
     "make:win": "DEBUG=electron-forge:* electron-forge make --platform win32",
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."

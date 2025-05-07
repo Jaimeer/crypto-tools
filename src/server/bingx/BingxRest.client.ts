@@ -310,7 +310,7 @@ export class BingxRestClient
     }
     const balance = await this.bingxRequest<BingxBalance[]>(API)
     this.logger.debug(`[fetchBalance] Fetched balance ${!!balance}`)
-    return balance.find((x) => x.asset === 'USDT')
+    return balance?.find((x) => x.asset === 'USDT')
   }
 
   async fetchContracts(): Promise<BingxContract[]> {

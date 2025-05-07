@@ -92,7 +92,7 @@ const loadPrevSymbol = () => {
 watchEffect(() => {
   if (bingxChartStore.symbol) {
     if (escape.value) bingxChartStore.resetSymbol()
-    if (arrowup.value) loadPrevSymbol
+    if (arrowup.value) loadPrevSymbol()
     if (arrowleft.value) loadPrevSymbol()
     if (arrowdown.value) loadNextSymbol()
     if (arrowright.value) loadNextSymbol()

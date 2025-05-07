@@ -36,6 +36,18 @@ const botShort = computed(() => {
   )
 })
 
+const positionLong = computed(() => {
+  return props.positions?.find(
+    (x) => x.symbol === symbol.value && x.positionSide === 'LONG',
+  )
+})
+
+const positionShort = computed(() => {
+  return props.positions?.find(
+    (x) => x.symbol === symbol.value && x.positionSide === 'SHORT',
+  )
+})
+
 const contract = computed(() => {
   return props.contracts?.find((x) => x.symbol === symbol.value)
 })
@@ -49,7 +61,10 @@ const contract = computed(() => {
     >
       <span
         :class="{
-          'text-slate-400/50': !botLong && !botShort,
+          'text-slate-400/50':
+            !botLong && !botShort && !positionLong && !positionShort,
+          'text-yellow-400/50':
+            !botLong && !botShort && (positionLong || positionShort),
           'text-red-400/50':
             botLong?.status === 'stop' && botShort?.status === 'stop',
         }"
@@ -60,7 +75,8 @@ const contract = computed(() => {
         <Icon
           class="absolute -right-5 -bottom-1.5 text-xl"
           :class="{
-            'text-slate-400/50': !botLong,
+            'text-slate-400/50': !botLong && !positionLong && !positionShort,
+            'text-yellow-400': !botLong && positionLong,
             'text-green-400': botLong?.status === 'active',
             'text-orange-400': botLong?.status === 'onlysell',
             'text-red-400/50': botLong?.status === 'stop',
@@ -70,7 +86,8 @@ const contract = computed(() => {
         <Icon
           class="absolute -top-1.5 -right-5 text-xl"
           :class="{
-            'text-slate-400/50': !botShort,
+            'text-slate-400/50': !botLong && !positionLong && !positionShort,
+            'text-yellow-400': !botShort && positionShort,
             'text-green-400': botShort?.status === 'active',
             'text-orange-400': botShort?.status === 'onlysell',
             'text-red-400/50': botShort?.status === 'stop',
@@ -80,7 +97,7 @@ const contract = computed(() => {
       </div>
     </div>
 
-    <span v-if="!contract" class="text-red-400"> no contract </span>
+    <span v-if="!contract" class="text-red-400">NC</span>
     <template v-else>
       <span v-if="!contract?.apiStateOpen" class="text-red-400"> open </span>
       <span v-if="!contract?.apiStateClose" class="text-red-400"> close </span>

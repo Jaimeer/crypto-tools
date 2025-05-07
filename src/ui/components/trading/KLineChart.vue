@@ -89,9 +89,15 @@ const draw = () => {
       const tradeTime = new Date(trade.filledTime).getTime()
       const tradePrice = trade.price
       const isProfit = trade.realisedPNL > 0
-      const color = trade.side === 'BUY' ? '#20aa93' : '#FF0000'
+      const color = trade.positionSide === 'LONG' ? '#20aa93' : '#FF0000'
       const overlayName =
-        trade.side === 'BUY' ? 'simpleAnnotationDown' : 'simpleAnnotation'
+        trade.positionSide === 'LONG' && trade.side === 'BUY'
+          ? 'simpleAnnotationDown'
+          : trade.positionSide === 'LONG' && trade.side === 'SELL'
+            ? 'simpleAnnotation'
+            : trade.positionSide === 'SHORT' && trade.side === 'BUY'
+              ? 'simpleAnnotationDown'
+              : 'simpleAnnotation'
       chart.value.createOverlay({
         name: overlayName,
         groupId: 'trades',
