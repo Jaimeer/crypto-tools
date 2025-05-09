@@ -28,7 +28,7 @@ function createChartsWindow() {
   chartsWindow = new BrowserWindow({
     width: 1920 * 0.75,
     height: 1080 * 0.75,
-    title: 'Crypto Charts',
+    title: 'DK Bot Tools',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },

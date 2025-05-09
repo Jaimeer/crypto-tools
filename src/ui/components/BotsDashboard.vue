@@ -9,8 +9,9 @@ import PositionSide from './trading/PositionSide.vue'
 import BotStrategy from './bitkua/BotStrategy.vue'
 import BotDelete from './bitkua/BotDelete.vue'
 import BotReset from './bitkua/BotReset.vue'
+import BotCreate from './bitkua/BotCreate.vue'
 import DateTime from './general/DateTime.vue'
-import { BitkuaActionUpdateSafe } from 'src/server/bitkua/Bitkua.dto'
+import { BitkuaActionUpdateSafe } from '../../server/bitkua/Bitkua.dto'
 import { subDays } from 'date-fns'
 import BotAmount from './bitkua/BotAmount.vue'
 import BingxChartManager from './trading/BingxChartManager.vue'
@@ -104,6 +105,9 @@ const loadSymbolChart = (bot: Bot) => {
         </button>
       </template>
     </TheHeader>
+    <div class="my-4 w-full rounded border border-slate-600 p-2">
+      <BotCreate />
+    </div>
     <Table
       :headers="[
         'index',
@@ -162,8 +166,8 @@ const loadSymbolChart = (bot: Bot) => {
             :class="{
               'bg-slate-600': item.count === 0,
               'bg-green-600 text-white': item.count > 0 && item.count < 7,
-              'bg-yellow-600 text-white': item.count >= 7 && item.count < 14,
-              'bg-red-600 text-white': item.count >= 14,
+              'bg-yellow-600 text-white': item.count >= 7 && item.count < 12,
+              'bg-red-600 text-white': item.count >= 12,
             }"
           >
             {{ item.count }}

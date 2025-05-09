@@ -6,7 +6,7 @@
 
 # Installation
 
-The bingX API should only have read permissions.
+The bingx API should only have read permissions.
 
 ```bash
 npm install

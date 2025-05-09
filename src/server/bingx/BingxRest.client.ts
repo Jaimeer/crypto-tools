@@ -36,7 +36,7 @@ export class BingxRestClient
     >
 {
   private readonly logger: LoggerService
-  //   private bingX: bingx
+  //   private bingx: bingx
   private API_KEY: string
   private API_SECRET: string
   private readonly HOST = 'open-api.bingx.com'

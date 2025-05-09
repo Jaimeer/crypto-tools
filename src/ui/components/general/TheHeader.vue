@@ -12,7 +12,17 @@ const search = defineModel()
 <template>
   <div class="mb-4 flex items-center justify-between">
     <div class="flex items-center gap-2" flex items-center>
-      <h1 class="text-xl font-bold">Crypto Tools</h1>
+      <h1 class="text-xl font-bold">Dashboard</h1>
+      <RouterLink
+        to="/bots"
+        class="rounded bg-slate-500 px-4 py-1 transition hover:bg-slate-600"
+        :class="{
+          'bg-slate-500 text-white': page === 'bots',
+          'bg-slate-700 text-slate-400': page !== 'bots',
+        }"
+      >
+        Bots
+      </RouterLink>
       <RouterLink
         to="/bingx"
         class="rounded bg-slate-500 px-4 py-1 transition hover:bg-slate-600"
@@ -32,16 +42,6 @@ const search = defineModel()
         }"
       >
         Bitget
-      </RouterLink>
-      <RouterLink
-        to="/bots"
-        class="rounded bg-slate-500 px-4 py-1 transition hover:bg-slate-600"
-        :class="{
-          'bg-slate-500 text-white': page === 'bots',
-          'bg-slate-700 text-slate-400': page !== 'bots',
-        }"
-      >
-        Bots
       </RouterLink>
       <slot name="left" />
     </div>
@@ -72,6 +72,12 @@ const search = defineModel()
       >
         <span>Config</span>
       </button>
+      <a
+        href="https://app.bitkua.com?reference=jaime_odh"
+        class="rounded bg-amber-500 px-4 py-1 text-white transition hover:bg-amber-600"
+      >
+        <span>Register in Bitkua</span>
+      </a>
     </div>
   </div>
 </template>

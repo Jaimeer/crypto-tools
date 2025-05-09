@@ -3,6 +3,7 @@ import { CookieJar } from 'tough-cookie'
 import { BrowserWindow } from 'electron'
 import {
   BitkuaAction,
+  BitkuaActionCreateBot,
   BitkuaActionDelete,
   BitkuaActionReset,
   BitkuaActionUpdateAmount,
@@ -64,6 +65,8 @@ export class BitkuaService {
 
   async processAction(message: BitkuaAction) {
     switch (message.action) {
+      case 'createBot':
+        return this.createBot(message)
       case 'updateStatus':
         return this.updateBotStatus(message)
       case 'updateSafe':
@@ -84,19 +87,23 @@ export class BitkuaService {
   private async getBots() {
     try {
       this.logger.debug('Fetching dk-bots...')
+      const data = {
+        action: 'info_bots',
+        username: this.username,
+        token: this.token,
+      }
+
       const response = await this.client.request<{
         success: boolean
         data: BitkuaBot[]
       }>({
         method: 'GET',
-        data: {
-          action: 'info_bots',
-          username: this.username,
-          token: this.token,
-        },
+        data,
       })
 
       const bitkuaBots = response.data
+      console.log('Bots:', response.data.data.length, data)
+
       if (!bitkuaBots.success || !bitkuaBots.data) return
 
       const bots: Bot[] = bitkuaBots.data.map((bot) => ({
@@ -248,6 +255,67 @@ export class BitkuaService {
         },
       })
       this.logger.debug(`Bot reset successfully: ${message.symbol}`)
+      this.startAutoRefresh()
+    } catch (error) {
+      console.error('Error resetting bot:', error.message)
+    }
+  }
+
+  private async createBot(message: BitkuaActionCreateBot) {
+    try {
+      if (message.long) {
+        const data = {
+          action: 'create_bots',
+          username: this.username,
+          token: this.token,
+          symbol: message.symbol,
+          security_token: this.token,
+          amount: message.amount,
+          active: message.status,
+          exchange: message.exchange,
+          estrategia: message.strategy,
+          positionside: 'LONG',
+          count: 0,
+          safe: message.safe ? 'yes' : 'no',
+        }
+        console.log(data)
+        await this.client.request<{
+          success: boolean
+          data: BitkuaBot[]
+        }>({
+          method: 'POST',
+          data,
+        })
+        this.logger.debug(`Long bot created successfully: ${message.symbol}`)
+      }
+
+      if (message.short && message.strategy !== 'infinity') {
+        const data = {
+          action: 'create_bots',
+          username: this.username,
+          token: this.token,
+          symbol: message.symbol,
+          security_token: this.token,
+          amount: message.amount,
+          active: message.status,
+          exchange: message.exchange,
+          estrategia: `short${message.strategy}`,
+          positionside: 'SHORT',
+          count: 0,
+          safe: message.safe ? 'yes' : 'no',
+        }
+        console.log(data)
+
+        await this.client.request<{
+          success: boolean
+          data: BitkuaBot[]
+        }>({
+          method: 'POST',
+          data,
+        })
+        this.logger.debug(`Short bot created successfully: ${message.symbol}`)
+      }
+
       this.startAutoRefresh()
     } catch (error) {
       console.error('Error resetting bot:', error.message)

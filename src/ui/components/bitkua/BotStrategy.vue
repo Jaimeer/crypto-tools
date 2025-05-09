@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { BitkuaActionUpdateStrategy } from '../../../server/bitkua/Bitkua.dto'
+import {
+  BitkuaActionUpdateStrategy,
+  BotStrategiesAll,
+} from '../../../server/bitkua/Bitkua.dto'
 import { Bot } from '../../../server/data.dto'
 
 const props = defineProps<{
@@ -41,7 +44,7 @@ const isFormActive = ref(false)
 
 const selectedStrategy = ref()
 
-const sendAction = (botId: string, strategy: string) => {
+const sendAction = (botId: string, strategy: BotStrategiesAll) => {
   const message: BitkuaActionUpdateStrategy = {
     action: 'updateStrategy',
     botId,

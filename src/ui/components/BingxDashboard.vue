@@ -29,7 +29,7 @@ const bingxBalanceStore = useBingxBalanceStore()
 const bitkuaBotsStore = useBitkuaBotsStore()
 const bingxPositionsStore = useBingxPositionsStore()
 const bingxTradesStore = useBingxTradesStore()
-const bingXContractsStore = useBingxContractsStore()
+const bingxContractsStore = useBingxContractsStore()
 const bingxPreferencesStore = useBingxPreferencesStore()
 
 const search = ref('')
@@ -61,7 +61,7 @@ const trades = computed(() => {
 })
 
 const contracts = computed(() => {
-  return bingXContractsStore.contracts
+  return bingxContractsStore.contracts
 })
 
 const allSymbols = computed(() => {

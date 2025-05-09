@@ -1,7 +1,58 @@
+export type BotStatus = 'active' | 'stop' | 'onlysell'
+export type BotStrategies =
+  | 'aiexpertavg'
+  | 'aiexpertavgplus'
+  | 'degen'
+  | 'infinity'
+  | 'karlosavg'
+  | 'ladominantkong'
+  | 'lamilagrosa'
+  | 'lamilagrosapro'
+  | 'liquidationpoint'
+  | 'liquiditypool'
+  | 'longalashitcoin'
+  | 'pmd'
+  | 'smartcandle'
+  | 'smartmoney'
+  | 'sniperagresive'
+
+export type BotStrategiesAll =
+  | 'aiexpertavg'
+  | 'shortaiexpertavg'
+  | 'aiexpertavgplus'
+  | 'shortaiexpertavgplus'
+  | 'degen'
+  | 'shortdegen'
+  | 'infinity'
+  | 'karlosavg'
+  | 'shortkarlosavg'
+  | 'ladominantkong'
+  | 'shortladominantkong'
+  | 'lamilagrosa'
+  | 'shortlamilagrosa'
+  | 'lamilagrosapro'
+  | 'shortlamilagrosapro'
+  | 'liquidationpoint'
+  | 'shortliquidationpoint'
+  | 'liquiditypool'
+  | 'shortliquiditypool'
+  | 'longalashitcoin'
+  | 'shortalashitcoin'
+  | 'pmd'
+  | 'shortpmd'
+  | 'smartcandle'
+  | 'shortsmartcandle'
+  | 'smartmoney'
+  | 'shortsmartmoney'
+  | 'sniperagresive'
+  | 'shortsniperagresive'
+
+export type BotExchange = 'Bingx' | 'Bitget'
+
 export type BitkuaActionUpdateStatus = {
   botId: string
   action: 'updateStatus'
-  status: 'active' | 'stop' | 'onlysell'
+  status: BotStatus
 }
 
 export type BitkuaActionUpdateSafe = {
@@ -13,7 +64,7 @@ export type BitkuaActionUpdateSafe = {
 export type BitkuaActionUpdateStrategy = {
   botId: string
   action: 'updateStrategy'
-  strategy: string
+  strategy: BotStrategiesAll
 }
 
 export type BitkuaActionUpdateAmount = {
@@ -34,6 +85,18 @@ export type BitkuaActionReset = {
   positionSide: string
 }
 
+export type BitkuaActionCreateBot = {
+  action: 'createBot'
+  exchange: BotExchange
+  symbol: string
+  amount: number
+  strategy: BotStrategies
+  status: BotStatus
+  safe: boolean
+  long: boolean
+  short: boolean
+}
+
 export type BitkuaAction =
   | BitkuaActionUpdateStatus
   | BitkuaActionUpdateSafe
@@ -41,3 +104,4 @@ export type BitkuaAction =
   | BitkuaActionUpdateStrategy
   | BitkuaActionDelete
   | BitkuaActionReset
+  | BitkuaActionCreateBot

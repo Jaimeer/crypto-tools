@@ -25,7 +25,7 @@ export class BitgetRestClient
     >
 {
   private readonly logger: LoggerService
-  //   private bingX: bitget
+  //   private bingx: bitget
   private API_KEY: string
   private API_SECRET: string
   private PASSWORD: string

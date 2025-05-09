@@ -6,11 +6,10 @@ import ChartsView from './ui/views/ChartsView.vue'
 import BotsView from './ui/views/BotsView.vue'
 
 const routes = [
-  { path: '/', component: BingxView },
+  { path: '/', component: BotsView },
   { path: '/bitget', component: BitgetView },
   { path: '/bingx', component: BingxView },
   { path: '/charts', component: ChartsView },
-  { path: '/bots', component: BotsView },
 ]
 
 export const router = createRouter({
