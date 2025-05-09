@@ -72,12 +72,12 @@ const search = defineModel()
       >
         <span>Config</span>
       </button>
-      <a
+      <!-- <a
         href="https://app.bitkua.com?reference=jaime_odh"
         class="rounded bg-amber-500 px-4 py-1 text-white transition hover:bg-amber-600"
       >
         <span>Register in Bitkua</span>
-      </a>
+      </a> -->
     </div>
   </div>
 </template>
