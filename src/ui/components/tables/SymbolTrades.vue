@@ -251,8 +251,8 @@ const strategyName = (strategy: string) => {
       shortlamilagrosa: 'HFT Short La Milagrosa F-15',
       lamilagrosapro: 'HFT Long La Milagrosa Pro F-15',
       shortlamilagrosapro: 'HFT Short La Milagrosa Pro F-15',
-      pmd: 'HFT Short PMD F-15',
-      shortpmd: 'HFT Long La Mialagrosa F-15',
+      pmd: 'HFT Long PMD F-15',
+      shortpmd: 'HFT Short PMD F-15',
       degen: 'HFT Long Degen F-15',
       shortdegen: 'HFT Short Degen F-15',
     }[strategy] ?? strategy
