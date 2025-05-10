@@ -121,4 +121,5 @@ export type BitkuaDataMarket = {
   rangoInferior: string
   LiqMax: string
   LiqMin: string
+  ratio_fvd_mc: string
 }

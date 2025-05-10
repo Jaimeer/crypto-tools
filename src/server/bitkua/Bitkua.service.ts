@@ -172,6 +172,21 @@ export class BitkuaService {
           lowerRange: parseFloat(dataMarket.rangoInferior),
           liqMax: parseFloat(dataMarket.LiqMax),
           liqMin: parseFloat(dataMarket.LiqMin),
+          fomo:
+            parseFloat(dataMarket.minimoD) > 0
+              ? ((parseFloat(dataMarket.price) -
+                  parseFloat(dataMarket.minimoD)) /
+                  parseFloat(dataMarket.minimoD)) *
+                100
+              : 0,
+          fud:
+            parseFloat(dataMarket.maximoD) > 0
+              ? ((parseFloat(dataMarket.maximoD) -
+                  parseFloat(dataMarket.price)) /
+                  parseFloat(dataMarket.maximoD)) *
+                100
+              : 0,
+          ratioFvdMc: parseFloat(dataMarket.ratio_fvd_mc),
         }),
       )
 

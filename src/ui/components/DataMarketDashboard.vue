@@ -29,7 +29,14 @@ const search = ref('')
 const dataMarkets = computed(() => {
   let index = 1
   return bitkuaDataMarketStore.dataMarket
-    .filter((dataMarket) => dataMarket.exchange === exchange.value)
+    .filter(
+      (dataMarket) =>
+        dataMarket.exchange === exchange.value &&
+        dataMarket.symbol.toLowerCase().includes(search.value.toLowerCase()),
+    )
+    .sort((a, b) => {
+      return a.symbol.localeCompare(b.symbol)
+    })
     .map((dataMarket) => {
       return {
         index: index++,
@@ -59,14 +66,6 @@ const positions = computed(() => {
 const contracts = computed(() => {
   return bingxContractsStore.contracts
 })
-
-const fomo = (item: DataMarket) => {
-  return item.minD > 0 ? ((item.price - item.minD) / item.minD) * 100 : 0
-}
-
-const fud = (item: DataMarket) => {
-  return item.maxD > 0 ? ((item.maxD - item.price) / item.maxD) * 100 : 0
-}
 </script>
 
 <template>
@@ -79,7 +78,7 @@ const fud = (item: DataMarket) => {
         'index',
         'symbol',
         'exchange',
-        'avarice',
+        'fomo',
         'fud',
         'price',
         'sma55',
@@ -93,6 +92,7 @@ const fud = (item: DataMarket) => {
         'lowerRange',
         'liqMax',
         'liqMin',
+        'ratioFvdMc',
       ]"
       :items="dataMarkets ?? []"
       fullHeight
@@ -111,8 +111,8 @@ const fud = (item: DataMarket) => {
           />
         </td>
         <td class="px-2 py-0.5"><Exchange :value="item.exchange" /></td>
-        <td class="px-2 py-0.5"><Fomo :value="fomo(item)" /></td>
-        <td class="px-2 py-0.5"><Fud :value="fud(item)" /></td>
+        <td class="px-2 py-0.5"><Fomo :value="item.fomo" /></td>
+        <td class="px-2 py-0.5"><Fud :value="item.fud" /></td>
         <td class="px-2 py-0.5"><Price :value="item.price" color="gray" /></td>
         <td class="px-2 py-0.5"><Price :value="item.sma55" color="gray" /></td>
         <td class="px-2 py-0.5">
@@ -135,6 +135,9 @@ const fud = (item: DataMarket) => {
         </td>
         <td class="px-2 py-0.5"><Price :value="item.liqMax" color="gray" /></td>
         <td class="px-2 py-0.5"><Price :value="item.liqMin" color="gray" /></td>
+        <td class="px-2 py-0.5">
+          <Price :value="item.ratioFvdMc" color="gray" />
+        </td>
       </template>
     </Table>
     <BingxChartManager />

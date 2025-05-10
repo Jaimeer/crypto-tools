@@ -171,4 +171,7 @@ export type DataMarket = {
   lowerRange: number
   liqMax: number
   liqMin: number
+  fomo: number
+  fud: number
+  ratioFvdMc: number
 }

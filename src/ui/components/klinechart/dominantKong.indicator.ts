@@ -130,8 +130,8 @@ const calc: IndicatorCalcCallback<
     counterDown++
     counterAlert++
 
-    const sma5Value = sma5[i] || 0
-    const sma55Value = sma55[i] || 0
+    const sma5Value = utils.isValid(sma5[i]) ? sma5[i] : NaN
+    const sma55Value = utils.isValid(sma55[i]) ? sma55[i] : NaN
 
     const colorMedia = sma5Value > sma55Value ? '#08F00F' : '#FF0000'
 
@@ -313,6 +313,7 @@ const draw: IndicatorDrawCallback<
 
     // Draw SMA55
     ctx.beginPath()
+    ctx.setLineDash([])
     ctx.strokeStyle = curr.sma55Color
     ctx.moveTo(x1, y1_sma55)
     ctx.lineTo(x2, y2_sma55)

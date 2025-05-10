@@ -18,6 +18,7 @@ import BingxChartManager from './trading/BingxChartManager.vue'
 import { useBingxChartStore } from '../store/bingx/bingxChart.store'
 import { Bot } from '../../server/data.dto'
 import Exchange from './trading/Exchange.vue'
+import { s } from 'vite/dist/node/types.d-aGj9QkWt'
 
 const bitkuaBotsStore = useBitkuaBotsStore()
 const bingxChartStore = useBingxChartStore()
@@ -30,9 +31,7 @@ const bots = computed(() => {
       bot.symbol.toLowerCase().includes(search.value.toLowerCase()),
     )
     .sort((a, b) => {
-      if (a.exchange === b.exchange) {
-        return a.symbol.localeCompare(b.symbol)
-      }
+      if (a.exchange === b.exchange) return a.symbol.localeCompare(b.symbol)
       return a.exchange.localeCompare(b.exchange)
     })
     .map((bot) => ({

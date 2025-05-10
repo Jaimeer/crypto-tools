@@ -67,6 +67,21 @@ const printData = (start: boolean) => {
       chart.value.updateData(latestPoint)
     }
   }
+
+  // const minPrice = Math.min(...data.map((item) => item.low))
+  // const maxPrice = Math.max(...data.map((item) => item.high))
+
+  // const axis = {
+  //   minValue: -1, //minPrice * 0.1,
+  //   maxValue: 1, //maxPrice * 0.2,
+  // }
+  // console.log(axis)
+
+  // chart.value.setPaneOptions({
+  //   id: 'candle_pane',
+  //   axis,
+  // })
+
   draw()
 }
 

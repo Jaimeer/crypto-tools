@@ -201,6 +201,11 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
+      <div
+        class="w-full rounded-t border border-t-0 border-slate-600 bg-slate-900 p-2"
+      >
+        AQUI
+      </div>
     </div>
   </div>
 </template>
