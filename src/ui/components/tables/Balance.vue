@@ -34,7 +34,7 @@ const parseValue = (value: number | string | undefined) => {
 </script>
 
 <template>
-  <Table :headers="['Key', 'Value']" :items="[]">
+  <Table :headers="['Key', 'Value']" :items="[]" :disable-sort="true">
     <template #tbody>
       <tr
         class="border-b border-gray-200 bg-white hover:bg-slate-700 dark:border-gray-700 dark:bg-gray-800"
@@ -72,10 +72,7 @@ const parseValue = (value: number | string | undefined) => {
         <td class="px-2 py-0.5">
           <Price :value="balance?.unrealizedPnl" :decimals="2" />
           ({{
-            (
-              (-1 * parseFloat(balance?.unrealizedPnl) * 100) /
-              parseFloat(balance?.balance)
-            ).toFixed(2)
+            ((-1 * balance?.unrealizedPnl * 100) / balance?.balance).toFixed(2)
           }}%)
         </td>
       </tr>
@@ -86,10 +83,7 @@ const parseValue = (value: number | string | undefined) => {
         <td class="px-2 py-0.5">
           <Price :value="balance?.availableMargin" :decimals="2" />
           ({{
-            (
-              (parseFloat(balance?.availableMargin) * 100) /
-              parseFloat(balance?.equity)
-            ).toFixed(2)
+            ((balance?.availableMargin * 100) / balance?.equity).toFixed(2)
           }}%)
         </td>
       </tr>
@@ -99,12 +93,7 @@ const parseValue = (value: number | string | undefined) => {
         <td class="px-2 py-0.5">usedMargin (equity)</td>
         <td class="px-2 py-0.5">
           <Price :value="balance?.usedMargin" color="orange" :decimals="2" />
-          ({{
-            (
-              (parseFloat(balance?.usedMargin) * 100) /
-              parseFloat(balance?.equity)
-            ).toFixed(2)
-          }}%)
+          ({{ ((balance?.usedMargin * 100) / balance?.equity).toFixed(2) }}%)
         </td>
       </tr>
       <tr
@@ -114,7 +103,7 @@ const parseValue = (value: number | string | undefined) => {
         <td class="px-2 py-0.5">
           <Price
             v-if="balance"
-            :value="parseFloat(balance?.balance) - totalIncomeTransactions"
+            :value="balance?.balance - totalIncomeTransactions"
             color="violet"
             :decimals="2"
           />
@@ -122,9 +111,9 @@ const parseValue = (value: number | string | undefined) => {
             v-if="balance"
             class="text-[10px]"
             :value="
-              parseFloat(balance?.balance) -
+              balance?.balance -
               totalIncomeTransactions +
-              parseFloat(balance?.unrealizedPnl)
+              balance?.unrealizedPnl
             "
             :decimals="2"
           />
@@ -133,11 +122,11 @@ const parseValue = (value: number | string | undefined) => {
             v-if="balance"
             class="text-[8px]"
             :value="
-              ((parseFloat(balance?.balance) -
+              ((balance?.balance -
                 totalIncomeTransactions +
-                parseFloat(balance?.unrealizedPnl)) *
+                balance?.unrealizedPnl) *
                 100) /
-              (parseFloat(balance?.balance) - totalIncomeTransactions)
+              (balance?.balance - totalIncomeTransactions)
             "
             :decimals="2"
             suffix="%"
@@ -147,7 +136,7 @@ const parseValue = (value: number | string | undefined) => {
       <tr
         v-for="[key, value] in Object.entries({
           profitByDay: balance
-            ? (parseFloat(balance?.balance) - totalIncomeTransactions) /
+            ? (balance?.balance - totalIncomeTransactions) /
               differenceInDays(
                 new Date(),
                 startOfDay(
@@ -269,7 +258,7 @@ const parseValue = (value: number | string | undefined) => {
               }, 0) *
                 10 *
                 0.75 >
-              parseFloat(balance?.balance ?? '0')
+              (balance?.balance ?? 0)
                 ? 'red'
                 : undefined
             "
@@ -284,7 +273,7 @@ const parseValue = (value: number | string | undefined) => {
               }, 0) *
                 10 *
                 0.75 >
-              parseFloat(balance?.balance ?? '0')
+              (balance?.balance ?? 0)
             "
             class="text-yellow-400"
             icon="ic:round-warning"

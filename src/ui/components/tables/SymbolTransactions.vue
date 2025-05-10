@@ -115,7 +115,7 @@ const usedSymbols = computed(() => {
 </script>
 
 <template>
-  <Table :headers="[]" :items="transactionsBySymbol">
+  <Table :headers="[]" :items="transactionsBySymbol" :disable-sort="true">
     <template #headers>
       <th class="px-2 py-0.5" v-for="header of ['date', 'total']">
         {{ header }}

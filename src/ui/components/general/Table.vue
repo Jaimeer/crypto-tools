@@ -1,5 +1,6 @@
 <script setup lang="ts" generic="T extends Record<string, unknown>">
 import { computed, ref } from 'vue'
+import { Icon } from '@iconify/vue'
 
 const props = defineProps<{
   headers: string[]
@@ -35,9 +36,11 @@ const sortValue = ref('')
 const sortAsc = ref(true)
 
 const sortByHeader = (header: string) => {
-  if (sortValue.value === header) sortAsc.value = !sortAsc.value
-  else sortAsc.value = true
-
+  if (props.disableSort) return
+  if (sortValue.value === header) {
+    sortValue.value = ''
+    return
+  }
   sortValue.value = header
 }
 </script>
@@ -61,19 +64,37 @@ const sortByHeader = (header: string) => {
         <tr>
           <slot name="headers">
             <th
-              class="cursor-pointer px-2 py-0.5"
-              :class="headerClass"
+              class="px-2 py-0.5"
+              :class="
+                headerClass +
+                ' ' +
+                (props.disableSort ? '' : 'cursor-pointer hover:text-slate-300')
+              "
               v-for="header of headers"
               :key="header"
               @click="sortByHeader(header)"
             >
-              {{ header }}
+              <div class="flex items-center gap-1">
+                {{ header }}
+                <Icon
+                  v-if="sortValue === header && sortAsc"
+                  icon="majesticons:arrow-up-line"
+                  class="text-green-400"
+                  @click.stop="sortAsc = !sortAsc"
+                />
+                <Icon
+                  v-if="sortValue === header && !sortAsc"
+                  icon="majesticons:arrow-down-line"
+                  class="text-green-400"
+                  @click.stop="sortAsc = !sortAsc"
+                />
+              </div>
             </th>
           </slot>
         </tr>
       </thead>
-      <tbody>
-        <slot name="tbody">
+      <tbody class="">
+        <slot name="tbody" :items="sortedItems">
           <tr
             v-for="item in sortedItems"
             class="border-b border-gray-200 bg-white text-nowrap hover:bg-slate-700 dark:border-gray-700 dark:bg-gray-800"

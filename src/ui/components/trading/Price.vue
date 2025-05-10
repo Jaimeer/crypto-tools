@@ -35,7 +35,7 @@ const parseValue = computed(() => {
         typeof parseValue === 'string',
     }"
   >
-    {{ prefix }}
+    <template v-if="parseValue !== '---'">{{ prefix }}</template>
     <template v-if="typeof parseValue === 'string'">
       {{ parseValue }}
     </template>
@@ -47,6 +47,6 @@ const parseValue = computed(() => {
         }).format(parseValue)
       }}
     </template>
-    {{ suffix }}
+    <template v-if="parseValue !== '---'">{{ suffix }}</template>
   </span>
 </template>

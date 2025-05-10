@@ -82,7 +82,7 @@ const symbolRanking = computed(() => {
 </script>
 
 <template>
-  <Table :headers="[]" :items="symbolRanking">
+  <Table :headers="[]" :items="symbolRanking" :disable-sort="true">
     <template #headers>
       <th class="px-2 py-0.5">Symbol</th>
       <th

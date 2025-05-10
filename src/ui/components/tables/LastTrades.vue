@@ -44,7 +44,11 @@ const lastClosedTransactions = computed(() => {
 </script>
 
 <template>
-  <Table :headers="['Date', 'symbol', 'pnl']" :items="lastClosedTransactions">
+  <Table
+    :headers="['Date', 'symbol', 'pnl']"
+    :items="lastClosedTransactions"
+    :disable-sort="true"
+  >
     <template #default="{ item }">
       <td class="px-2 py-0.5"><DateTime :value="new Date(item.time)" /></td>
       <td class="px-2 py-0.5">

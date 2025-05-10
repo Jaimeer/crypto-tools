@@ -80,6 +80,7 @@ const transactionsByDay = computed(() => {
       'USDT/hour',
     ]"
     :items="transactionsByDay"
+    :disable-sort="true"
   >
     <template #default="{ item }">
       <td class="px-2 py-0.5">{{ item.key }}</td>

@@ -312,6 +312,7 @@ const sendAction = (botId: string, status: 'active' | 'stop' | 'onlysell') => {
       'DK Bot',
     ]"
     :items="tradesInfo"
+    :disable-sort="true"
   >
     <template #default="{ item }">
       <td class="px-2 py-0.5">
