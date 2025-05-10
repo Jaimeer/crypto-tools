@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-const props = defineProps<{ items: string[]; placeHolder: string }>()
+const props = defineProps<{
+  items: string[]
+  placeHolder: string
+  disabled?: boolean
+}>()
 
 const value = defineModel<string>()
 
@@ -29,6 +33,8 @@ const closeItems = () => {
       v-model="value"
       :placeholder="placeHolder"
       class="rounded border border-slate-600 bg-slate-700 px-2 py-0.5 text-slate-200 focus:border-slate-500 focus:outline-none"
+      :class="{ 'disabled:opacity-50': disabled }"
+      :disabled="disabled"
       @focus="viewItems = true"
       @blur="closeItems"
     />

@@ -39,7 +39,7 @@ const periodsOptions: Period[] = [
   '1M',
 ]
 
-const selectedPeriod = ref<Period>('15m')
+const selectedPeriod = ref<Period>('1h')
 
 const search = ref('')
 

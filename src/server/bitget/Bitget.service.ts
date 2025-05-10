@@ -35,12 +35,13 @@ import { ObjectSize } from '../../utils/ObjectSize'
 
 // const klineRegex = /^([A-Z0-9]*-[A-Z0-9]*)?@kline_([1-9]*[mhdwM]*)?$/;
 
+const activeIntervals: Set<NodeJS.Timeout> = new Set()
+
 export class BitgetService implements ExchangeService {
   private readonly logger: LoggerService
   private readonly restClient: BitgetRestClient
   // private readonly wsClient: BitgetWebSocket;
   private readonly cacheService: BitgetCacheService
-  private refreshInterval: NodeJS.Timeout | null = null
   private originalData: {
     transactions: FuturesAccountBillV2[]
     trades: FuturesOrderFillV2[]
@@ -96,13 +97,16 @@ export class BitgetService implements ExchangeService {
   startAutoRefresh(intervalMs = 60000) {
     this.stopAutoRefresh()
     this.loadData()
-    this.refreshInterval = setInterval(async () => {
+    const refreshInterval = setInterval(async () => {
       try {
         await this.loadData()
       } catch (error) {
         console.error('BitgetService auto-refresh failed:', error)
       }
     }, intervalMs)
+
+    activeIntervals.add(refreshInterval)
+
     this.logger.debug(
       `BitgetService auto-refresh started: every ${intervalMs / 1000} seconds`,
     )
@@ -113,9 +117,9 @@ export class BitgetService implements ExchangeService {
   }
   stopAutoRefresh() {
     this.stopWebSocket()
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval)
-      this.refreshInterval = null
+    for (const interval of activeIntervals) {
+      clearInterval(interval)
+      activeIntervals.delete(interval)
       this.logger.debug('BitgetService auto-refresh stopped')
     }
   }

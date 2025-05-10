@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { computed, reactive } from 'vue'
-import type { BitkuaActionCreateBot } from '../../../server/bitkua/Bitkua.dto'
+import type {
+  BitkuaActionCreateBot,
+  BotExchange,
+} from '../../../server/bitkua/Bitkua.dto'
 import { useBingxContractsStore } from '../../../ui/store/bingx/bingxContracts.store'
 import { useBitgetContractsStore } from '../../../ui/store/bitget/bitgetContracts.store'
 import SearchAutocomplete from '../trading/SearchAutocomplete.vue'
+
+const props = defineProps<{ symbol?: string; exchange?: BotExchange }>()
 
 const bingxContractsStore = useBingxContractsStore()
 const bitgetContractsStore = useBitgetContractsStore()
@@ -43,8 +48,8 @@ const exchangeSymbols = computed<
 
 const formData = reactive<BitkuaActionCreateBot>({
   action: 'createBot',
-  exchange: 'Bingx',
-  symbol: '',
+  exchange: props.exchange ?? 'Bingx',
+  symbol: props.symbol ?? '',
   amount: undefined,
   strategy: 'lamilagrosapro',
   status: 'active',
@@ -56,7 +61,7 @@ const formData = reactive<BitkuaActionCreateBot>({
 const createBot = () => {
   const message: BitkuaActionCreateBot = { ...formData }
   window.electronAPI.sendBitkuaAction(message)
-  formData.symbol = ''
+  formData.symbol = props.symbol ?? ''
   formData.amount = undefined
 }
 
@@ -67,6 +72,8 @@ const isValid = computed(() => {
   if (!formData.status) return false
   if (!formData.exchange) return false
   if (!formData.long && !formData.short) return false
+  if (!exchangeSymbols.value[formData.exchange].includes(formData.symbol))
+    return false
   return true
 })
 </script>
@@ -75,7 +82,8 @@ const isValid = computed(() => {
   <form class="flex w-full items-center gap-2" @submit.prevent="createBot">
     <select
       v-model="formData.exchange"
-      class="rounded border border-slate-600 bg-slate-700 px-2 py-0.5 text-slate-200 focus:border-slate-500 focus:outline-none"
+      class="rounded border border-slate-600 bg-slate-700 px-2 py-0.5 text-slate-200 focus:border-slate-500 focus:outline-none disabled:opacity-50"
+      :disabled="!!props.exchange"
     >
       <option
         v-for="exchange in botExchange.toSorted((a, b) => a.localeCompare(b))"
@@ -94,6 +102,7 @@ const isValid = computed(() => {
         )
       "
       placeHolder="Search symbol"
+      :disabled="!!props.symbol"
     />
 
     <select

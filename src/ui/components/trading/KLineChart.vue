@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { init, dispose, registerOverlay } from 'klinecharts'
+import { init, dispose, registerOverlay, registerIndicator } from 'klinecharts'
 import { vElementSize } from '@vueuse/components'
 import { addMonths, subDays, subHours } from 'date-fns'
 import { Icon } from '@iconify/vue'
@@ -15,9 +15,11 @@ import Rescue from './Rescue.vue'
 import NumTrades from './NumTrades.vue'
 import { BitkuaActionUpdateStatus } from '../../../server/bitkua/Bitkua.dto'
 import { useBitkuaBotsStore } from '../../store/bitkua/bitkuaBots.store'
+import dominantKongIndicator from '../klinechart/dominantKong.indicator'
 
 registerOverlay(rectangle)
 registerOverlay(simpleAnnotationDown)
+registerIndicator(dominantKongIndicator)
 
 const bingxTradesStore = useBingxTradesStore()
 const bingxTransactionsStore = useBingxTransactionsStore()
@@ -35,6 +37,7 @@ const props = defineProps<{
   positions: Position[]
   size: 'small' | 'large'
   onlyChart?: boolean
+  printDKIndicator?: boolean
 }>()
 
 const printData = (start: boolean) => {
@@ -89,7 +92,11 @@ const draw = () => {
       const tradeTime = new Date(trade.filledTime).getTime()
       const tradePrice = trade.price
       const isProfit = trade.realisedPNL > 0
-      const color = trade.positionSide === 'LONG' ? '#20aa93' : '#FF0000'
+      const opacity = isProfit ? '' : '60'
+      const color =
+        trade.positionSide === 'LONG'
+          ? `#20aa93${opacity}`
+          : `#FF0000${opacity}`
       const overlayName =
         trade.positionSide === 'LONG' && trade.side === 'BUY'
           ? 'simpleAnnotationDown'
@@ -108,7 +115,7 @@ const draw = () => {
           : trade.side.charAt(0),
         styles: {
           text: {
-            color: '#FFFFFF',
+            color: `#FFFFFF${opacity}`,
             backgroundColor: color,
           },
           polygon: { color },
@@ -374,6 +381,10 @@ onMounted(async () => {
     },
   })
 
+  if (props.printDKIndicator)
+    chart.value.createIndicator('DominantKongProTrader', false, {
+      id: 'candle_pane',
+    })
   printData(true)
 })
 

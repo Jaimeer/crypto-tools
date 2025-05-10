@@ -19,6 +19,7 @@ import { useBitgetTransactionsStore } from './ui/store/bitget/bitgetTransactions
 import { useBitgetContractsStore } from './ui/store/bitget/bitgetContracts.store'
 import { useBitgetKLinesStore } from './ui/store/bitget/bitgetKLines.store'
 import { useBitgetTradesStore } from './ui/store/bitget/bitgetTrades.store'
+import { useBitkuaDataMarketStore } from './ui/store/bitkua/bitkuaDataMarket.store'
 
 const pinia = createPinia()
 
@@ -43,6 +44,7 @@ const bitgetContractsStore = useBitgetContractsStore()
 const bitgetKlineStore = useBitgetKLinesStore()
 
 const botsStore = useBitkuaBotsStore()
+const dataMarketStore = useBitkuaDataMarketStore()
 
 const updateDataHandler = (message: NotifyMessage) => {
   switch (message.store) {
@@ -92,6 +94,9 @@ const updateDataHandler = (message: NotifyMessage) => {
       break
     case 'bots':
       botsStore.processMessage(message.bots)
+      break
+    case 'dataMarket':
+      dataMarketStore.processMessage(message.dataMarket)
       break
     default:
       console.log(message)

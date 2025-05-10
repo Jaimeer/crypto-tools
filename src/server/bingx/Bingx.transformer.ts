@@ -63,15 +63,26 @@ export const BingxTransformer: ExchangeTransformer<
   },
 
   balanceTransform(balance: BingxBalance): Balance {
+    if (!balance)
+      return {
+        symbol: parseSymbol('unknown'),
+        availableMargin: 0,
+        balance: 0,
+        equity: 0,
+        freezedMargin: 0,
+        realisedPnl: 0,
+        unrealizedPnl: 0,
+        usedMargin: 0,
+      }
     return {
       symbol: parseSymbol(balance.asset),
-      availableMargin: balance.availableMargin,
-      balance: balance.balance,
-      equity: balance.equity,
-      freezedMargin: balance.freezedMargin,
-      realisedPnl: balance.realisedProfit,
-      unrealizedPnl: balance.unrealizedProfit,
-      usedMargin: balance.usedMargin,
+      availableMargin: parseFloat(balance.availableMargin),
+      balance: parseFloat(balance.balance),
+      equity: parseFloat(balance.equity),
+      freezedMargin: parseFloat(balance.freezedMargin),
+      realisedPnl: parseFloat(balance.realisedProfit),
+      unrealizedPnl: parseFloat(balance.unrealizedProfit),
+      usedMargin: parseFloat(balance.usedMargin),
     }
   },
 

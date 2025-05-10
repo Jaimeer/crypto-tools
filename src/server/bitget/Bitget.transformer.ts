@@ -51,7 +51,7 @@ export const BitgetTransformer: ExchangeTransformer<
         commission: 0,
         commissionAsset: '',
         orderId: trade.orderId,
-        tradeId: trade.side === 'buy' ? 'LONG' : 'SHORT',
+        tradeId: trade.tradeId,
         filledTime: new Date(trade.cTime),
         side: trade.side.toUpperCase() as 'BUY' | 'SELL',
         positionSide: trade.side.toUpperCase(),
@@ -65,13 +65,13 @@ export const BitgetTransformer: ExchangeTransformer<
   balanceTransform(balance: FuturesAccountsV2): Balance {
     return {
       symbol: parseSymbol(balance.marginCoin),
-      availableMargin: balance.crossedMaxAvailable,
-      balance: balance.available + balance.locked,
-      equity: balance.accountEquity,
-      freezedMargin: balance.locked,
-      realisedPnl: '0',
-      unrealizedPnl: balance.unrealizedPL,
-      usedMargin: balance.crossedMargin,
+      availableMargin: parseFloat(balance.crossedMaxAvailable),
+      balance: parseFloat(balance.available) + parseFloat(balance.locked),
+      equity: parseFloat(balance.accountEquity),
+      freezedMargin: parseFloat(balance.locked),
+      realisedPnl: 0,
+      unrealizedPnl: parseFloat(balance.unrealizedPL),
+      usedMargin: parseFloat(balance.crossedMargin),
     }
   },
 

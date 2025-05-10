@@ -8,6 +8,7 @@ import { useBingxTradesStore } from '../../store/bingx/bingxTrades.store'
 import { useBingxTransactionsStore } from '../../store/bingx/bingxTransactions.store'
 import { useBingxPreferencesStore } from '../../store/bingx/bingxPreferences.store'
 import KLineChart from './KLineChart.vue'
+import BotCreate from '../bitkua/BotCreate.vue'
 
 const bingxChartStore = useBingxChartStore()
 const bingxKLinesStore = useBingxKLinesStore()
@@ -22,8 +23,8 @@ const positions = computed(() => {
   return bingxPositionsStore.positions
 })
 
-const klines15m = computed(() => {
-  return bingxKLinesStore.kLine(bingxChartStore.symbol, '15m') ?? []
+const klines1h = computed(() => {
+  return bingxKLinesStore.kLine(bingxChartStore.symbol, '1h') ?? []
 })
 
 const klines4h = computed(() => {
@@ -43,16 +44,16 @@ watch(
   (newSymbol, oldSymbol) => {
     if (newSymbol) {
       if (oldSymbol && newSymbol !== oldSymbol) {
-        bingxKLinesStore.unsubscribeKLines(oldSymbol, '15m')
+        bingxKLinesStore.unsubscribeKLines(oldSymbol, '1h')
         bingxKLinesStore.unsubscribeKLines(oldSymbol, '4h')
         bingxKLinesStore.unsubscribeKLines(oldSymbol, '1d')
       }
 
-      bingxKLinesStore.fetchKLines(newSymbol, '15m')
+      bingxKLinesStore.fetchKLines(newSymbol, '1h')
       bingxKLinesStore.fetchKLines(newSymbol, '4h')
       bingxKLinesStore.fetchKLines(newSymbol, '1d')
     } else {
-      if (oldSymbol) bingxKLinesStore.unsubscribeKLines(oldSymbol, '15m')
+      if (oldSymbol) bingxKLinesStore.unsubscribeKLines(oldSymbol, '1h')
       if (oldSymbol) bingxKLinesStore.unsubscribeKLines(oldSymbol, '4h')
       if (oldSymbol) bingxKLinesStore.unsubscribeKLines(oldSymbol, '1d')
     }
@@ -101,7 +102,7 @@ watchEffect(() => {
 
 onUnmounted(() => {
   if (bingxChartStore.symbol) {
-    bingxKLinesStore.unsubscribeKLines(bingxChartStore.symbol, '15m')
+    bingxKLinesStore.unsubscribeKLines(bingxChartStore.symbol, '1h')
     bingxKLinesStore.unsubscribeKLines(bingxChartStore.symbol, '4h')
     bingxKLinesStore.unsubscribeKLines(bingxChartStore.symbol, '1d')
   }
@@ -111,35 +112,45 @@ onUnmounted(() => {
 <template>
   <div
     v-if="bingxChartStore.symbol"
-    class="absolute bottom-0 flex h-screen w-full flex-col justify-end bg-slate-900/50 transition"
+    class="absolute bottom-0 left-0 flex h-screen w-full flex-col justify-end bg-slate-900/50 transition"
     @click="bingxChartStore.resetSymbol()"
   >
     <div
-      class="flex h-[80%] w-full items-center justify-center border-t-2 border-t-slate-800 bg-slate-900"
+      class="flex h-[94%] w-full flex-col items-center justify-center border-t-2 border-t-slate-800 bg-slate-900"
       @click="$event.stopPropagation()"
     >
-      <div class="grid h-full flex-1 grid-cols-3">
+      <div
+        class="w-full rounded-t border border-b-0 border-slate-600 bg-slate-900 p-2"
+      >
+        <BotCreate
+          :symbol="bingxChartStore.symbol"
+          exchange="Bingx"
+          :key="bingxChartStore.symbol"
+        />
+      </div>
+      <div class="grid h-full w-full flex-1 grid-cols-3 pb-1">
         <div class="col-span-2">
           <div
-            v-if="!klines15m.length"
+            v-if="!klines1h.length"
             class="flex h-full w-full items-center justify-center rounded border border-gray-600 p-4 text-slate-600"
           >
-            {{ bingxChartStore.symbol }} Fetching data 15m...
+            {{ bingxChartStore.symbol }} Fetching data 1h...
           </div>
           <KLineChart
             v-else
             :symbol="bingxChartStore.symbol"
-            period="15m"
+            period="1h"
             :hideTrades="false"
-            :klines="klines15m"
+            :klines="klines1h"
             :trades="trades.filter((x) => x.symbol === bingxChartStore.symbol)"
             :positions="
               positions.filter((x) => x.symbol === bingxChartStore.symbol)
             "
             size="large"
+            printDKIndicator
           />
         </div>
-        <div>
+        <div class="col-span-1">
           <div class="h-1/2">
             <div
               v-if="!klines4h.length"
@@ -161,6 +172,7 @@ onUnmounted(() => {
               "
               size="large"
               onlyChart
+              printDKIndicator
             />
           </div>
           <div class="h-1/2">
@@ -184,6 +196,7 @@ onUnmounted(() => {
               "
               size="large"
               onlyChart
+              printDKIndicator
             />
           </div>
         </div>

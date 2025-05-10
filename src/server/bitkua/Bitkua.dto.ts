@@ -105,3 +105,20 @@ export type BitkuaAction =
   | BitkuaActionDelete
   | BitkuaActionReset
   | BitkuaActionCreateBot
+
+export type BitkuaDataMarket = {
+  symbol: string
+  exchange: string
+  price: string
+  sma55: string
+  sma55_1d: string
+  maximoD: string
+  minimoD: string
+  pmd: string
+  max15_1h: string
+  min15_1h: string
+  rangoSuperior: string
+  rangoInferior: string
+  LiqMax: string
+  LiqMin: string
+}

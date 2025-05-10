@@ -7,14 +7,14 @@ import { LoggerService } from '../../utils/Logger'
 
 export type HandleMessageFn = (message: WebSocketMessage) => void
 
+const activeIntervals: Set<NodeJS.Timeout> = new Set()
+
 export class BingxWebSocket {
   private readonly logger: LoggerService
   private readonly restClient: BingxRestClient
   private readonly handleMessageFn: HandleMessageFn
   private socket: WebSocket
-  private extendKeyInterval: NodeJS.Timeout | undefined
   private listenKey: string
-  private date = new Date()
 
   constructor(restClient: BingxRestClient, handleMessageFn: HandleMessageFn) {
     this.logger = new LoggerService(BingxWebSocket.name)
@@ -86,7 +86,7 @@ export class BingxWebSocket {
     this.logger.debug('>> startExtendKeyInterval')
     this.stopExtendKeyInterval()
 
-    this.extendKeyInterval = setInterval(
+    const refreshInterval = setInterval(
       async () => {
         try {
           this.logger.debug('>> extendKeyInterval')
@@ -101,14 +101,18 @@ export class BingxWebSocket {
       30 * 60 * 1000,
     )
 
+    activeIntervals.add(refreshInterval)
+
     this.logger.debug('>> WebSocket key extension scheduled every 30 minutes')
   }
 
   private stopExtendKeyInterval() {
-    if (this.extendKeyInterval) {
-      clearInterval(this.extendKeyInterval)
-      this.extendKeyInterval = null
+    for (const interval of activeIntervals) {
+      clearInterval(interval)
+      activeIntervals.delete(interval)
+      this.logger.debug('BingxWebSocket auto-refresh stopped')
     }
+    this.logger.debug('BingxWebSocket key extension interval stopped')
   }
 
   stop() {

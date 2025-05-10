@@ -1,5 +1,5 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'node:path'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import started from 'electron-squirrel-startup'
 import { BingxService } from './server/bingx/Bingx.service'
 import { BitkuaService } from './server/bitkua/Bitkua.service'
@@ -13,45 +13,7 @@ if (started) {
   app.quit()
 }
 
-let chartsWindow: BrowserWindow | null = null
-
 const logger = new LoggerService('MainProcess')
-
-function createChartsWindow() {
-  // If window already exists, just focus it
-  if (chartsWindow) {
-    chartsWindow.focus()
-    return
-  }
-
-  // Create the charts window
-  chartsWindow = new BrowserWindow({
-    width: 1920 * 0.75,
-    height: 1080 * 0.75,
-    title: 'DK Bot Tools',
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-    },
-    icon: path.join(__dirname, '../assets/icons/win/icon.png'),
-  })
-
-  // Load the app with charts route
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    chartsWindow.loadURL(
-      `${MAIN_WINDOW_VITE_DEV_SERVER_URL}#/charts?standalone=true`,
-    )
-  } else {
-    chartsWindow.loadFile(
-      path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
-      { hash: '/charts?standalone=true' },
-    )
-  }
-
-  // Handle window closing
-  chartsWindow.on('closed', () => {
-    chartsWindow = null
-  })
-}
 
 // Initialize BingX service
 let bingxService: BingxService | undefined
@@ -113,13 +75,6 @@ ipcMain.handle('send-bitkua-action', async (event, message: BitkuaAction) => {
     await bitkuaService.processAction(message)
     return { success: true }
   }
-})
-
-// Add IPC handler for opening charts window
-ipcMain.handle('open-charts-window', () => {
-  if (bingxService) bingxService.stopWebSocket()
-  createChartsWindow()
-  return { success: true }
 })
 
 // Set up IPC handlers
@@ -203,6 +158,8 @@ ipcMain.handle(
 //   }
 // });
 
+const iconPath = path.resolve(app.getAppPath(), 'assets/icons/icon.png')
+
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -211,7 +168,7 @@ const createWindow = () => {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
-    icon: path.join(__dirname, '../assets/icons/win/icon.png'),
+    icon: path.join(__dirname, `../../assets/icons/64x64.png`),
   })
 
   // and load the index.html of the app.

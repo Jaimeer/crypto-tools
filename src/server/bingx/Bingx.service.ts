@@ -22,13 +22,13 @@ import { ExchangeService } from '../base/Exchange.service'
 import { ObjectSize } from '../../utils/ObjectSize'
 
 const klineRegex = /^([A-Z0-9]*-[A-Z0-9]*)?@kline_([1-9]*[mhdwM]*)?$/
+const activeIntervals: Set<NodeJS.Timeout> = new Set()
 
 export class BingxService implements ExchangeService {
   private readonly logger: LoggerService
   private readonly restClient: BingxRestClient
   private readonly wsClient: BingxWebSocket
   private readonly cacheService: BingxCacheService
-  private refreshInterval: NodeJS.Timeout | null = null
   private originalData: {
     transactions: BingxTransaction[]
     trades: BingxTrade[]
@@ -85,13 +85,15 @@ export class BingxService implements ExchangeService {
     this.stopAutoRefresh()
     this.loadData()
 
-    this.refreshInterval = setInterval(async () => {
+    const refreshInterval = setInterval(async () => {
       try {
         await this.loadData()
       } catch (error) {
         console.error('BingxService auto-refresh failed:', error)
       }
     }, intervalMs)
+
+    activeIntervals.add(refreshInterval)
 
     this.logger.debug(
       `BingxService auto-refresh started: every ${intervalMs / 1000} seconds`,
@@ -101,11 +103,12 @@ export class BingxService implements ExchangeService {
   stopWebSocket() {
     this.wsClient.stop()
   }
+
   stopAutoRefresh() {
     this.stopWebSocket()
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval)
-      this.refreshInterval = null
+    for (const interval of activeIntervals) {
+      clearInterval(interval)
+      activeIntervals.delete(interval)
       this.logger.debug('BingxService auto-refresh stopped')
     }
   }

@@ -20,13 +20,13 @@ export type Transaction = {
 
 export type Balance = {
   symbol: string
-  balance: string
-  equity: string
-  unrealizedPnl: string
-  realisedPnl: string
-  availableMargin: string
-  usedMargin: string
-  freezedMargin: string
+  balance: number
+  equity: number
+  unrealizedPnl: number
+  realisedPnl: number
+  availableMargin: number
+  usedMargin: number
+  freezedMargin: number
 }
 
 export type Trade = {
@@ -37,7 +37,7 @@ export type Trade = {
   commission: number
   commissionAsset: string
   orderId: string
-  tradeId: 'LONG' | 'SHORT'
+  tradeId: string
   filledTime: Date
   side: 'BUY' | 'SELL'
   positionSide: string
@@ -154,4 +154,21 @@ export type Bot = {
   count: number
   safe: boolean
   createdAt: Date
+}
+
+export type DataMarket = {
+  symbol: string
+  exchange: string
+  price: number
+  sma55: number
+  sma55_1d: number
+  maxD: number
+  minD: number
+  pmd: number
+  max15_1h: number
+  min15_1h: number
+  higherRange: number
+  lowerRange: number
+  liqMax: number
+  liqMin: number
 }

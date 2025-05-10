@@ -177,8 +177,12 @@ export class BitgetRestClient
           hasMoreData = false
           continue
         }
-
-        allTrades.push(...trades)
+        for (const trade of trades) {
+          const founded = allTrades.some(
+            (x) => x.orderId === trade.orderId && x.tradeId === trade.tradeId,
+          )
+          if (!founded) allTrades.push(trade)
+        }
 
         page++
 

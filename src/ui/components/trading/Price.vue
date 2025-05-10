@@ -3,7 +3,7 @@ import { computed } from 'vue'
 
 const props = defineProps<{
   value: number | string | undefined
-  color?: 'violet' | 'green' | 'red' | 'amber' | 'orange'
+  color?: 'violet' | 'green' | 'red' | 'amber' | 'orange' | 'gray'
   decimals?: number
   suffix?: string
   prefix?: string
@@ -27,6 +27,10 @@ const parseValue = computed(() => {
         color === 'red' || (typeof parseValue === 'number' && parseValue < 0),
       'text-amber-400':
         color === 'amber' ||
+        (typeof parseValue === 'number' && parseValue == 0) ||
+        typeof parseValue === 'string',
+      'text-slate-400':
+        color === 'gray' ||
         (typeof parseValue === 'number' && parseValue == 0) ||
         typeof parseValue === 'string',
     }"

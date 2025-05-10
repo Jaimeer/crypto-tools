@@ -28,5 +28,4 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onUpdateData: (callback: (message: NotifyMessage) => void) => {
     ipcRenderer.on('update-data', (event, data) => callback(data))
   },
-  openChartsWindow: () => ipcRenderer.invoke('open-charts-window'),
 })

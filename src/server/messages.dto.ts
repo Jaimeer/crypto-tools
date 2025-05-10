@@ -2,6 +2,7 @@ import {
   Balance,
   Bot,
   Contract,
+  DataMarket,
   KLine,
   Period,
   Position,
@@ -23,3 +24,4 @@ export type NotifyMessage =
   | { store: 'bitget.contracts'; contracts: Contract[] }
   | { store: 'bitget.klines'; symbol: string; period: Period; klines: KLine[] }
   | { store: 'bots'; bots: Bot[] }
+  | { store: 'dataMarket'; dataMarket: DataMarket[] }

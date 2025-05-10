@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import { Bot, Contract, Position, Trade } from '../../../server/data.dto'
 import { useBingxChartStore } from '../../store/bingx/bingxChart.store'
-import { s } from 'vite/dist/node/types.d-aGj9QkWt'
 
 const props = defineProps<{
   value: string

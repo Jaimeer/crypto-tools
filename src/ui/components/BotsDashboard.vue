@@ -17,6 +17,7 @@ import BotAmount from './bitkua/BotAmount.vue'
 import BingxChartManager from './trading/BingxChartManager.vue'
 import { useBingxChartStore } from '../store/bingx/bingxChart.store'
 import { Bot } from '../../server/data.dto'
+import Exchange from './trading/Exchange.vue'
 
 const bitkuaBotsStore = useBitkuaBotsStore()
 const bingxChartStore = useBingxChartStore()
@@ -129,17 +130,7 @@ const loadSymbolChart = (bot: Bot) => {
       <template #default="{ item }">
         <td class="px-2 py-0.5">#{{ item.index }}</td>
         <td class="px-2 py-0.5">
-          <div
-            class="w-fit rounded px-2 py-0.5 font-bold"
-            :class="{
-              'bg-[#00e0ff] text-slate-50':
-                item.exchange.toLowerCase() === 'bitget',
-              'bg-[#2a66ff] text-slate-50':
-                item.exchange.toLowerCase() === 'bingx',
-            }"
-          >
-            {{ item.exchange }}
-          </div>
+          <Exchange :value="item.exchange" />
         </td>
         <td
           class="cursor-pointer px-2 py-0.5 text-[10px] font-bold"

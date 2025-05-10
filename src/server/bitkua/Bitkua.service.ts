@@ -10,16 +10,18 @@ import {
   BitkuaActionUpdateSafe,
   BitkuaActionUpdateStatus,
   BitkuaActionUpdateStrategy,
+  BitkuaDataMarket,
 } from './Bitkua.dto'
 import { NotifyMessage } from '../messages.dto'
-import { BitkuaBot, Bot } from '../data.dto'
+import { BitkuaBot, Bot, DataMarket } from '../data.dto'
 import { LoggerService } from '../../utils/Logger'
+
+const activeIntervals: Set<NodeJS.Timeout> = new Set()
 
 export class BitkuaService {
   private readonly logger: LoggerService
   private username: string
   private token: string
-  private refreshInterval: NodeJS.Timeout | null = null
   private client: Axios
 
   private jar = new CookieJar()
@@ -41,14 +43,18 @@ export class BitkuaService {
   async startAutoRefresh(intervalMs = 60000) {
     this.stopAutoRefresh()
     await this.getBots()
+    await this.getDataMarket()
 
-    this.refreshInterval = setInterval(async () => {
+    const refreshInterval = setInterval(async () => {
       try {
         await this.getBots()
+        await this.getDataMarket()
       } catch (error) {
         console.error('BitkuaService auto-refresh failed:', error)
       }
     }, intervalMs)
+
+    activeIntervals.add(refreshInterval)
 
     this.logger.debug(
       `BitkuaService auto-refresh started: every ${intervalMs / 1000} seconds`,
@@ -56,9 +62,9 @@ export class BitkuaService {
   }
 
   stopAutoRefresh() {
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval)
-      this.refreshInterval = null
+    for (const interval of activeIntervals) {
+      clearInterval(interval)
+      activeIntervals.delete(interval)
       this.logger.debug('BitkuaService auto-refresh stopped')
     }
   }
@@ -102,7 +108,6 @@ export class BitkuaService {
       })
 
       const bitkuaBots = response.data
-      console.log('Bots:', response.data.data.length, data)
 
       if (!bitkuaBots.success || !bitkuaBots.data) return
 
@@ -127,6 +132,57 @@ export class BitkuaService {
       })
     } catch (error) {
       console.error('Error during login process:', error)
+    }
+  }
+
+  async getDataMarket() {
+    try {
+      this.logger.debug('Fetching dk-data-market...')
+      const data = {
+        action: 'data_market',
+        username: this.username,
+        token: this.token,
+      }
+
+      const response = await this.client.request<{
+        success: boolean
+        data: BitkuaDataMarket[]
+      }>({
+        method: 'GET',
+        data,
+      })
+
+      const bitkuaDataMarket = response.data
+
+      if (!bitkuaDataMarket.success || !bitkuaDataMarket.data) return
+
+      const dataMarket: DataMarket[] = bitkuaDataMarket.data.map(
+        (dataMarket) => ({
+          symbol: dataMarket.symbol.replace('-', ''),
+          exchange: dataMarket.exchange,
+          price: parseFloat(dataMarket.price),
+          sma55: parseFloat(dataMarket.sma55),
+          sma55_1d: parseFloat(dataMarket.sma55_1d),
+          maxD: parseFloat(dataMarket.maximoD),
+          minD: parseFloat(dataMarket.minimoD),
+          pmd: parseFloat(dataMarket.pmd),
+          max15_1h: parseFloat(dataMarket.max15_1h),
+          min15_1h: parseFloat(dataMarket.min15_1h),
+          higherRange: parseFloat(dataMarket.rangoSuperior),
+          lowerRange: parseFloat(dataMarket.rangoInferior),
+          liqMax: parseFloat(dataMarket.LiqMax),
+          liqMin: parseFloat(dataMarket.LiqMin),
+        }),
+      )
+
+      this.logger.debug(`Fetch dataMarket data: ${dataMarket.length}`)
+
+      this.notifyClients({
+        store: 'dataMarket',
+        dataMarket: dataMarket,
+      })
+    } catch (error) {
+      console.error('Error during data market fetch:', error)
     }
   }
 

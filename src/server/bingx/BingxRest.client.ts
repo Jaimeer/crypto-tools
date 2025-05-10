@@ -268,7 +268,12 @@ export class BingxRestClient
         }
 
         // Add to our collection
-        allTrades.push(...trades.fill_history_orders)
+        for (const trade of trades.fill_history_orders) {
+          const founded = allTrades.some(
+            (x) => x.orderId === trade.orderId && x.tradeId === trade.tradeId,
+          )
+          if (!founded) allTrades.push(trade)
+        }
 
         // Find the oldest transaction timestamp for next pagination request
         const oldestTransaction = Math.min(

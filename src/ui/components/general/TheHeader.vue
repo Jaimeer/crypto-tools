@@ -3,7 +3,7 @@ import { Icon } from '@iconify/vue'
 import { useBingxConfigStore } from '../../store/bingx/bingxConfig.store'
 import { RouterLink } from 'vue-router'
 
-defineProps<{ page: 'bingx' | 'bitget' | 'charts' | 'bots' }>()
+defineProps<{ page: 'bingx' | 'bitget' | 'charts' | 'bots' | 'data-market' }>()
 const bingxConfig = useBingxConfigStore()
 
 const search = defineModel()
@@ -22,6 +22,16 @@ const search = defineModel()
         }"
       >
         Bots
+      </RouterLink>
+      <RouterLink
+        to="/data-market"
+        class="rounded bg-slate-500 px-4 py-1 transition hover:bg-slate-600"
+        :class="{
+          'bg-slate-500 text-white': page === 'data-market',
+          'bg-slate-700 text-slate-400': page !== 'data-market',
+        }"
+      >
+        Data Market
       </RouterLink>
       <RouterLink
         to="/bingx"

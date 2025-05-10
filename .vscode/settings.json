@@ -17,6 +17,7 @@
     "changenew",
     "chartjs",
     "cookiejar",
+    "crossunder",
     "degen",
     "estrategia",
     "headlessui",
@@ -35,12 +36,15 @@
     "liquiditypool",
     "longalashitcoin",
     "majesticons",
+    "maximo",
     "mhdw",
     "Mialagrosa",
     "Milagrosa",
+    "minimo",
     "onlysell",
     "otplib",
     "positionside",
+    "rango",
     "realised",
     "RPNL",
     "Shitcoin",
@@ -64,6 +68,8 @@
     "TOTP",
     "unsub",
     "uuidv",
+    "vcdown",
+    "vcup",
     "vueuse"
   ]
 }

@@ -30,9 +30,24 @@ export class BingxCacheService {
   }
 
   async loadBingxTransactions(): Promise<CachedData<BingxTransaction> | null> {
-    return this.cacheService.readCache<BingxTransaction>(
+    const data = await this.cacheService.readCache<BingxTransaction>(
       this.transactionFileName,
     )
+
+    // Clean duplicates using a Set for O(1) lookups
+    const uniqueKeys = new Set<string>()
+    const dataWithoutDuplicates = data.data.filter((transaction) => {
+      const key = `${transaction.tranId}-${transaction.tradeId}`
+      if (uniqueKeys.has(key)) return false
+
+      uniqueKeys.add(key)
+      return true
+    })
+
+    return {
+      ...data,
+      data: dataWithoutDuplicates,
+    }
   }
 
   async saveBingxTrades(trades: BingxTrade[]): Promise<void> {
@@ -44,6 +59,23 @@ export class BingxCacheService {
   }
 
   async loadBingxTrades(): Promise<CachedData<BingxTrade> | null> {
-    return this.cacheService.readCache<BingxTrade>(this.tradeFileName)
+    const data = await this.cacheService.readCache<BingxTrade>(
+      this.tradeFileName,
+    )
+
+    // Clean duplicates
+    const uniqueKeys = new Set<string>()
+    const dataWithoutDuplicates = data.data.filter((transaction) => {
+      const key = `${transaction.orderId}-${transaction.tradeId}`
+      if (uniqueKeys.has(key)) return false
+
+      uniqueKeys.add(key)
+      return true
+    })
+
+    return {
+      ...data,
+      data: dataWithoutDuplicates,
+    }
   }
 }
