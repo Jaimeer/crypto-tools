@@ -5,7 +5,8 @@ defineProps<{ value: number }>()
 <template>
   <div
     :class="{
-      'text-green-600': value < 30,
+      'text-slate-600': value <= 0,
+      'text-green-600': value > 0 && value < 30,
       'text-yellow-600': value >= 30 && value < 70,
       'text-red-600': value >= 70,
     }"

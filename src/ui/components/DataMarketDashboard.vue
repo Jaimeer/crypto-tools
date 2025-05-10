@@ -71,7 +71,7 @@ const fud = (item: DataMarket) => {
 
 <template>
   <div class="p-4">
-    <TheHeader page="bots" v-model="search">
+    <TheHeader page="data-market" v-model="search">
       <template #post-search> </template>
     </TheHeader>
     <Table

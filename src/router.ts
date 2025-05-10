@@ -7,7 +7,7 @@ import BotsView from './ui/views/BotsView.vue'
 import DataMarketView from './ui/views/DataMarketView.vue'
 
 const routes = [
-  { path: '/', component: DataMarketView },
+  { path: '/', component: BotsView },
   { path: '/bitget', component: BitgetView },
   { path: '/bingx', component: BingxView },
   { path: '/bots', component: BotsView },
