@@ -34,7 +34,8 @@ const positionBot = (position: Position) => {
   const bot = props.bots.find(
     (x) =>
       x.symbol.toLowerCase() === position.symbol.toLowerCase() &&
-      !x.strategy.includes(side),
+      ((side === 'long' && !x.strategy.startsWith('short')) ||
+        (side === 'short' && x.strategy.startsWith('short'))),
   )
   return bot
 }
