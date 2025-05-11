@@ -29,6 +29,7 @@ export class BingxService implements ExchangeService {
   private readonly restClient: BingxRestClient
   private readonly wsClient: BingxWebSocket
   private readonly cacheService: BingxCacheService
+  private klineSymbol: string | undefined
   private originalData: {
     transactions: BingxTransaction[]
     trades: BingxTrade[]
@@ -177,9 +178,11 @@ export class BingxService implements ExchangeService {
     )
   }
 
-  async loadSymbolKLines(symbol: string, period: Period) {
-    if (!this.data.kLines[symbol])
-      this.data.kLines[symbol] = { socketId: uuidv4(), data: [] }
+  private async refreshKlines(
+    symbol: string,
+    period: Period,
+    intervalMs = 1000,
+  ) {
     const kLines = await this.restClient.fetchKLines(symbol, period)
     this.data.kLines[symbol].data = BingxTransformer.klineTransform(kLines)
 
@@ -190,14 +193,28 @@ export class BingxService implements ExchangeService {
       klines: this.data.kLines[symbol].data,
     })
 
-    await this.wsClient.subscribe(
-      this.data.kLines[symbol].socketId,
-      `${symbol.replace('USDT', '-USDT')}@kline_${period}`,
-    )
+    setTimeout(async () => {
+      if (symbol !== this.klineSymbol) return
+      await this.refreshKlines(symbol, period)
+    }, intervalMs)
+  }
+
+  async loadSymbolKLines(symbol: string, period: Period) {
+    this.klineSymbol = symbol
+    if (!this.data.kLines[symbol])
+      this.data.kLines[symbol] = { socketId: uuidv4(), data: [] }
+
+    await this.refreshKlines(symbol, period)
+
+    // await this.wsClient.subscribe(
+    //   this.data.kLines[symbol].socketId,
+    //   `${symbol.replace('USDT', '-USDT')}@kline_${period}`,
+    // )
   }
 
   async removeSymbolKLines(symbol: string, period: Period) {
     if (this.data.kLines[symbol]) {
+      this.klineSymbol = undefined
       this.data.kLines[symbol].data = []
       this.notifyClients({
         store: 'bingx.klines',
@@ -206,10 +223,10 @@ export class BingxService implements ExchangeService {
         klines: this.data.kLines[symbol].data,
       })
 
-      await this.wsClient.unsubscribe(
-        this.data.kLines[symbol].socketId,
-        `${symbol.replace('USDT', '-USDT')}@kline_${period}`,
-      )
+      // await this.wsClient.unsubscribe(
+      //   this.data.kLines[symbol].socketId,
+      //   `${symbol.replace('USDT', '-USDT')}@kline_${period}`,
+      // )
     }
   }
 

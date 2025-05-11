@@ -148,6 +148,13 @@ export class BingxRestClient
             return this.bingxRequest<T>(API)
           }
         }
+
+        if (error.response.data.include('80014')) {
+          console.log('----- TIMESTAMP ERROR')
+          await this.sleep(1000)
+          return this.bingxRequest<T>(API)
+        }
+
         console.error('BingX API request error:', error.response.data)
         return
       }
@@ -358,9 +365,9 @@ export class BingxRestClient
       protocol: 'https',
     }
     const klines = await this.bingxRequest<BingxKLine[]>(API)
-    this.logger.debug(
-      `[fetchLines][${symbol}][${period}] Fetched klines ${klines?.length ?? 'ERROR'}`,
-    )
+    // this.logger.debug(
+    //   `[fetchLines][${symbol}][${period}] Fetched klines ${klines?.length ?? 'ERROR'}`,
+    // )
     if (!klines) return []
 
     return klines

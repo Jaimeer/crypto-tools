@@ -7,8 +7,10 @@ import { useBingxPositionsStore } from '../../store/bingx/bingxPositions.store'
 import { useBingxTradesStore } from '../../store/bingx/bingxTrades.store'
 import { useBingxTransactionsStore } from '../../store/bingx/bingxTransactions.store'
 import { useBingxPreferencesStore } from '../../store/bingx/bingxPreferences.store'
+import { useBitkuaBotsStore } from '../../store/bitkua/bitkuaBots.store'
 import KLineChart from './KLineChart.vue'
 import BotCreate from '../bitkua/BotCreate.vue'
+import PositionSummary from './PositionSummary.vue'
 
 const bingxChartStore = useBingxChartStore()
 const bingxKLinesStore = useBingxKLinesStore()
@@ -16,11 +18,14 @@ const bingxPositionsStore = useBingxPositionsStore()
 const bingxTradesStore = useBingxTradesStore()
 const bingxTransactionsStore = useBingxTransactionsStore()
 const bingxPreferencesStore = useBingxPreferencesStore()
+const BitkuaBotsStore = useBitkuaBotsStore()
 
 const { escape, arrowup, arrowright, arrowdown, arrowleft } = useMagicKeys()
 
 const positions = computed(() => {
-  return bingxPositionsStore.positions
+  return bingxPositionsStore.positions.filter(
+    (x) => x.symbol === bingxChartStore.symbol,
+  )
 })
 
 const klines1h = computed(() => {
@@ -37,6 +42,10 @@ const klines1d = computed(() => {
 
 const trades = computed(() => {
   return bingxTradesStore.trades
+})
+
+const bots = computed(() => {
+  return BitkuaBotsStore.bots.filter((x) => x.symbol === bingxChartStore.symbol)
 })
 
 watch(
@@ -120,13 +129,19 @@ onUnmounted(() => {
       @click="$event.stopPropagation()"
     >
       <div
-        class="w-full rounded-t border border-b-0 border-slate-600 bg-slate-900 p-2"
+        class="flex w-full items-center justify-between rounded-t border border-b-0 border-slate-600 bg-slate-900 p-2"
       >
         <BotCreate
           :symbol="bingxChartStore.symbol"
           exchange="Bingx"
           :key="bingxChartStore.symbol"
         />
+        <div
+          class="cursor-pointer px-2 text-slate-600 hover:text-slate-400"
+          @click="bingxChartStore.resetSymbol()"
+        >
+          X
+        </div>
       </div>
       <div class="grid h-full w-full flex-1 grid-cols-3 pb-1">
         <div class="col-span-2">
@@ -147,6 +162,7 @@ onUnmounted(() => {
               positions.filter((x) => x.symbol === bingxChartStore.symbol)
             "
             size="large"
+            onlyChart
             printDKIndicator
           />
         </div>
@@ -204,7 +220,11 @@ onUnmounted(() => {
       <div
         class="w-full rounded-t border border-t-0 border-slate-600 bg-slate-900 p-2"
       >
-        AQUI
+        <PositionSummary
+          :symbol="bingxChartStore.symbol"
+          :positions="positions"
+          :bots="bots"
+        />
       </div>
     </div>
   </div>

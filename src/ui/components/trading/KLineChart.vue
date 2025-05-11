@@ -427,14 +427,6 @@ watch(
   <div
     class="relative flex h-full flex-1 flex-col rounded border border-gray-600 p-4 text-slate-400"
     v-element-size="updateChartSize"
-    :class="{
-      'border-t-green-600 border-l-green-600': bot.long?.status === 'active',
-      'border-t-red-600 border-l-red-600': bot.long?.status === 'stop',
-      'border-t-amber-600 border-l-amber-600': bot.long?.status === 'onlysell',
-      'border-r-green-600 border-b-green-600': bot.short?.status === 'active',
-      'border-r-red-600 border-b-red-600': bot.short?.status === 'stop',
-      'border-r-amber-600 border-b-amber-600': bot.short?.status === 'onlysell',
-    }"
   >
     <div
       class="absolute text-lg font-bold text-slate-700 uppercase"
