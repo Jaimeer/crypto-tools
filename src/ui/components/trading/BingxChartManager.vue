@@ -162,7 +162,6 @@ onUnmounted(() => {
               positions.filter((x) => x.symbol === bingxChartStore.symbol)
             "
             size="large"
-            onlyChart
             printDKIndicator
           />
         </div>
