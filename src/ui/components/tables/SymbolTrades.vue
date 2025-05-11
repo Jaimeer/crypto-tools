@@ -203,7 +203,7 @@ const tradesInfo = computed(() => {
     //   side,
     //   bot,
     // });
-    data[symbol][side].amount = bot?.count ?? 0
+    data[symbol][side].amount = bot?.amount ?? 0
     data[symbol][side].botId = bot?.id || ''
     data[symbol][side].strategy = bot?.strategy || ''
     data[symbol][side].status = bot?.status || ''
