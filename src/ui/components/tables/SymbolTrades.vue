@@ -320,7 +320,6 @@ const sendAction = (botId: string, status: 'active' | 'stop' | 'onlysell') => {
           :value="item.key"
           :exchange="exchange"
           :bots="bots"
-          :trades="trades"
           :positions="positions"
           :balance="balance"
           :contracts="contracts"

@@ -9,14 +9,12 @@ import {
   Bot,
   Contract,
   Position,
-  Trade,
   Transaction,
 } from '../../../server/data.dto'
 import { Icon } from '@iconify/vue'
 
 const props = defineProps<{
   exchange: string
-  trades: Trade[]
   positions: Position[]
   balance: Balance
   bots: Bot[]
@@ -56,7 +54,6 @@ const lastClosedTransactions = computed(() => {
           :value="item.symbol"
           :exchange="exchange"
           :bots="bots"
-          :trades="trades"
           :positions="positions"
           :balance="balance"
           :contracts="contracts"

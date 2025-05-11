@@ -22,6 +22,7 @@ interface ElectronAPI {
     token: string,
   ) => Promise<{ success: boolean }>
   sendBitkuaAction: (message: BitkuaAction) => Promise<{ success: boolean }>
+  openUrl: (url: string) => void
 
   onUpdateData: (callback: (message: NotifyMessage) => void) => void
 }

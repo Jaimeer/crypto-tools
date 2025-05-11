@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
-import { Bot, Contract, Position, Trade } from '../../../server/data.dto'
+import { Bot, Contract, Position } from '../../../server/data.dto'
 import { useBingxChartStore } from '../../store/bingx/bingxChart.store'
 
 const props = defineProps<{
   value: string
   exchange: string
-  trades: Trade[]
   positions: Position[]
   bots: Bot[]
   contracts: Contract[]
+  fullName?: boolean
 }>()
 
 const symbol = computed(() => {
@@ -68,7 +68,7 @@ const contract = computed(() => {
             botLong?.status === 'stop' && botShort?.status === 'stop',
         }"
       >
-        {{ value.replace('USDT', '') }}
+        {{ fullName ? value : value.replace('USDT', '') }}
       </span>
       <div class="relative">
         <Icon

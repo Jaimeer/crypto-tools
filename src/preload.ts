@@ -28,4 +28,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onUpdateData: (callback: (message: NotifyMessage) => void) => {
     ipcRenderer.on('update-data', (event, data) => callback(data))
   },
+  openUrl: (url: string) => {
+    ipcRenderer.invoke('open-url', url)
+  },
 })

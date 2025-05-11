@@ -79,7 +79,7 @@ const isValid = computed(() => {
 </script>
 
 <template>
-  <form class="flex w-full items-center gap-2" @submit.prevent="createBot">
+  <form class="flex items-center gap-2" @submit.prevent="createBot">
     <select
       v-model="formData.exchange"
       class="rounded border border-slate-600 bg-slate-700 px-2 py-0.5 text-slate-200 focus:border-slate-500 focus:outline-none disabled:opacity-50"

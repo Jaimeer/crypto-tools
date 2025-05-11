@@ -2,6 +2,8 @@
 import { Icon } from '@iconify/vue'
 import { useBingxConfigStore } from '../../store/bingx/bingxConfig.store'
 import { RouterLink } from 'vue-router'
+import { shell } from 'electron'
+import ButtonReferral from '../bitkua/ButtonReferral.vue'
 
 defineProps<{ page: 'bingx' | 'bitget' | 'charts' | 'bots' | 'data-market' }>()
 const bingxConfig = useBingxConfigStore()
@@ -82,12 +84,7 @@ const search = defineModel()
       >
         <span>Config</span>
       </button>
-      <!-- <a
-        href="https://app.bitkua.com?reference=jaime_odh"
-        class="rounded bg-amber-500 px-4 py-1 text-white transition hover:bg-amber-600"
-      >
-        <span>Register in Bitkua</span>
-      </a> -->
+      <ButtonReferral />
     </div>
   </div>
 </template>

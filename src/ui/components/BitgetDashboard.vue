@@ -150,7 +150,6 @@ watch(selectedSymbols, () => {
         />
         <LastTrades
           :exchange="exchange"
-          :trades="trades"
           :positions="positions"
           :balance="balance"
           :bots="bots"
@@ -187,7 +186,6 @@ watch(selectedSymbols, () => {
       <SymbolTransactions
         date-format="yyyy-MM-dd"
         :exchange="exchange"
-        :trades="trades"
         :positions="positions"
         :balance="balance"
         :bots="bots"
@@ -197,7 +195,6 @@ watch(selectedSymbols, () => {
         :hidedSymbols="hidedSymbols"
         :search="search"
       />
-      <!-- <SymbolTransactions date-format="yyyy-MM-dd HH" /> -->
     </div>
   </div>
 </template>

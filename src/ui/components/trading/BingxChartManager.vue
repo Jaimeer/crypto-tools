@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onUnmounted, watch, watchEffect } from 'vue'
+import { computed, onUnmounted, ref, watch, watchEffect } from 'vue'
 import { useMagicKeys } from '@vueuse/core'
 import { useBingxKLinesStore } from '../../store/bingx/bingxKLines.store'
 import { useBingxChartStore } from '../../store/bingx/bingxChart.store'
@@ -8,9 +8,13 @@ import { useBingxTradesStore } from '../../store/bingx/bingxTrades.store'
 import { useBingxTransactionsStore } from '../../store/bingx/bingxTransactions.store'
 import { useBingxPreferencesStore } from '../../store/bingx/bingxPreferences.store'
 import { useBitkuaBotsStore } from '../../store/bitkua/bitkuaBots.store'
+import { useBingxBalanceStore } from '../../store/bingx/bingxBalance.store'
+import { useBingxContractsStore } from '../../store/bingx/bingxContracts.store'
 import KLineChart from './KLineChart.vue'
 import BotCreate from '../bitkua/BotCreate.vue'
-import PositionSummary from './PositionSummary.vue'
+import PositionSummary from '../tables/PositionSummary.vue'
+import { subDays, subMonths, subYears } from 'date-fns'
+import Price from '../trading/Price.vue'
 
 const bingxChartStore = useBingxChartStore()
 const bingxKLinesStore = useBingxKLinesStore()
@@ -19,11 +23,23 @@ const bingxTradesStore = useBingxTradesStore()
 const bingxTransactionsStore = useBingxTransactionsStore()
 const bingxPreferencesStore = useBingxPreferencesStore()
 const BitkuaBotsStore = useBitkuaBotsStore()
+const bingxBalanceStore = useBingxBalanceStore()
+const bingxContractsStore = useBingxContractsStore()
+
+const exchange = 'Bingx'
 
 const { escape, arrowup, arrowright, arrowdown, arrowleft } = useMagicKeys()
 
+const autoView = ref(false)
+
 const positions = computed(() => {
   return bingxPositionsStore.positions.filter(
+    (x) => x.symbol === bingxChartStore.symbol,
+  )
+})
+
+const transactions = computed(() => {
+  return bingxTransactionsStore.transactions.filter(
     (x) => x.symbol === bingxChartStore.symbol,
   )
 })
@@ -40,12 +56,38 @@ const klines1d = computed(() => {
   return bingxKLinesStore.kLine(bingxChartStore.symbol, '1d') ?? []
 })
 
+const balance = computed(() => {
+  return bingxBalanceStore.balance
+})
+
 const trades = computed(() => {
   return bingxTradesStore.trades
 })
 
+const contracts = computed(() => {
+  return bingxContractsStore.contracts
+})
+
 const bots = computed(() => {
   return BitkuaBotsStore.bots.filter((x) => x.symbol === bingxChartStore.symbol)
+})
+
+const profits = computed(() => {
+  const calculateProfit = (date: Date) =>
+    transactions.value.reduce((acc, transaction) => {
+      if (transaction.symbol === bingxChartStore.symbol) {
+        if (transaction.time > date.getTime()) {
+          return acc + transaction.income
+        }
+      }
+      return acc
+    }, 0)
+  return {
+    day: calculateProfit(subDays(new Date(), 1)),
+    week: calculateProfit(subDays(new Date(), 7)),
+    month: calculateProfit(subMonths(new Date(), 1)),
+    total: calculateProfit(subYears(new Date(), 100)),
+  }
 })
 
 watch(
@@ -99,6 +141,22 @@ const loadPrevSymbol = () => {
   bingxChartStore.setSymbol(newSymbol)
 }
 
+const lastTrade = ref(trades.value[0])
+watch(
+  () => trades.value,
+  () => {
+    if (autoView.value) {
+      const newLastTrade = trades.value[0]
+
+      if (lastTrade.value?.tradeId !== newLastTrade.tradeId) {
+        lastTrade.value = newLastTrade
+        bingxChartStore.setSymbol(newLastTrade.symbol)
+      }
+    }
+  },
+  { deep: true },
+)
+
 watchEffect(() => {
   if (bingxChartStore.symbol) {
     if (escape.value) bingxChartStore.resetSymbol()
@@ -136,11 +194,33 @@ onUnmounted(() => {
           exchange="Bingx"
           :key="bingxChartStore.symbol"
         />
-        <div
-          class="cursor-pointer px-2 text-slate-600 hover:text-slate-400"
-          @click="bingxChartStore.resetSymbol()"
-        >
-          X
+        <div class="flex items-center gap-2">
+          <div
+            v-for="[key, value] in Object.entries(profits)"
+            :key="key"
+            class="text-sm"
+          >
+            <div class="text-slate-400">{{ key }}</div>
+            <Price :value="value" :decimals="2" />
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            @click="autoView = !autoView"
+            class="cursor-pointer rounded px-4 py-1 transition hover:opacity-80"
+            :class="{
+              'bg-violet-500 text-white': autoView,
+              'bg-slate-800 text-slate-600': !autoView,
+            }"
+          >
+            <span>Auto view</span>
+          </button>
+          <div
+            class="cursor-pointer px-2 text-slate-600 hover:text-slate-400"
+            @click="bingxChartStore.resetSymbol()"
+          >
+            X
+          </div>
         </div>
       </div>
       <div class="grid h-full w-full flex-1 grid-cols-3 pb-1">
@@ -220,9 +300,12 @@ onUnmounted(() => {
         class="w-full rounded-t border border-t-0 border-slate-600 bg-slate-900 p-2"
       >
         <PositionSummary
-          :symbol="bingxChartStore.symbol"
           :positions="positions"
           :bots="bots"
+          :search="''"
+          :exchange="exchange"
+          :balance="balance"
+          :contracts="contracts"
         />
       </div>
     </div>

@@ -15,6 +15,7 @@ import SymbolTransactions from './tables/SymbolTransactions.vue'
 import LastTrades from './tables/LastTrades.vue'
 import TheHeader from './general/TheHeader.vue'
 import ProfitRanking from './tables/ProfitRanking.vue'
+import PositionSummary from './tables/PositionSummary.vue'
 import {
   Listbox,
   ListboxButton,
@@ -151,7 +152,6 @@ watch(selectedSymbols, () => {
         />
         <LastTrades
           :exchange="exchange"
-          :trades="trades"
           :positions="positions"
           :balance="balance"
           :bots="bots"
@@ -171,22 +171,15 @@ watch(selectedSymbols, () => {
           :search="search"
         />
       </div>
-      <div class="">
-        <SymbolTrades
-          :exchange="exchange"
-          :trades="trades"
-          :positions="positions"
-          :balance="balance"
-          :bots="bots"
-          :contracts="contracts"
-          :transactions="transactions"
-          :allSymbols="allSymbols"
-          :hidedSymbols="hidedSymbols"
-          :search="search"
-        />
-      </div>
-      <SymbolTransactions
-        date-format="yyyy-MM-dd"
+      <PositionSummary
+        :positions="positions"
+        :bots="bots"
+        :search="search"
+        :exchange="exchange"
+        :balance="balance"
+        :contracts="contracts"
+      />
+      <SymbolTrades
         :exchange="exchange"
         :trades="trades"
         :positions="positions"
@@ -198,7 +191,18 @@ watch(selectedSymbols, () => {
         :hidedSymbols="hidedSymbols"
         :search="search"
       />
-      <!-- <SymbolTransactions date-format="yyyy-MM-dd HH" /> -->
+      <SymbolTransactions
+        date-format="yyyy-MM-dd"
+        :exchange="exchange"
+        :positions="positions"
+        :balance="balance"
+        :bots="bots"
+        :contracts="contracts"
+        :transactions="transactions"
+        :allSymbols="allSymbols"
+        :hidedSymbols="hidedSymbols"
+        :search="search"
+      />
       <BingxChartManager />
     </div>
   </div>

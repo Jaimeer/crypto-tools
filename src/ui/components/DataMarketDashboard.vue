@@ -10,7 +10,6 @@ import { useBitkuaDataMarketStore } from '../store/bitkua/bitkuaDataMarket.store
 import { useBingxBalanceStore } from '../store/bingx/bingxBalance.store'
 import { useBingxContractsStore } from '../store/bingx/bingxContracts.store'
 import { useBingxPositionsStore } from '../store/bingx/bingxPositions.store'
-import { useBingxTradesStore } from '../store/bingx/bingxTrades.store'
 import { useBitkuaBotsStore } from '../store/bitkua/bitkuaBots.store'
 import BingxChartManager from './trading/BingxChartManager.vue'
 import { DataMarket } from 'src/server/data.dto'
@@ -20,7 +19,6 @@ const bitkuaDataMarketStore = useBitkuaDataMarketStore()
 const bingxBalanceStore = useBingxBalanceStore()
 const bitkuaBotsStore = useBitkuaBotsStore()
 const bingxPositionsStore = useBingxPositionsStore()
-const bingxTradesStore = useBingxTradesStore()
 const bingxContractsStore = useBingxContractsStore()
 
 const exchange = ref('Bingx')
@@ -49,10 +47,6 @@ const bots = computed(() => {
   return bitkuaBotsStore.bots.filter(
     (x) => x.exchange.toLowerCase() === exchange.value.toLowerCase(),
   )
-})
-
-const trades = computed(() => {
-  return bingxTradesStore.trades
 })
 
 const balance = computed(() => {
@@ -125,7 +119,6 @@ const ranking = (data: DataMarket) => {
               :value="item.symbol"
               :exchange="item.exchange"
               :bots="bots"
-              :trades="trades"
               :positions="positions"
               :balance="balance"
               :contracts="contracts"
