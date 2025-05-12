@@ -22,7 +22,6 @@ import {
   ListboxOptions,
   ListboxOption,
 } from '@headlessui/vue'
-import BingxChartManager from './trading/BingxChartManager.vue'
 
 const exchange = 'bingx'
 const bingxTransactionsStore = useBingxTransactionsStore()
@@ -203,7 +202,6 @@ watch(selectedSymbols, () => {
         :hidedSymbols="hidedSymbols"
         :search="search"
       />
-      <BingxChartManager />
     </div>
   </div>
 </template>

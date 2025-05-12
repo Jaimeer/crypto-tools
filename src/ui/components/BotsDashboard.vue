@@ -14,14 +14,14 @@ import DateTime from './general/DateTime.vue'
 import { BitkuaActionUpdateSafe } from '../../server/bitkua/Bitkua.dto'
 import { subDays } from 'date-fns'
 import BotAmount from './bitkua/BotAmount.vue'
-import BingxChartManager from './trading/BingxChartManager.vue'
 import { useBingxChartStore } from '../store/bingx/bingxChart.store'
 import { Bot } from '../../server/data.dto'
 import Exchange from './trading/Exchange.vue'
-import { s } from 'vite/dist/node/types.d-aGj9QkWt'
+import { useBitgetChartStore } from '../store/bitget/bitgetChart.store'
 
 const bitkuaBotsStore = useBitkuaBotsStore()
 const bingxChartStore = useBingxChartStore()
+const bitgetChartStore = useBitgetChartStore()
 
 const search = ref('')
 const bots = computed(() => {
@@ -54,12 +54,17 @@ const activeSafeForAll = () => {
 }
 
 const loadSymbolChart = (bot: Bot) => {
-  if (bot.exchange.toLowerCase() === 'bingx') {
-    bingxChartStore.setSymbol(bot.symbol)
-  } else {
-    console.log(
-      `loadSymbolChart not implemented for this ${bot.exchange} exchange`,
-    )
+  switch (bot.exchange.toLowerCase()) {
+    case 'bingx':
+      bingxChartStore.setSymbol(bot.symbol)
+      break
+    case 'bitget':
+      bitgetChartStore.setSymbol(bot.symbol)
+      break
+    default:
+      console.log(
+        `loadSymbolChart not implemented for this ${bot.exchange} exchange`,
+      )
   }
 }
 </script>
@@ -190,6 +195,5 @@ const loadSymbolChart = (bot: Bot) => {
         </td>
       </template>
     </Table>
-    <BingxChartManager />
   </div>
 </template>

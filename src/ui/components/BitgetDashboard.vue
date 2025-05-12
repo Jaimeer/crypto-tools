@@ -4,7 +4,6 @@ import { useBitkuaBotsStore } from '../store/bitkua/bitkuaBots.store'
 import { useBitgetBalanceStore } from '../store/bitget/bitgetBalance.store'
 import { useBitgetTransactionsStore } from '../store/bitget/bitgetTransactions.store'
 import { useBitgetPositionsStore } from '../store/bitget/bitgetPositions.store'
-import { useBitgetTradesStore } from '../store/bitget/bitgetTrades.store'
 import { useBitgetPreferencesStore } from '../store/bitget/bitgetPreferences.store'
 
 import ProfitByDay from './tables/ProfitByDay.vue'
@@ -20,14 +19,11 @@ import {
   ListboxOptions,
   ListboxOption,
 } from '@headlessui/vue'
-import { Contract } from '../../server/data.dto'
 import { useBitgetContractsStore } from '../store/bitget/bitgetContracts.store'
-import BitgetChartManager from './trading/BitgetChartManager.vue'
 
 const exchange = 'bitget'
 const bitgetTransactionsStore = useBitgetTransactionsStore()
 const bitgetBalanceStore = useBitgetBalanceStore()
-const bitgetTradesStore = useBitgetTradesStore()
 const bitkuaBotsStore = useBitkuaBotsStore()
 const bitgetPositionsStore = useBitgetPositionsStore()
 const bitgetPreferencesStore = useBitgetPreferencesStore()
@@ -44,7 +40,7 @@ const incomeTransactions = computed(() => {
 })
 
 const trades = computed(() => {
-  return bitgetTradesStore.trades
+  return [] //bitgetTradesStore.trades
 })
 
 const bots = computed(() => {
@@ -196,7 +192,6 @@ watch(selectedSymbols, () => {
         :hidedSymbols="hidedSymbols"
         :search="search"
       />
-      <BitgetChartManager />
     </div>
   </div>
 </template>

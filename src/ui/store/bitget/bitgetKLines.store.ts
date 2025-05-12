@@ -30,6 +30,15 @@ export const useBitgetKLinesStore = defineStore('bitget-klines', {
       this.loading = false
     },
 
+    async unsubscribeKLines(symbol: string, period: Period) {
+      const key = `${symbol}-${period}`
+      this.loading = true
+      this.error = null
+      this.klines[key] = undefined
+      // window.electronAPI.unsubscribeBingXKLines(symbol, period)
+      this.loading = false
+    },
+
     processMessage(symbol: string, period: Period, klines: KLine[]) {
       if (!this.klines[symbol]) {
         this.klines[symbol] = { period: period, data: klines }

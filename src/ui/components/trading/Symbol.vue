@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import { Bot, Contract, Position } from '../../../server/data.dto'
 import { useBingxChartStore } from '../../store/bingx/bingxChart.store'
+import { useBitgetChartStore } from '../../store/bitget/bitgetChart.store'
 
 const props = defineProps<{
   value: string
@@ -18,9 +19,19 @@ const symbol = computed(() => {
 })
 
 const bingxChartStore = useBingxChartStore()
+const bitgetChartStore = useBitgetChartStore()
 
 function loadSymbol() {
-  bingxChartStore.setSymbol(symbol.value)
+  switch (props.exchange.toLowerCase()) {
+    case 'bingx':
+      bingxChartStore.setSymbol(symbol.value)
+      break
+    case 'bitget':
+      bitgetChartStore.setSymbol(symbol.value)
+      break
+    default:
+      break
+  }
 }
 
 const botLong = computed(() => {

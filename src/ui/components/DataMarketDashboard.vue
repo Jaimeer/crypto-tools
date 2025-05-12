@@ -11,7 +11,6 @@ import { useBingxBalanceStore } from '../store/bingx/bingxBalance.store'
 import { useBingxContractsStore } from '../store/bingx/bingxContracts.store'
 import { useBingxPositionsStore } from '../store/bingx/bingxPositions.store'
 import { useBitkuaBotsStore } from '../store/bitkua/bitkuaBots.store'
-import BingxChartManager from './trading/BingxChartManager.vue'
 import { DataMarket } from 'src/server/data.dto'
 import Fud from './trading/Fud.vue'
 
@@ -171,6 +170,5 @@ const ranking = (data: DataMarket) => {
         </tr>
       </template>
     </Table>
-    <BingxChartManager />
   </div>
 </template>

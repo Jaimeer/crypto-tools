@@ -6,6 +6,8 @@ import { computed } from 'vue'
 import md5 from 'md5'
 import { useDark } from '@vueuse/core'
 import { useBitgetConfigStore } from './ui/store/bitget/bitgetConfig.store'
+import BitgetChartManager from './ui/components/trading/BitgetChartManager.vue'
+import BingxChartManager from './ui/components/trading/BingxChartManager.vue'
 
 const isDark = useDark()
 isDark.value = true
@@ -68,6 +70,8 @@ if (bitkuaConfig.username && bitkuaConfig.token) {
     <Config v-if="bingxConfig.viewConfig" />
     <div v-else :key="hashKey" class="h-screen w-full overflow-y-auto">
       <RouterView />
+      <BitgetChartManager />
+      <BingxChartManager />
     </div>
   </div>
 </template>
