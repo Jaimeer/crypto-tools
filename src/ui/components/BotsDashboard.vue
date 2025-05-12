@@ -154,7 +154,7 @@ const loadSymbolChart = (bot: Bot) => {
           <div
             class="w-fit rounded px-2 py-0.5 text-[10px]"
             :class="{
-              'bg-slate-400': item.count === 0,
+              'bg-slate-400 text-slate-950': item.count === 0,
               'bg-green-400 text-green-950': item.count > 0 && item.count < 7,
               'bg-yellow-400 text-yellow-950':
                 item.count >= 7 && item.count < 12,
