@@ -206,10 +206,10 @@ export class BingxService implements ExchangeService {
 
     await this.refreshKlines(symbol, period)
 
-    // await this.wsClient.subscribe(
-    //   this.data.kLines[symbol].socketId,
-    //   `${symbol.replace('USDT', '-USDT')}@kline_${period}`,
-    // )
+    await this.wsClient.subscribe(
+      this.data.kLines[symbol].socketId,
+      `${symbol.replace('USDT', '-USDT')}@kline_${period}`,
+    )
   }
 
   async removeSymbolKLines(symbol: string, period: Period) {

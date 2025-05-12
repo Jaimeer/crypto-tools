@@ -26,7 +26,7 @@ const BitkuaBotsStore = useBitkuaBotsStore()
 const bingxBalanceStore = useBingxBalanceStore()
 const bingxContractsStore = useBingxContractsStore()
 
-const exchange = 'Bingx'
+const exchange = 'Bitget'
 
 const { escape, arrowup, arrowright, arrowdown, arrowleft } = useMagicKeys()
 

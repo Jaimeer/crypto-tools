@@ -356,6 +356,7 @@ export class BingxRestClient
   ): Promise<BingxKLine[]> {
     const API: BingXApiRequest = {
       path: '/openApi/swap/v3/quote/klines',
+      // path: '/openApi/swap/v1/market/markPriceKlines',
       method: 'GET',
       payload: {
         symbol: symbol.replace('USDT', '-USDT'),

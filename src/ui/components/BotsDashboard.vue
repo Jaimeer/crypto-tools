@@ -134,10 +134,10 @@ const loadSymbolChart = (bot: Bot) => {
         <td
           class="cursor-pointer px-2 py-0.5 text-[10px] font-bold"
           :class="{
-            'bg-green-600 text-green-950 hover:bg-green-500':
+            'bg-green-400 text-green-950 hover:bg-green-500':
               item.status === 'active',
-            'bg-red-600 text-red-950 hover:bg-red-500': item.status === 'stop',
-            'bg-yellow-600 text-yellow-950 hover:bg-yellow-500':
+            'bg-red-400 text-red-950 hover:bg-red-500': item.status === 'stop',
+            'bg-yellow-400 text-yellow-950 hover:bg-yellow-500':
               item.status === 'onlysell',
           }"
           @click="loadSymbolChart(item)"
@@ -154,10 +154,11 @@ const loadSymbolChart = (bot: Bot) => {
           <div
             class="w-fit rounded px-2 py-0.5 text-[10px]"
             :class="{
-              'bg-slate-600': item.count === 0,
-              'bg-green-600 text-white': item.count > 0 && item.count < 7,
-              'bg-yellow-600 text-white': item.count >= 7 && item.count < 12,
-              'bg-red-600 text-white': item.count >= 12,
+              'bg-slate-400': item.count === 0,
+              'bg-green-400 text-green-950': item.count > 0 && item.count < 7,
+              'bg-yellow-400 text-yellow-950':
+                item.count >= 7 && item.count < 12,
+              'bg-red-400 text-red-950': item.count >= 12,
             }"
           >
             {{ item.count }}

@@ -10,8 +10,8 @@ const props = defineProps<{
   <div
     class="flex w-fit items-center gap-0.5 rounded text-[10px] font-bold"
     :class="{
-      'text-red-600': positionSide === 'SHORT',
-      'text-green-600': positionSide === 'LONG',
+      'text-red-400': positionSide === 'SHORT',
+      'text-green-400': positionSide === 'LONG',
     }"
   >
     <Icon

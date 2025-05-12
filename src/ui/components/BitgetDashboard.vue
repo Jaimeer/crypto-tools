@@ -22,6 +22,7 @@ import {
 } from '@headlessui/vue'
 import { Contract } from '../../server/data.dto'
 import { useBitgetContractsStore } from '../store/bitget/bitgetContracts.store'
+import BitgetChartManager from './trading/BitgetChartManager.vue'
 
 const exchange = 'bitget'
 const bitgetTransactionsStore = useBitgetTransactionsStore()
@@ -195,6 +196,7 @@ watch(selectedSymbols, () => {
         :hidedSymbols="hidedSymbols"
         :search="search"
       />
+      <BitgetChartManager />
     </div>
   </div>
 </template>
