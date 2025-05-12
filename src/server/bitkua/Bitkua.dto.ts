@@ -88,6 +88,7 @@ export type BitkuaActionReset = {
 export type BitkuaActionCreateBot = {
   action: 'createBot'
   exchange: BotExchange
+  tokenId: string
   symbol: string
   amount: number
   strategy: BotStrategies
@@ -122,4 +123,10 @@ export type BitkuaDataMarket = {
   LiqMax: string
   LiqMin: string
   ratio_fvd_mc: string
+}
+
+export type BitkuaSecurityToken = {
+  idtokens: string
+  security_token: string
+  exchange: string
 }

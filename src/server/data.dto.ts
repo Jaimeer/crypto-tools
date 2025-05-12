@@ -131,6 +131,7 @@ export type ListenKey = {
 
 export type BitkuaBot = {
   id: number
+  security_token: string
   symbol: string
   amount: number
   active: string
@@ -145,6 +146,7 @@ export type BitkuaBot = {
 
 export type Bot = {
   id: string
+  securityToken: string
   symbol: string
   amount: number
   status: string
@@ -174,4 +176,10 @@ export type DataMarket = {
   fomo: number
   fud: number
   ratioFvdMc: number
+}
+
+export type SecurityToken = {
+  tokenId: string
+  securityToken: string
+  exchange: string
 }

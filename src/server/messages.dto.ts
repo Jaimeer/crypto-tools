@@ -6,6 +6,7 @@ import {
   KLine,
   Period,
   Position,
+  SecurityToken,
   Trade,
   Transaction,
 } from './data.dto'
@@ -25,3 +26,4 @@ export type NotifyMessage =
   | { store: 'bitget.klines'; symbol: string; period: Period; klines: KLine[] }
   | { store: 'bots'; bots: Bot[] }
   | { store: 'dataMarket'; dataMarket: DataMarket[] }
+  | { store: 'securityTokens'; securityTokens: SecurityToken[] }

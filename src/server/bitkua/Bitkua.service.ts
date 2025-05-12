@@ -1,5 +1,4 @@
 import axios, { Axios } from 'axios'
-import { CookieJar } from 'tough-cookie'
 import { BrowserWindow } from 'electron'
 import {
   BitkuaAction,
@@ -11,9 +10,10 @@ import {
   BitkuaActionUpdateStatus,
   BitkuaActionUpdateStrategy,
   BitkuaDataMarket,
+  BitkuaSecurityToken,
 } from './Bitkua.dto'
 import { NotifyMessage } from '../messages.dto'
-import { BitkuaBot, Bot, DataMarket } from '../data.dto'
+import { BitkuaBot, Bot, DataMarket, SecurityToken } from '../data.dto'
 import { LoggerService } from '../../utils/Logger'
 
 const activeIntervals: Set<NodeJS.Timeout> = new Set()
@@ -24,14 +24,12 @@ export class BitkuaService {
   private token: string
   private client: Axios
 
-  private jar = new CookieJar()
-
   constructor(username: string, token: string) {
     this.logger = new LoggerService(BitkuaService.name)
     this.username = username
     this.token = token
     this.client = axios.create({
-      baseURL: 'https://www.bitkua.com/apiv3/',
+      baseURL: 'https://www.bitkua.com/apiv4/',
     })
   }
 
@@ -44,11 +42,13 @@ export class BitkuaService {
     this.stopAutoRefresh()
     await this.getBots()
     await this.getDataMarket()
+    await this.getSecurityTokens()
 
     const refreshInterval = setInterval(async () => {
       try {
         await this.getBots()
         await this.getDataMarket()
+        await this.getSecurityTokens()
       } catch (error) {
         console.error('BitkuaService auto-refresh failed:', error)
       }
@@ -96,7 +96,7 @@ export class BitkuaService {
       const data = {
         action: 'info_bots',
         username: this.username,
-        token: this.token,
+        clave: this.token,
       }
 
       const response = await this.client.request<{
@@ -113,6 +113,7 @@ export class BitkuaService {
 
       const bots: Bot[] = bitkuaBots.data.map((bot) => ({
         id: bot.id.toString(),
+        securityToken: bot.security_token,
         symbol: bot.symbol.replace('-', ''),
         amount: bot.amount,
         status: bot.active,
@@ -141,7 +142,7 @@ export class BitkuaService {
       const data = {
         action: 'data_market',
         username: this.username,
-        token: this.token,
+        clave: this.token,
       }
 
       const response = await this.client.request<{
@@ -154,7 +155,10 @@ export class BitkuaService {
 
       const bitkuaDataMarket = response.data
 
-      if (!bitkuaDataMarket.success || !bitkuaDataMarket.data) return
+      if (!bitkuaDataMarket.success || !bitkuaDataMarket.data) {
+        console.warn(bitkuaDataMarket)
+        return
+      }
 
       const dataMarket: DataMarket[] = bitkuaDataMarket.data.map(
         (dataMarket) => ({
@@ -201,9 +205,52 @@ export class BitkuaService {
     }
   }
 
+  async getSecurityTokens() {
+    try {
+      this.logger.debug('Fetching dk-security-tokens...')
+      const data = {
+        action: 'tokens',
+        username: this.username,
+        clave: this.token,
+      }
+
+      const response = await this.client.request<{
+        success: boolean
+        data: BitkuaSecurityToken[]
+      }>({
+        method: 'GET',
+        data,
+      })
+
+      const bitkuaSecurityTokens = response.data
+
+      if (!bitkuaSecurityTokens.success || !bitkuaSecurityTokens.data) {
+        console.warn(bitkuaSecurityTokens)
+        return
+      }
+
+      const securityTokens: SecurityToken[] = bitkuaSecurityTokens.data.map(
+        (securityToken) => ({
+          tokenId: securityToken.idtokens,
+          securityToken: securityToken.security_token,
+          exchange: securityToken.exchange,
+        }),
+      )
+
+      this.logger.debug(`Fetch securityTokens data: ${securityTokens.length}`)
+
+      this.notifyClients({
+        store: 'securityTokens',
+        securityTokens: securityTokens,
+      })
+    } catch (error) {
+      console.error('Error during data security tokens fetch:', error)
+    }
+  }
+
   private async updateBotStatus(message: BitkuaActionUpdateStatus) {
     try {
-      await this.client.request<{
+      const response = await this.client.request<{
         success: boolean
         data: BitkuaBot[]
       }>({
@@ -211,12 +258,16 @@ export class BitkuaService {
         data: {
           action: 'update_status',
           username: this.username,
-          token: this.token,
+          clave: this.token,
           id: message.botId,
           status: message.status,
         },
       })
-      this.logger.debug(`Bot status updated successfully: ${message.botId}`)
+
+      if (!response.data.success)
+        this.logger.warn(response.data.data.toString())
+      else
+        this.logger.debug(`Bot status updated successfully: ${message.botId}`)
       this.startAutoRefresh()
     } catch (error) {
       console.error('Error updating bot status:', error.message)
@@ -225,7 +276,7 @@ export class BitkuaService {
 
   private async updateBotSafe(message: BitkuaActionUpdateSafe) {
     try {
-      await this.client.request<{
+      const response = await this.client.request<{
         success: boolean
         data: BitkuaBot[]
       }>({
@@ -233,12 +284,15 @@ export class BitkuaService {
         data: {
           action: 'update_safe',
           username: this.username,
-          token: this.token,
+          clave: this.token,
           id: message.botId,
           safe: message.safe ? 'yes' : 'no',
         },
       })
-      this.logger.debug(`Bot safe  updated successfully: ${message.botId}`)
+
+      if (!response.data.success)
+        this.logger.warn(response.data.data.toString())
+      else this.logger.debug(`Bot safe updated successfully: ${message.botId}`)
       this.startAutoRefresh()
     } catch (error) {
       console.error('Error updating bot safe:', error.message)
@@ -247,7 +301,7 @@ export class BitkuaService {
 
   private async updateBotStrategy(message: BitkuaActionUpdateStrategy) {
     try {
-      await this.client.request<{
+      const response = await this.client.request<{
         success: boolean
         data: BitkuaBot[]
       }>({
@@ -255,12 +309,16 @@ export class BitkuaService {
         data: {
           action: 'update_estrategia',
           username: this.username,
-          token: this.token,
+          clave: this.token,
           id: message.botId,
           estrategia: message.strategy,
         },
       })
-      this.logger.debug(`Bot strategy updated successfully: ${message.botId}`)
+
+      if (!response.data.success)
+        this.logger.warn(response.data.data.toString())
+      else
+        this.logger.debug(`Bot strategy updated successfully: ${message.botId}`)
       this.startAutoRefresh()
     } catch (error) {
       console.error('Error updating bot strategy:', error.message)
@@ -269,7 +327,7 @@ export class BitkuaService {
 
   private async updateBotAmount(message: BitkuaActionUpdateAmount) {
     try {
-      await this.client.request<{
+      const response = await this.client.request<{
         success: boolean
         data: BitkuaBot[]
       }>({
@@ -277,12 +335,16 @@ export class BitkuaService {
         data: {
           action: 'update_amount',
           username: this.username,
-          token: this.token,
+          clave: this.token,
           id: message.botId,
           amount: message.amount,
         },
       })
-      this.logger.debug(`Bot amount updated successfully: ${message.botId}`)
+
+      if (!response.data.success)
+        this.logger.warn(response.data.data.toString())
+      else
+        this.logger.debug(`Bot amount updated successfully: ${message.botId}`)
       this.startAutoRefresh()
     } catch (error) {
       console.error('Error updating bot amount:', error.message)
@@ -291,7 +353,7 @@ export class BitkuaService {
 
   private async deleteBot(message: BitkuaActionDelete) {
     try {
-      await this.client.request<{
+      const response = await this.client.request<{
         success: boolean
         data: BitkuaBot[]
       }>({
@@ -299,11 +361,14 @@ export class BitkuaService {
         data: {
           action: 'delete',
           username: this.username,
-          token: this.token,
+          clave: this.token,
           id: message.botId,
         },
       })
-      this.logger.debug(`Bot deleted successfully: ${message.botId}`)
+
+      if (!response.data.success)
+        this.logger.warn(response.data.data.toString())
+      else this.logger.debug(`Bot deleted successfully: ${message.botId}`)
       this.startAutoRefresh()
     } catch (error) {
       console.error('Error deleting bot:', error.message)
@@ -312,7 +377,7 @@ export class BitkuaService {
 
   private async resetBot(message: BitkuaActionReset) {
     try {
-      await this.client.request<{
+      const response = await this.client.request<{
         success: boolean
         data: BitkuaBot[]
       }>({
@@ -320,12 +385,15 @@ export class BitkuaService {
         data: {
           action: 'reset',
           username: this.username,
-          token: this.token,
+          clave: this.token,
           symbol: message.symbol,
           positionSide: message.positionSide,
         },
       })
-      this.logger.debug(`Bot reset successfully: ${message.symbol}`)
+
+      if (!response.data.success)
+        this.logger.warn(response.data.data.toString())
+      else this.logger.debug(`Bot reset successfully: ${message.symbol}`)
       this.startAutoRefresh()
     } catch (error) {
       console.error('Error resetting bot:', error.message)
@@ -338,7 +406,7 @@ export class BitkuaService {
         const data = {
           action: 'create_bots',
           username: this.username,
-          token: this.token,
+          clave: this.token,
           symbol: message.symbol,
           security_token: this.token,
           amount: message.amount,
@@ -350,21 +418,25 @@ export class BitkuaService {
           safe: message.safe ? 'yes' : 'no',
         }
         console.log(data)
-        await this.client.request<{
+        const response = await this.client.request<{
           success: boolean
           data: BitkuaBot[]
         }>({
           method: 'POST',
           data,
         })
-        this.logger.debug(`Long bot created successfully: ${message.symbol}`)
+
+        if (!response.data.success)
+          this.logger.warn(response.data.data.toString())
+        else
+          this.logger.debug(`Long bot created successfully: ${message.symbol}`)
       }
 
       if (message.short && message.strategy !== 'infinity') {
         const data = {
           action: 'create_bots',
           username: this.username,
-          token: this.token,
+          clave: this.token,
           symbol: message.symbol,
           security_token: this.token,
           amount: message.amount,
@@ -377,14 +449,18 @@ export class BitkuaService {
         }
         console.log(data)
 
-        await this.client.request<{
+        const response = await this.client.request<{
           success: boolean
           data: BitkuaBot[]
         }>({
           method: 'POST',
           data,
         })
-        this.logger.debug(`Short bot created successfully: ${message.symbol}`)
+
+        if (!response.data.success)
+          this.logger.warn(response.data.data.toString())
+        else
+          this.logger.debug(`Short bot created successfully: ${message.symbol}`)
       }
 
       this.startAutoRefresh()

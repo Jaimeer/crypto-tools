@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import type {
   BitkuaActionCreateBot,
   BotExchange,
@@ -7,11 +7,13 @@ import type {
 import { useBingxContractsStore } from '../../../ui/store/bingx/bingxContracts.store'
 import { useBitgetContractsStore } from '../../../ui/store/bitget/bitgetContracts.store'
 import SearchAutocomplete from '../trading/SearchAutocomplete.vue'
+import { useBitkuaSecurityTokensStore } from '../../store/bitkua/bitkuaSecurityTokens.store'
 
 const props = defineProps<{ symbol?: string; exchange?: BotExchange }>()
 
 const bingxContractsStore = useBingxContractsStore()
 const bitgetContractsStore = useBitgetContractsStore()
+const bitkuaSecurityTokensStore = useBitkuaSecurityTokensStore()
 
 const botStrategies = [
   ,
@@ -49,6 +51,14 @@ const exchangeSymbols = computed<
 const formData = reactive<BitkuaActionCreateBot>({
   action: 'createBot',
   exchange: props.exchange ?? 'Bingx',
+  tokenId:
+    bitkuaSecurityTokensStore.securityTokens.filter(
+      (x) => x.exchange === (props.exchange ?? 'Bingx'),
+    ).length === 1
+      ? bitkuaSecurityTokensStore.securityTokens.filter(
+          (x) => x.exchange === (props.exchange ?? 'Bingx'),
+        )[0].tokenId
+      : '',
   symbol: props.symbol ?? '',
   amount: undefined,
   strategy: 'lamilagrosapro',
@@ -57,6 +67,21 @@ const formData = reactive<BitkuaActionCreateBot>({
   long: false,
   short: false,
 })
+
+const availableSecurityTokes = computed(() => {
+  return bitkuaSecurityTokensStore.securityTokens.filter(
+    (x) => x.exchange === formData.exchange,
+  )
+})
+
+watch(
+  () => availableSecurityTokes.value,
+  () => {
+    if (availableSecurityTokes.value.length === 1)
+      formData.tokenId = availableSecurityTokes.value[0].tokenId
+  },
+  { deep: true, immediate: true },
+)
 
 const createBot = () => {
   const message: BitkuaActionCreateBot = { ...formData }
@@ -91,6 +116,19 @@ const isValid = computed(() => {
         :value="exchange"
       >
         {{ exchange }}
+      </option>
+    </select>
+    <select
+      v-model="formData.tokenId"
+      class="rounded border border-slate-600 bg-slate-700 px-2 py-0.5 text-slate-200 focus:border-slate-500 focus:outline-none disabled:opacity-50"
+      :disabled="availableSecurityTokes.length === 1"
+    >
+      <option
+        v-for="securityToken in availableSecurityTokes"
+        :key="securityToken.securityToken"
+        :value="securityToken.tokenId"
+      >
+        {{ securityToken.securityToken }}
       </option>
     </select>
 
