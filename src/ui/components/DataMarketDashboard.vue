@@ -72,7 +72,7 @@ const ranking = (data: DataMarket) => {
   if (data.sma55_1d > 0 && smaRange && data.fud < 50) return 'SHORT SMA'
   if (data.fomo < 30 && data.fud > 70) return 'LONG'
   if (data.fomo > 200 && data.fud < 30) return 'SHORT'
-  if (data.ratioFvdMc > 4 && data.fud > 0 && data.fud < 50) return 'SHORT PVD'
+  if (data.ratioFvdMc > 4 && data.fud > 0 && data.fud < 50) return 'SHORT FVD'
   return '---'
 }
 </script>
