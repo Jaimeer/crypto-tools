@@ -82,7 +82,6 @@ export type BitkuaActionReset = {
   botId: string
   action: 'reset'
   symbol: string
-  positionSide: string
 }
 
 export type BitkuaActionCreateBot = {

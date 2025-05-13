@@ -13,7 +13,14 @@ import {
   BitkuaSecurityToken,
 } from './Bitkua.dto'
 import { NotifyMessage } from '../messages.dto'
-import { BitkuaBot, Bot, DataMarket, SecurityToken } from '../data.dto'
+import {
+  BitkuaBot,
+  BitkuaStrategy,
+  Bot,
+  DataMarket,
+  SecurityToken,
+  Strategy,
+} from '../data.dto'
 import { LoggerService } from '../../utils/Logger'
 
 const activeIntervals: Set<NodeJS.Timeout> = new Set()
@@ -38,17 +45,22 @@ export class BitkuaService {
     this.token = token
   }
 
+  private async getData() {
+    await Promise.all([
+      this.getBots(),
+      this.getStrategies(),
+      this.getDataMarket(),
+      this.getSecurityTokens(),
+    ])
+  }
+
   async startAutoRefresh(intervalMs = 60000) {
     this.stopAutoRefresh()
-    await this.getBots()
-    await this.getDataMarket()
-    await this.getSecurityTokens()
+    await this.getData()
 
     const refreshInterval = setInterval(async () => {
       try {
-        await this.getBots()
-        await this.getDataMarket()
-        await this.getSecurityTokens()
+        await this.getData()
       } catch (error) {
         console.error('BitkuaService auto-refresh failed:', error)
       }
@@ -109,7 +121,10 @@ export class BitkuaService {
 
       const bitkuaBots = response.data
 
-      if (!bitkuaBots.success || !bitkuaBots.data) return
+      if (!bitkuaBots.success || !bitkuaBots.data) {
+        console.warn(response.data)
+        return
+      }
 
       const bots: Bot[] = bitkuaBots.data.map((bot) => ({
         id: bot.id.toString(),
@@ -125,7 +140,8 @@ export class BitkuaService {
         createdAt: new Date(bot.created_at),
       }))
 
-      this.logger.debug(`Scraped bot data: ${bots.length}`)
+      // console.log(bots)
+      this.logger.debug(`Fetched bot data: ${bots.length}`)
 
       this.notifyClients({
         store: 'bots',
@@ -133,6 +149,48 @@ export class BitkuaService {
       })
     } catch (error) {
       console.error('Error during login process:', error)
+    }
+  }
+
+  private async getStrategies() {
+    try {
+      this.logger.debug('Fetching dk-strategies...')
+      const data = {
+        action: 'check_estrategias',
+        username: this.username,
+        clave: this.token,
+      }
+
+      const response = await this.client.request<{
+        success: boolean
+        data: BitkuaStrategy[]
+      }>({
+        method: 'GET',
+        data,
+      })
+
+      const bitkuaStrategies = response.data
+
+      if (!bitkuaStrategies.success || !bitkuaStrategies.data) {
+        console.log(response.data)
+        return
+      }
+
+      const strategies: Strategy[] = bitkuaStrategies.data.map((strategy) => ({
+        id: strategy.id.toString(),
+        slug: strategy.slug,
+        name: strategy.name,
+        positionside: strategy.positionside,
+      }))
+
+      this.logger.debug(`Fetched bot data: ${strategies.length}`)
+
+      this.notifyClients({
+        store: 'strategies',
+        strategies: strategies.toSorted((a, b) => a.name.localeCompare(b.name)),
+      })
+    } catch (error) {
+      console.error('Error during fetch strategies process:', error)
     }
   }
 
@@ -156,7 +214,7 @@ export class BitkuaService {
       const bitkuaDataMarket = response.data
 
       if (!bitkuaDataMarket.success || !bitkuaDataMarket.data) {
-        console.warn(bitkuaDataMarket)
+        console.warn(response.data)
         return
       }
 
@@ -383,18 +441,21 @@ export class BitkuaService {
 
   private async resetBot(message: BitkuaActionReset) {
     try {
+      const data = {
+        action: 'reset',
+        username: this.username,
+        clave: this.token,
+        id: message.botId,
+        symbol: message.symbol,
+      }
+      console.log(data)
+
       const response = await this.client.request<{
         success: boolean
         data: BitkuaBot[]
       }>({
         method: 'POST',
-        data: {
-          action: 'reset',
-          username: this.username,
-          clave: this.token,
-          symbol: message.symbol,
-          positionSide: message.positionSide,
-        },
+        data,
       })
 
       if (!response.data.success) {

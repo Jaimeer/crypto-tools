@@ -12,7 +12,6 @@ const sendAction = (botId: string) => {
     action: 'reset',
     botId,
     symbol: props.bot.symbol,
-    positionSide: props.bot.positionSide,
   }
   window.electronAPI.sendBitkuaAction(message)
 }

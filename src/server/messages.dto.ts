@@ -7,6 +7,7 @@ import {
   Period,
   Position,
   SecurityToken,
+  Strategy,
   Trade,
   Transaction,
 } from './data.dto'
@@ -27,3 +28,4 @@ export type NotifyMessage =
   | { store: 'bots'; bots: Bot[] }
   | { store: 'dataMarket'; dataMarket: DataMarket[] }
   | { store: 'securityTokens'; securityTokens: SecurityToken[] }
+  | { store: 'strategies'; strategies: Strategy[] }

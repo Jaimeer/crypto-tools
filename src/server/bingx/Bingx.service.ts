@@ -200,6 +200,7 @@ export class BingxService implements ExchangeService {
   }
 
   async loadSymbolKLines(symbol: string, period: Period) {
+    this.logger.debug(`loadSymbolKLines ${symbol} ${period}`)
     this.klineSymbol = symbol
     if (!this.data.kLines[symbol])
       this.data.kLines[symbol] = { socketId: uuidv4(), data: [] }
@@ -213,6 +214,7 @@ export class BingxService implements ExchangeService {
   }
 
   async removeSymbolKLines(symbol: string, period: Period) {
+    this.logger.debug(`removeSymbolKLines ${symbol} ${period}`)
     if (this.data.kLines[symbol]) {
       this.klineSymbol = undefined
       this.data.kLines[symbol].data = []
@@ -235,10 +237,8 @@ export class BingxService implements ExchangeService {
     if (match) {
       const symbol = match[1].replace('-', '')
       const period = match[2] as Period
-
       if (symbol && period) {
         const klineData = this.data.kLines[symbol].data
-
         message.data.forEach((kline) => {
           if (klineData[0]?.timestamp === kline.T) {
             klineData[0].close = parseFloat(kline.c)
@@ -257,10 +257,8 @@ export class BingxService implements ExchangeService {
             })
           }
         })
-
         if (this.data.kLines[symbol].data.length > 1000)
           this.data.kLines[symbol].data.pop()
-
         // this.logger.debug(symbol, {
         //   ini: this.data.kLines[symbol].data[0].close,
         //   end: this.data.kLines[symbol].data[
@@ -308,7 +306,8 @@ export class BingxService implements ExchangeService {
     if ('dataType' in message) {
       if (message.dataType === '') return
       if (klineRegex.test(message.dataType)) {
-        return this.processWSEventKline(message as KLineDataEvent)
+        return
+        // return this.processWSEventKline(message as KLineDataEvent)
       }
     }
     this.logger.debug(

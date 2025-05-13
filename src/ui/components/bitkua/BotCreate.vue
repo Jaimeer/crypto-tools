@@ -8,31 +8,20 @@ import { useBingxContractsStore } from '../../../ui/store/bingx/bingxContracts.s
 import { useBitgetContractsStore } from '../../../ui/store/bitget/bitgetContracts.store'
 import SearchAutocomplete from '../trading/SearchAutocomplete.vue'
 import { useBitkuaSecurityTokensStore } from '../../store/bitkua/bitkuaSecurityTokens.store'
+import { useBitkuaStrategiesStore } from '../../store/bitkua/bitkuaStrategies.store'
 
 const props = defineProps<{ symbol?: string; exchange?: BotExchange }>()
 
 const bingxContractsStore = useBingxContractsStore()
 const bitgetContractsStore = useBitgetContractsStore()
 const bitkuaSecurityTokensStore = useBitkuaSecurityTokensStore()
+const bitkuaStrategiesStore = useBitkuaStrategiesStore()
 
-const botStrategies = [
-  ,
-  'aiexpertavg',
-  'aiexpertavgplus',
-  'degen',
-  'infinity',
-  'karlosavg',
-  'ladominantkong',
-  'lamilagrosa',
-  'lamilagrosapro',
-  'liquidationpoint',
-  'liquiditypool',
-  'longalashitcoin',
-  'pmd',
-  'smartcandle',
-  'smartmoney',
-  'sniperagresive',
-]
+const botStrategies = computed(() => {
+  return bitkuaStrategiesStore.strategies
+    .filter((x) => x.positionside === 'LONG')
+    .map((x) => ({ ...x, name: x.name.replace('HFT Long', '') }))
+})
 
 const botExchange = ['Bingx', 'Bitget'] as const
 const botStatus = ['active', 'stop'] as const
@@ -93,6 +82,7 @@ const createBot = () => {
 const isValid = computed(() => {
   if (!formData.symbol) return false
   if (!formData.amount) return false
+  if (!formData.tokenId) return false
   if (!formData.strategy) return false
   if (!formData.status) return false
   if (!formData.exchange) return false
@@ -143,16 +133,17 @@ const isValid = computed(() => {
       :disabled="!!props.symbol"
     />
 
+    <!-- <pre>{{ bitkuaStrategiesStore }}</pre> -->
     <select
       v-model="formData.strategy"
       class="rounded border border-slate-600 bg-slate-700 px-2 py-0.5 text-slate-200 focus:border-slate-500 focus:outline-none"
     >
       <option
-        v-for="strategy in botStrategies.toSorted((a, b) => a.localeCompare(b))"
-        :key="strategy"
-        :value="strategy"
+        v-for="strategy in botStrategies"
+        :key="strategy.name"
+        :value="strategy.slug"
       >
-        {{ strategy }}
+        {{ strategy.name }}
       </option>
     </select>
     <input
@@ -212,5 +203,6 @@ const isValid = computed(() => {
     >
       Create Bot
     </button>
+    <!-- <pre>{{ formData }}</pre> -->
   </form>
 </template>

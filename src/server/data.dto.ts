@@ -144,6 +144,13 @@ export type BitkuaBot = {
   safe: 'yes' | 'no'
 }
 
+export type BitkuaStrategy = {
+  id: number
+  slug: string
+  name: string
+  positionside: 'SHORT' | 'LONG'
+}
+
 export type Bot = {
   id: string
   securityToken: string
@@ -156,6 +163,13 @@ export type Bot = {
   count: number
   safe: boolean
   createdAt: Date
+}
+
+export type Strategy = {
+  id: string
+  slug: string
+  name: string
+  positionside: 'SHORT' | 'LONG'
 }
 
 export type DataMarket = {

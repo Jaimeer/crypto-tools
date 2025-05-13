@@ -21,6 +21,7 @@ import { useBitgetKLinesStore } from './ui/store/bitget/bitgetKLines.store'
 import { useBitgetTradesStore } from './ui/store/bitget/bitgetTrades.store'
 import { useBitkuaDataMarketStore } from './ui/store/bitkua/bitkuaDataMarket.store'
 import { useBitkuaSecurityTokensStore } from './ui/store/bitkua/bitkuaSecurityTokens.store'
+import { useBitkuaStrategiesStore } from './ui/store/bitkua/bitkuaStrategies.store'
 
 const pinia = createPinia()
 
@@ -46,7 +47,8 @@ const bitgetKlineStore = useBitgetKLinesStore()
 
 const botsStore = useBitkuaBotsStore()
 const dataMarketStore = useBitkuaDataMarketStore()
-const dataSecurityTokensStore = useBitkuaSecurityTokensStore()
+const securityTokensStore = useBitkuaSecurityTokensStore()
+const strategiesStore = useBitkuaStrategiesStore()
 
 const updateDataHandler = (message: NotifyMessage) => {
   switch (message.store) {
@@ -101,7 +103,10 @@ const updateDataHandler = (message: NotifyMessage) => {
       dataMarketStore.processMessage(message.dataMarket)
       break
     case 'securityTokens':
-      dataSecurityTokensStore.processMessage(message.securityTokens)
+      securityTokensStore.processMessage(message.securityTokens)
+      break
+    case 'strategies':
+      strategiesStore.processMessage(message.strategies)
       break
     default:
       console.log(message)
