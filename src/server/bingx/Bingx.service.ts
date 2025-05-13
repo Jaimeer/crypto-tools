@@ -61,6 +61,7 @@ export class BingxService implements ExchangeService {
 
   constructor(apiKey: string, apiSecret: string) {
     this.logger = new LoggerService(BingxService.name)
+
     this.logger.debug('BingxService constructor ')
     if (!this.restClient) {
       this.restClient = new BingxRestClient(apiKey, apiSecret)

@@ -16,6 +16,7 @@ import {
 import { subYears } from 'date-fns'
 import { LoggerService } from '../../utils/Logger'
 import { ExchangeRestService } from '../base/ExchangeRest.service'
+import { NotificationService } from '../Notification.service'
 
 export type BingXApiRequest = {
   path: string
@@ -35,6 +36,7 @@ export class BingxRestClient
       BingxKLine
     >
 {
+  private readonly notification: NotificationService
   private readonly logger: LoggerService
   //   private bingx: bingx
   private API_KEY: string
@@ -43,6 +45,7 @@ export class BingxRestClient
 
   constructor(apiKey: string, apiSecret: string) {
     this.logger = new LoggerService(BingxRestClient.name)
+    this.notification = new NotificationService()
     this.API_KEY = apiKey
     this.API_SECRET = apiSecret
   }
@@ -155,6 +158,12 @@ export class BingxRestClient
           return this.bingxRequest<T>(API)
         }
 
+        this.notification.sendNotification({
+          type: 'error',
+          title: 'BingX',
+          message: `Error fetching data: ${error.message}`,
+        })
+
         console.error('BingX API request error:', error.response.data)
         return
       }
@@ -221,6 +230,11 @@ export class BingxRestClient
         }
       } catch (error) {
         console.error('Error during pagination:', error)
+        this.notification.sendNotification({
+          type: 'error',
+          title: 'BingX',
+          message: `Error fetching transactions: ${error.message}`,
+        })
         hasMoreData = false
       }
     } while (hasMoreData)
@@ -300,6 +314,11 @@ export class BingxRestClient
         }
       } catch (error) {
         console.error('Error during pagination:', error)
+        this.notification.sendNotification({
+          type: 'error',
+          title: 'BingX',
+          message: `Error fetching trades: ${error.message}`,
+        })
         hasMoreData = false
       }
     } while (hasMoreData)

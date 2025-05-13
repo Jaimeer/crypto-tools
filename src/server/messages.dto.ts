@@ -10,6 +10,7 @@ import {
   Strategy,
   Trade,
   Transaction,
+  Notification,
 } from './data.dto'
 
 export type NotifyMessage =
@@ -29,3 +30,4 @@ export type NotifyMessage =
   | { store: 'dataMarket'; dataMarket: DataMarket[] }
   | { store: 'securityTokens'; securityTokens: SecurityToken[] }
   | { store: 'strategies'; strategies: Strategy[] }
+  | { store: 'notifications'; notification: Notification }

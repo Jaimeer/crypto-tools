@@ -12,8 +12,8 @@ const strategyName = (strategy: string) => {
   return (
     bitkuaStrategiesStore.strategies
       .find((x) => x.slug === strategy)
-      ?.name.replace('HFT Long', '')
-      .replace('HFT Short', '') ?? strategy
+      ?.name.replace('Long', '')
+      .replace('Short', '') ?? strategy
   )
 }
 </script>

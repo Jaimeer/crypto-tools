@@ -22,10 +22,12 @@ import {
   Strategy,
 } from '../data.dto'
 import { LoggerService } from '../../utils/Logger'
+import { NotificationService } from '../Notification.service'
 
 const activeIntervals: Set<NodeJS.Timeout> = new Set()
 
 export class BitkuaService {
+  private readonly notification: NotificationService
   private readonly logger: LoggerService
   private username: string
   private token: string
@@ -33,6 +35,7 @@ export class BitkuaService {
 
   constructor(username: string, token: string) {
     this.logger = new LoggerService(BitkuaService.name)
+    this.notification = new NotificationService()
     this.username = username
     this.token = token
     this.client = axios.create({
@@ -102,440 +105,301 @@ export class BitkuaService {
     }
   }
 
-  private async getBots() {
+  private async getDataEntity<B, R>(
+    action: 'info_bots' | 'check_estrategias' | 'data_market' | 'tokens',
+    transformerFn: (items: B) => R,
+  ) {
     try {
-      this.logger.debug('Fetching dk-bots...')
+      this.logger.debug(`Fetching action ${action}...`)
       const data = {
-        action: 'info_bots',
+        action,
         username: this.username,
         clave: this.token,
       }
 
+      const response = await this.client.request<{
+        success: boolean
+        data: B[]
+      }>({
+        method: 'GET',
+        data,
+      })
+
+      const responseData = response.data
+
+      if (!responseData.success || !responseData.data) {
+        console.warn(response.data)
+        this.notification.sendNotification({
+          type: 'error',
+          title: 'BingX',
+          message: `Error fetching ${action}: ${responseData.data.toString()}`,
+        })
+        return
+      }
+
+      const items = responseData.data.map((item) => transformerFn(item))
+
+      this.logger.debug(`Fetched ${action}: ${items.length}`)
+      return items
+    } catch (error) {
+      console.error(`Error fetching ${action}:`, error.message)
+      this.notification.sendNotification({
+        type: 'error',
+        title: 'BingX',
+        message: `Error fetching ${action}: ${error.message}`,
+      })
+    }
+  }
+
+  private async getBots() {
+    const items = await this.getDataEntity<BitkuaBot, Bot>(
+      'info_bots',
+      (item) => ({
+        id: item.id.toString(),
+        securityToken: item.security_token,
+        symbol: item.symbol.replace('-', ''),
+        amount: item.amount,
+        status: item.active,
+        strategy: item.estrategia,
+        positionSide: item.positionside,
+        exchange: item.exchange,
+        count: item.count,
+        safe: item.safe === 'yes',
+        createdAt: new Date(item.created_at),
+      }),
+    )
+
+    this.notifyClients({
+      store: 'bots',
+      bots: items.toSorted((a, b) => a.symbol.localeCompare(b.symbol)),
+    })
+  }
+
+  private async getStrategies() {
+    const items = await this.getDataEntity<BitkuaStrategy, Strategy>(
+      'check_estrategias',
+      (item) => ({
+        id: item.id.toString(),
+        slug: item.slug,
+        name: item.name,
+        positionside: item.positionside,
+      }),
+    )
+
+    this.notifyClients({
+      store: 'strategies',
+      strategies: items.toSorted((a, b) => a.name.localeCompare(b.name)),
+    })
+  }
+
+  async getDataMarket() {
+    const items = await this.getDataEntity<BitkuaDataMarket, DataMarket>(
+      'data_market',
+      (item) => ({
+        symbol: item.symbol.replace('-', ''),
+        exchange: item.exchange,
+        price: parseFloat(item.price),
+        sma55: parseFloat(item.sma55),
+        sma55_1d: parseFloat(item.sma55_1d),
+        maxD: parseFloat(item.maximoD),
+        minD: parseFloat(item.minimoD),
+        pmd: parseFloat(item.pmd),
+        max15_1h: parseFloat(item.max15_1h),
+        min15_1h: parseFloat(item.min15_1h),
+        higherRange: parseFloat(item.rangoSuperior),
+        lowerRange: parseFloat(item.rangoInferior),
+        liqMax: parseFloat(item.LiqMax),
+        liqMin: parseFloat(item.LiqMin),
+        fomo:
+          parseFloat(item.minimoD) > 0
+            ? ((parseFloat(item.price) - parseFloat(item.minimoD)) /
+                parseFloat(item.minimoD)) *
+              100
+            : 0,
+        fud:
+          parseFloat(item.maximoD) > 0
+            ? ((parseFloat(item.maximoD) - parseFloat(item.price)) /
+                parseFloat(item.maximoD)) *
+              100
+            : 0,
+        ratioFvdMc: parseFloat(item.ratio_fvd_mc),
+      }),
+    )
+
+    this.notifyClients({
+      store: 'dataMarket',
+      dataMarket: items,
+    })
+  }
+
+  async getSecurityTokens() {
+    const items = await this.getDataEntity<BitkuaSecurityToken, SecurityToken>(
+      'tokens',
+      (item) => ({
+        tokenId: item.idtokens,
+        securityToken: item.security_token,
+        exchange: item.exchange,
+      }),
+    )
+
+    this.notifyClients({
+      store: 'securityTokens',
+      securityTokens: items,
+    })
+  }
+
+  private async executeBotAction(
+    data: Record<string, unknown>,
+    botId?: string,
+  ) {
+    try {
       const response = await this.client.request<{
         success: boolean
         data: BitkuaBot[]
       }>({
-        method: 'GET',
+        method: 'POST',
         data,
       })
 
-      const bitkuaBots = response.data
-
-      if (!bitkuaBots.success || !bitkuaBots.data) {
-        console.warn(response.data)
-        return
-      }
-
-      const bots: Bot[] = bitkuaBots.data.map((bot) => ({
-        id: bot.id.toString(),
-        securityToken: bot.security_token,
-        symbol: bot.symbol.replace('-', ''),
-        amount: bot.amount,
-        status: bot.active,
-        strategy: bot.estrategia,
-        positionSide: bot.positionside,
-        exchange: bot.exchange,
-        count: bot.count,
-        safe: bot.safe === 'yes',
-        createdAt: new Date(bot.created_at),
-      }))
-
-      // console.log(bots)
-      this.logger.debug(`Fetched bot data: ${bots.length}`)
-
-      this.notifyClients({
-        store: 'bots',
-        bots: bots.toSorted((a, b) => a.symbol.localeCompare(b.symbol)),
-      })
-    } catch (error) {
-      console.error('Error during login process:', error)
-    }
-  }
-
-  private async getStrategies() {
-    try {
-      this.logger.debug('Fetching dk-strategies...')
-      const data = {
-        action: 'check_estrategias',
-        username: this.username,
-        clave: this.token,
-      }
-
-      const response = await this.client.request<{
-        success: boolean
-        data: BitkuaStrategy[]
-      }>({
-        method: 'GET',
-        data,
-      })
-
-      const bitkuaStrategies = response.data
-
-      if (!bitkuaStrategies.success || !bitkuaStrategies.data) {
+      if (!response.data.success) {
         console.log(response.data)
-        return
+        this.logger.warn(
+          `Bitkua error ${data.action}: ${response.data.data.toString()}`,
+        )
+        this.notification.sendNotification({
+          type: 'error',
+          title: 'BingX',
+          message: `Error ${data.action}: ${response.data.toString()}`,
+        })
+      } else {
+        this.logger.debug(`Bot ${data.action} successfully: ${botId}`)
+        this.notification.sendNotification({
+          type: 'success',
+          title: 'BingX',
+          message: `${data.action} successfully`,
+        })
       }
-
-      const strategies: Strategy[] = bitkuaStrategies.data.map((strategy) => ({
-        id: strategy.id.toString(),
-        slug: strategy.slug,
-        name: strategy.name,
-        positionside: strategy.positionside,
-      }))
-
-      this.logger.debug(`Fetched bot data: ${strategies.length}`)
-
-      this.notifyClients({
-        store: 'strategies',
-        strategies: strategies.toSorted((a, b) => a.name.localeCompare(b.name)),
-      })
+      this.startAutoRefresh()
     } catch (error) {
-      console.error('Error during fetch strategies process:', error)
-    }
-  }
-
-  async getDataMarket() {
-    try {
-      this.logger.debug('Fetching dk-data-market...')
-      const data = {
-        action: 'data_market',
-        username: this.username,
-        clave: this.token,
-      }
-
-      const response = await this.client.request<{
-        success: boolean
-        data: BitkuaDataMarket[]
-      }>({
-        method: 'GET',
-        data,
+      console.error(`Error ${data.action}:`, error.message)
+      this.notification.sendNotification({
+        type: 'error',
+        title: 'BingX',
+        message: `Error ${data.action}: ${error.message}`,
       })
-
-      const bitkuaDataMarket = response.data
-
-      if (!bitkuaDataMarket.success || !bitkuaDataMarket.data) {
-        console.warn(response.data)
-        return
-      }
-
-      const dataMarket: DataMarket[] = bitkuaDataMarket.data.map(
-        (dataMarket) => ({
-          symbol: dataMarket.symbol.replace('-', ''),
-          exchange: dataMarket.exchange,
-          price: parseFloat(dataMarket.price),
-          sma55: parseFloat(dataMarket.sma55),
-          sma55_1d: parseFloat(dataMarket.sma55_1d),
-          maxD: parseFloat(dataMarket.maximoD),
-          minD: parseFloat(dataMarket.minimoD),
-          pmd: parseFloat(dataMarket.pmd),
-          max15_1h: parseFloat(dataMarket.max15_1h),
-          min15_1h: parseFloat(dataMarket.min15_1h),
-          higherRange: parseFloat(dataMarket.rangoSuperior),
-          lowerRange: parseFloat(dataMarket.rangoInferior),
-          liqMax: parseFloat(dataMarket.LiqMax),
-          liqMin: parseFloat(dataMarket.LiqMin),
-          fomo:
-            parseFloat(dataMarket.minimoD) > 0
-              ? ((parseFloat(dataMarket.price) -
-                  parseFloat(dataMarket.minimoD)) /
-                  parseFloat(dataMarket.minimoD)) *
-                100
-              : 0,
-          fud:
-            parseFloat(dataMarket.maximoD) > 0
-              ? ((parseFloat(dataMarket.maximoD) -
-                  parseFloat(dataMarket.price)) /
-                  parseFloat(dataMarket.maximoD)) *
-                100
-              : 0,
-          ratioFvdMc: parseFloat(dataMarket.ratio_fvd_mc),
-        }),
-      )
-
-      this.logger.debug(`Fetch dataMarket data: ${dataMarket.length}`)
-
-      this.notifyClients({
-        store: 'dataMarket',
-        dataMarket: dataMarket,
-      })
-    } catch (error) {
-      console.error('Error during data market fetch:', error)
-    }
-  }
-
-  async getSecurityTokens() {
-    try {
-      this.logger.debug('Fetching dk-security-tokens...')
-      const data = {
-        action: 'tokens',
-        username: this.username,
-        clave: this.token,
-      }
-
-      const response = await this.client.request<{
-        success: boolean
-        data: BitkuaSecurityToken[]
-      }>({
-        method: 'GET',
-        data,
-      })
-
-      const bitkuaSecurityTokens = response.data
-
-      if (!bitkuaSecurityTokens.success || !bitkuaSecurityTokens.data) {
-        console.warn(bitkuaSecurityTokens)
-        return
-      }
-
-      const securityTokens: SecurityToken[] = bitkuaSecurityTokens.data.map(
-        (securityToken) => ({
-          tokenId: securityToken.idtokens,
-          securityToken: securityToken.security_token,
-          exchange: securityToken.exchange,
-        }),
-      )
-
-      this.logger.debug(`Fetch securityTokens data: ${securityTokens.length}`)
-
-      this.notifyClients({
-        store: 'securityTokens',
-        securityTokens: securityTokens,
-      })
-    } catch (error) {
-      console.error('Error during data security tokens fetch:', error)
     }
   }
 
   private async updateBotStatus(message: BitkuaActionUpdateStatus) {
-    try {
-      const response = await this.client.request<{
-        success: boolean
-        data: BitkuaBot[]
-      }>({
-        method: 'POST',
-        data: {
-          action: 'update_status',
-          username: this.username,
-          clave: this.token,
-          id: message.botId,
-          status: message.status,
-        },
-      })
-
-      if (!response.data.success) {
-        console.log(response.data)
-        this.logger.warn(`Bitkua error:${response.data.data.toString()}`)
-      } else
-        this.logger.debug(`Bot status updated successfully: ${message.botId}`)
-      this.startAutoRefresh()
-    } catch (error) {
-      console.error('Error updating bot status:', error.message)
-    }
+    await this.executeBotAction(
+      {
+        action: 'update_status',
+        username: this.username,
+        clave: this.token,
+        id: message.botId,
+        status: message.status,
+      },
+      message.botId,
+    )
   }
 
   private async updateBotSafe(message: BitkuaActionUpdateSafe) {
-    try {
-      const response = await this.client.request<{
-        success: boolean
-        data: BitkuaBot[]
-      }>({
-        method: 'POST',
-        data: {
-          action: 'update_safe',
-          username: this.username,
-          clave: this.token,
-          id: message.botId,
-          safe: message.safe ? 'yes' : 'no',
-        },
-      })
-
-      if (!response.data.success) {
-        console.log(response.data)
-        this.logger.warn(`Bitkua error:${response.data.data.toString()}`)
-      } else
-        this.logger.debug(`Bot safe updated successfully: ${message.botId}`)
-      this.startAutoRefresh()
-    } catch (error) {
-      console.error('Error updating bot safe:', error.message)
-    }
+    await this.executeBotAction(
+      {
+        action: 'update_safe',
+        username: this.username,
+        clave: this.token,
+        id: message.botId,
+        safe: message.safe ? 'yes' : 'no',
+      },
+      message.botId,
+    )
   }
 
   private async updateBotStrategy(message: BitkuaActionUpdateStrategy) {
-    try {
-      const response = await this.client.request<{
-        success: boolean
-        data: BitkuaBot[]
-      }>({
-        method: 'POST',
-        data: {
-          action: 'update_estrategia',
-          username: this.username,
-          clave: this.token,
-          id: message.botId,
-          estrategia: message.strategy,
-        },
-      })
-
-      if (!response.data.success) {
-        console.log(response.data)
-        this.logger.warn(`Bitkua error:${response.data.data.toString()}`)
-      } else
-        this.logger.debug(`Bot strategy updated successfully: ${message.botId}`)
-      this.startAutoRefresh()
-    } catch (error) {
-      console.error('Error updating bot strategy:', error.message)
-    }
+    await this.executeBotAction(
+      {
+        action: 'update_estrategia',
+        username: this.username,
+        clave: this.token,
+        id: message.botId,
+        estrategia: message.strategy,
+      },
+      message.botId,
+    )
   }
 
   private async updateBotAmount(message: BitkuaActionUpdateAmount) {
-    try {
-      const response = await this.client.request<{
-        success: boolean
-        data: BitkuaBot[]
-      }>({
-        method: 'POST',
-        data: {
-          action: 'update_amount',
-          username: this.username,
-          clave: this.token,
-          id: message.botId,
-          amount: message.amount,
-        },
-      })
-
-      if (!response.data.success) {
-        console.log(response.data)
-        this.logger.warn(`Bitkua error:${response.data.data.toString()}`)
-      } else
-        this.logger.debug(`Bot amount updated successfully: ${message.botId}`)
-      this.startAutoRefresh()
-    } catch (error) {
-      console.error('Error updating bot amount:', error.message)
-    }
+    await this.executeBotAction(
+      {
+        action: 'update_amount',
+        username: this.username,
+        clave: this.token,
+        id: message.botId,
+        amount: message.amount,
+      },
+      message.botId,
+    )
   }
 
   private async deleteBot(message: BitkuaActionDelete) {
-    try {
-      const response = await this.client.request<{
-        success: boolean
-        data: BitkuaBot[]
-      }>({
-        method: 'POST',
-        data: {
-          action: 'delete',
-          username: this.username,
-          clave: this.token,
-          id: message.botId,
-        },
-      })
-
-      if (!response.data.success) {
-        console.log(response.data)
-        this.logger.warn(`Bitkua error:${response.data.data.toString()}`)
-      } else this.logger.debug(`Bot deleted successfully: ${message.botId}`)
-      this.startAutoRefresh()
-    } catch (error) {
-      console.error('Error deleting bot:', error.message)
-    }
+    await this.executeBotAction(
+      {
+        action: 'delete',
+        username: this.username,
+        clave: this.token,
+        id: message.botId,
+      },
+      message.botId,
+    )
   }
 
   private async resetBot(message: BitkuaActionReset) {
-    try {
-      const data = {
+    await this.executeBotAction(
+      {
         action: 'reset',
         username: this.username,
         clave: this.token,
         id: message.botId,
         symbol: message.symbol,
-      }
-      console.log(data)
-
-      const response = await this.client.request<{
-        success: boolean
-        data: BitkuaBot[]
-      }>({
-        method: 'POST',
-        data,
-      })
-
-      if (!response.data.success) {
-        console.log(response.data)
-        this.logger.warn(`Bitkua error:${response.data.data.toString()}`)
-      } else this.logger.debug(`Bot reset successfully: ${message.symbol}`)
-      this.startAutoRefresh()
-    } catch (error) {
-      console.error('Error resetting bot:', error.message)
-    }
+      },
+      message.botId,
+    )
   }
 
   private async createBot(message: BitkuaActionCreateBot) {
-    try {
-      if (message.long) {
-        const data = {
-          action: 'create_bots',
-          username: this.username,
-          clave: this.token,
-          symbol: message.symbol,
-          idtokens: message.tokenId,
-          amount: message.amount,
-          active: message.status,
-          exchange: message.exchange,
-          estrategia: message.strategy,
-          positionside: 'LONG',
-          count: 0,
-          safe: message.safe ? 'yes' : 'no',
-        }
-        // console.log(data)
-        const response = await this.client.request<{
-          success: boolean
-          data: BitkuaBot[]
-        }>({
-          method: 'POST',
-          data,
-        })
+    if (message.long) {
+      await this.executeBotAction({
+        action: 'create_bots',
+        username: this.username,
+        clave: this.token,
+        symbol: message.symbol,
+        idtokens: message.tokenId,
+        amount: message.amount,
+        active: message.status,
+        exchange: message.exchange,
+        estrategia: message.strategy,
+        positionside: 'LONG',
+        count: 0,
+        safe: message.safe ? 'yes' : 'no',
+      })
+    }
 
-        if (!response.data.success) {
-          console.log(response.data)
-          this.logger.warn(`Bitkua error:${response.data.data.toString()}`)
-        } else
-          this.logger.debug(`Long bot created successfully: ${message.symbol}`)
-      }
-
-      if (message.short && message.strategy !== 'infinity') {
-        const data = {
-          action: 'create_bots',
-          username: this.username,
-          clave: this.token,
-          symbol: message.symbol,
-          idtokens: message.tokenId,
-          amount: message.amount,
-          active: message.status,
-          exchange: message.exchange,
-          estrategia: `short${message.strategy}`,
-          positionside: 'SHORT',
-          count: 0,
-          safe: message.safe ? 'yes' : 'no',
-        }
-        // console.log(data)
-
-        const response = await this.client.request<{
-          success: boolean
-          data: BitkuaBot[]
-        }>({
-          method: 'POST',
-          data,
-        })
-
-        if (!response.data.success) {
-          console.log(response.data)
-          this.logger.warn(`Bitkua error:${response.data.data.toString()}`)
-        } else
-          this.logger.debug(`Short bot created successfully: ${message.symbol}`)
-      }
-
-      this.startAutoRefresh()
-    } catch (error) {
-      console.error('Error resetting bot:', error.message)
+    if (message.short && message.strategy !== 'infinity') {
+      await this.executeBotAction({
+        action: 'create_bots',
+        username: this.username,
+        clave: this.token,
+        symbol: message.symbol,
+        idtokens: message.tokenId,
+        amount: message.amount,
+        active: message.status,
+        exchange: message.exchange,
+        estrategia: `short${message.strategy}`,
+        positionside: 'SHORT',
+        count: 0,
+        safe: message.safe ? 'yes' : 'no',
+      })
     }
   }
 

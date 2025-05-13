@@ -20,7 +20,7 @@ const bitkuaStrategiesStore = useBitkuaStrategiesStore()
 const botStrategies = computed(() => {
   return bitkuaStrategiesStore.strategies
     .filter((x) => x.positionside === 'LONG')
-    .map((x) => ({ ...x, name: x.name.replace('HFT Long', '') }))
+    .map((x) => ({ ...x, name: x.name.replace('Long', '') }))
 })
 
 const botExchange = ['Bingx', 'Bitget'] as const

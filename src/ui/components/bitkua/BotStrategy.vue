@@ -41,7 +41,7 @@ const deactivateForm = () => {
 const strategies = computed(() => {
   return bitkuaStrategiesStore.strategies
     .map((x) => ({
-      name: x.name.replace('HFT Long', '').replace('HFT Short', ''),
+      name: x.name.replace('Long', '').replace('Short', ''),
       slug: x.slug,
     }))
     .sort((a, b) => {

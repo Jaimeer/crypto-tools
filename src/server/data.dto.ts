@@ -197,3 +197,10 @@ export type SecurityToken = {
   securityToken: string
   exchange: string
 }
+
+export type Notification = {
+  id: string
+  title: string
+  message: string
+  type: 'info' | 'warning' | 'error' | 'success'
+}

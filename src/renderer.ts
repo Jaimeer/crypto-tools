@@ -22,6 +22,7 @@ import { useBitgetTradesStore } from './ui/store/bitget/bitgetTrades.store'
 import { useBitkuaDataMarketStore } from './ui/store/bitkua/bitkuaDataMarket.store'
 import { useBitkuaSecurityTokensStore } from './ui/store/bitkua/bitkuaSecurityTokens.store'
 import { useBitkuaStrategiesStore } from './ui/store/bitkua/bitkuaStrategies.store'
+import { useNotificationsStore } from './ui/store/general/notifications.store'
 
 const pinia = createPinia()
 
@@ -49,6 +50,8 @@ const botsStore = useBitkuaBotsStore()
 const dataMarketStore = useBitkuaDataMarketStore()
 const securityTokensStore = useBitkuaSecurityTokensStore()
 const strategiesStore = useBitkuaStrategiesStore()
+
+const notificationStore = useNotificationsStore()
 
 const updateDataHandler = (message: NotifyMessage) => {
   switch (message.store) {
@@ -107,6 +110,9 @@ const updateDataHandler = (message: NotifyMessage) => {
       break
     case 'strategies':
       strategiesStore.processMessage(message.strategies)
+      break
+    case 'notifications':
+      notificationStore.processMessage(message.notification)
       break
     default:
       console.log(message)
