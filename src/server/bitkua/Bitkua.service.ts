@@ -264,9 +264,10 @@ export class BitkuaService {
         },
       })
 
-      if (!response.data.success)
-        this.logger.warn(response.data.data.toString())
-      else
+      if (!response.data.success) {
+        console.log(response.data)
+        this.logger.warn(`Bitkua error:${response.data.data.toString()}`)
+      } else
         this.logger.debug(`Bot status updated successfully: ${message.botId}`)
       this.startAutoRefresh()
     } catch (error) {
@@ -290,9 +291,11 @@ export class BitkuaService {
         },
       })
 
-      if (!response.data.success)
-        this.logger.warn(response.data.data.toString())
-      else this.logger.debug(`Bot safe updated successfully: ${message.botId}`)
+      if (!response.data.success) {
+        console.log(response.data)
+        this.logger.warn(`Bitkua error:${response.data.data.toString()}`)
+      } else
+        this.logger.debug(`Bot safe updated successfully: ${message.botId}`)
       this.startAutoRefresh()
     } catch (error) {
       console.error('Error updating bot safe:', error.message)
@@ -315,9 +318,10 @@ export class BitkuaService {
         },
       })
 
-      if (!response.data.success)
-        this.logger.warn(response.data.data.toString())
-      else
+      if (!response.data.success) {
+        console.log(response.data)
+        this.logger.warn(`Bitkua error:${response.data.data.toString()}`)
+      } else
         this.logger.debug(`Bot strategy updated successfully: ${message.botId}`)
       this.startAutoRefresh()
     } catch (error) {
@@ -341,9 +345,10 @@ export class BitkuaService {
         },
       })
 
-      if (!response.data.success)
-        this.logger.warn(response.data.data.toString())
-      else
+      if (!response.data.success) {
+        console.log(response.data)
+        this.logger.warn(`Bitkua error:${response.data.data.toString()}`)
+      } else
         this.logger.debug(`Bot amount updated successfully: ${message.botId}`)
       this.startAutoRefresh()
     } catch (error) {
@@ -366,9 +371,10 @@ export class BitkuaService {
         },
       })
 
-      if (!response.data.success)
-        this.logger.warn(response.data.data.toString())
-      else this.logger.debug(`Bot deleted successfully: ${message.botId}`)
+      if (!response.data.success) {
+        console.log(response.data)
+        this.logger.warn(`Bitkua error:${response.data.data.toString()}`)
+      } else this.logger.debug(`Bot deleted successfully: ${message.botId}`)
       this.startAutoRefresh()
     } catch (error) {
       console.error('Error deleting bot:', error.message)
@@ -391,9 +397,10 @@ export class BitkuaService {
         },
       })
 
-      if (!response.data.success)
-        this.logger.warn(response.data.data.toString())
-      else this.logger.debug(`Bot reset successfully: ${message.symbol}`)
+      if (!response.data.success) {
+        console.log(response.data)
+        this.logger.warn(`Bitkua error:${response.data.data.toString()}`)
+      } else this.logger.debug(`Bot reset successfully: ${message.symbol}`)
       this.startAutoRefresh()
     } catch (error) {
       console.error('Error resetting bot:', error.message)
@@ -408,7 +415,7 @@ export class BitkuaService {
           username: this.username,
           clave: this.token,
           symbol: message.symbol,
-          security_token: this.token,
+          idtokens: message.tokenId,
           amount: message.amount,
           active: message.status,
           exchange: message.exchange,
@@ -417,7 +424,7 @@ export class BitkuaService {
           count: 0,
           safe: message.safe ? 'yes' : 'no',
         }
-        console.log(data)
+        // console.log(data)
         const response = await this.client.request<{
           success: boolean
           data: BitkuaBot[]
@@ -426,9 +433,10 @@ export class BitkuaService {
           data,
         })
 
-        if (!response.data.success)
-          this.logger.warn(response.data.data.toString())
-        else
+        if (!response.data.success) {
+          console.log(response.data)
+          this.logger.warn(`Bitkua error:${response.data.data.toString()}`)
+        } else
           this.logger.debug(`Long bot created successfully: ${message.symbol}`)
       }
 
@@ -438,7 +446,7 @@ export class BitkuaService {
           username: this.username,
           clave: this.token,
           symbol: message.symbol,
-          security_token: this.token,
+          idtokens: message.tokenId,
           amount: message.amount,
           active: message.status,
           exchange: message.exchange,
@@ -447,7 +455,7 @@ export class BitkuaService {
           count: 0,
           safe: message.safe ? 'yes' : 'no',
         }
-        console.log(data)
+        // console.log(data)
 
         const response = await this.client.request<{
           success: boolean
@@ -457,9 +465,10 @@ export class BitkuaService {
           data,
         })
 
-        if (!response.data.success)
-          this.logger.warn(response.data.data.toString())
-        else
+        if (!response.data.success) {
+          console.log(response.data)
+          this.logger.warn(`Bitkua error:${response.data.data.toString()}`)
+        } else
           this.logger.debug(`Short bot created successfully: ${message.symbol}`)
       }
 
