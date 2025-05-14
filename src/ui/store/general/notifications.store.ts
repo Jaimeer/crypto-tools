@@ -48,7 +48,7 @@ export const useNotificationsStore = defineStore('base-notifications', {
         const index = this.notifications.findIndex(
           (x: Notification) => x.id === notification.id,
         )
-        // if (index !== -1) this.notifications[index].show = false
+        if (index !== -1) this.notifications[index].show = false
       }, 2000)
     },
     removeNotification(id: string) {
