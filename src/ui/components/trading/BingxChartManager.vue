@@ -179,7 +179,7 @@ onUnmounted(() => {
 <template>
   <div
     v-if="bingxChartStore.symbol"
-    class="absolute bottom-0 left-0 flex h-screen w-full flex-col justify-end bg-slate-900/50 transition"
+    class="fixed bottom-0 left-0 flex h-screen w-full flex-col justify-end bg-slate-900/50 transition"
     @click="bingxChartStore.resetSymbol()"
   >
     <div
