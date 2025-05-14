@@ -16,7 +16,7 @@ onClickOutside(target, () => (viewData.value = false))
 <template>
   <div
     class="cursor-pointer rounded bg-pink-500 px-4 py-1 text-white transition hover:bg-pink-600"
-    @click="viewData = !viewData"
+    @click.prevent="viewData = !viewData"
   >
     Notifications ({{ notificationsStore.notifications.length }})
   </div>

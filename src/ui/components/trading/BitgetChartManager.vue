@@ -10,6 +10,7 @@ import { useBitgetPreferencesStore } from '../../store/bitget/bitgetPreferences.
 import { useBitkuaBotsStore } from '../../store/bitkua/bitkuaBots.store'
 import { useBitgetBalanceStore } from '../../store/bitget/bitgetBalance.store'
 import { useBitgetContractsStore } from '../../store/bitget/bitgetContracts.store'
+import { useNotificationsStore } from '../../store/general/notifications.store'
 import KLineChart from './KLineChart.vue'
 import BotCreate from '../bitkua/BotCreate.vue'
 import PositionSummary from '../tables/PositionSummary.vue'
@@ -25,6 +26,7 @@ const bitgetPreferencesStore = useBitgetPreferencesStore()
 const BitkuaBotsStore = useBitkuaBotsStore()
 const bitgetBalanceStore = useBitgetBalanceStore()
 const bitgetContractsStore = useBitgetContractsStore()
+const notificationsStore = useNotificationsStore()
 
 const exchange = 'Bitget'
 
@@ -147,11 +149,25 @@ const lastTrade = ref(trades.value[0])
 watch(
   () => trades.value,
   () => {
-    if (autoView.value) {
-      const newLastTrade = trades.value[0]
-
-      if (lastTrade.value?.tradeId !== newLastTrade.tradeId) {
-        lastTrade.value = newLastTrade
+    const newLastTrade = trades.value[0]
+    if (lastTrade.value?.tradeId !== newLastTrade.tradeId) {
+      const lastIndex = trades.value.findIndex(
+        (x) => x.tradeId === lastTrade.value?.tradeId,
+      )
+      for (let i = lastIndex; i >= 0; i--) {
+        const trade = trades.value[i]
+        const message = trade.realisedPNL ? 'Close' : 'Average'
+        const type = trade.realisedPNL ? 'success' : 'info'
+        notificationsStore.processMessage({
+          id: Date.now().toString(),
+          type,
+          title: 'New trade',
+          action: 'trade',
+          message: `[${trade.symbol}][${trade.side}] ${message} ${trade.realisedPNL.toFixed(2)}`,
+        })
+      }
+      lastTrade.value = newLastTrade
+      if (autoView.value) {
         bitgetChartStore.setSymbol(newLastTrade.symbol)
       }
     }
