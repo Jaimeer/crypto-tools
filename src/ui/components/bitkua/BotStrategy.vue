@@ -41,7 +41,7 @@ const deactivateForm = () => {
 const strategies = computed(() => {
   return bitkuaStrategiesStore.strategies
     .map((x) => ({
-      name: x.name.replace('Long', '').replace('Short', ''),
+      name: x.name,
       slug: x.slug,
     }))
     .sort((a, b) => {
