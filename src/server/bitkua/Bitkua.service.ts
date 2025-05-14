@@ -132,7 +132,8 @@ export class BitkuaService {
         this.notification.sendNotification({
           type: 'error',
           title: 'BingX',
-          message: `Error fetching ${action}: ${responseData.data.toString()}`,
+          action,
+          message: `Error fetching: ${responseData.data.toString()}`,
         })
         return
       }
@@ -146,7 +147,8 @@ export class BitkuaService {
       this.notification.sendNotification({
         type: 'error',
         title: 'BingX',
-        message: `Error fetching ${action}: ${error.message}`,
+        action,
+        message: `Error fetching: ${error.message}`,
       })
     }
   }
@@ -249,9 +251,21 @@ export class BitkuaService {
   }
 
   private async executeBotAction(
-    data: Record<string, unknown>,
+    data: Record<string, unknown> & {
+      action: string
+      symbol?: string
+      exchange?: string
+      estrategia?: string
+      positionside?: string
+    },
     botId?: string,
   ) {
+    let prefix = ''
+    if (data.symbol) prefix += `[${data.symbol}]`
+    if (data.exchange) prefix += `[${data.exchange}]`
+    if (data.estrategia) prefix += `[${data.estrategia}]`
+    if (data.positionside) prefix += `[${data.positionside}]`
+
     try {
       const response = await this.client.request<{
         success: boolean
@@ -269,14 +283,16 @@ export class BitkuaService {
         this.notification.sendNotification({
           type: 'error',
           title: 'BingX',
-          message: `Error ${data.action}: ${response.data.toString()}`,
+          action: data.action,
+          message: `${prefix} Error: ${response.data.toString()}`.trim(),
         })
       } else {
         this.logger.debug(`Bot ${data.action} successfully: ${botId}`)
         this.notification.sendNotification({
           type: 'success',
           title: 'BingX',
-          message: `${data.action} successfully`,
+          action: data.action,
+          message: `${prefix} Successfully`.trim(),
         })
       }
       this.startAutoRefresh()
@@ -285,7 +301,8 @@ export class BitkuaService {
       this.notification.sendNotification({
         type: 'error',
         title: 'BingX',
-        message: `Error ${data.action}: ${error.message}`,
+        action: data.action,
+        message: `${prefix} Error: ${error.message}`.trim(),
       })
     }
   }

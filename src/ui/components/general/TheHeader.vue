@@ -2,8 +2,8 @@
 import { Icon } from '@iconify/vue'
 import { useBingxConfigStore } from '../../store/bingx/bingxConfig.store'
 import { RouterLink } from 'vue-router'
-import { shell } from 'electron'
 import ButtonReferral from '../bitkua/ButtonReferral.vue'
+import NotificationsHistory from './NotificationsHistory.vue'
 
 defineProps<{ page: 'bingx' | 'bitget' | 'charts' | 'bots' | 'data-market' }>()
 const bingxConfig = useBingxConfigStore()
@@ -85,6 +85,7 @@ const search = defineModel()
         <span>Config</span>
       </button>
       <ButtonReferral />
+      <NotificationsHistory />
     </div>
   </div>
 </template>

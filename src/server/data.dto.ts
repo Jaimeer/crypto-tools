@@ -202,5 +202,6 @@ export type Notification = {
   id: string
   title: string
   message: string
+  action: string
   type: 'info' | 'warning' | 'error' | 'success'
 }

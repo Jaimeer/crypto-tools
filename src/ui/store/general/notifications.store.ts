@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia'
 import { Notification } from '../../../server/data.dto'
 
+type VisibleNotification = Notification & { show: boolean; date: Date }
+
 type State = {
-  notifications: Notification[]
+  notifications: VisibleNotification[]
   loading: boolean
   error: string | null
 }
@@ -35,11 +37,18 @@ export const useNotificationsStore = defineStore('base-notifications', {
 
   actions: {
     processMessage(notification: Notification) {
-      this.notifications.push(notification)
+      this.notifications.unshift({
+        ...notification,
+        show: true,
+        date: new Date(),
+      })
+      if (this.notifications.length > 50) this.notifications.pop()
+
       setTimeout(() => {
-        this.notifications = this.notifications.filter(
-          (x: Notification) => x.id !== notification.id,
+        const item = this.notifications.find(
+          (x: Notification) => x.id === notification.id,
         )
+        if (item) item.show = false
       }, 2000)
     },
   },
