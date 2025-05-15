@@ -158,25 +158,28 @@ watch(
   () => trades.value,
   () => {
     const newLastTrade = trades.value[0]
-    if (lastTrade.value?.tradeId !== newLastTrade.tradeId) {
-      const lastIndex = trades.value.findIndex(
-        (x) => x.tradeId === lastTrade.value?.tradeId,
-      )
-      for (let i = lastIndex; i >= 0; i--) {
-        const trade = trades.value[i]
-        const message = trade.realisedPNL ? 'Close' : 'Average'
-        const type = trade.realisedPNL ? 'success' : 'info'
-        notificationsStore.processMessage({
-          type,
-          title: 'New trade',
-          action: 'trade',
-          message: `[${trade.symbol}][${trade.side}] ${message} ${trade.realisedPNL.toFixed(2)}`,
-        })
-      }
-      lastTrade.value = newLastTrade
-      if (autoView.value) {
-        bingxChartStore.setSymbol(newLastTrade.symbol)
-      }
+    if (!newLastTrade || lastTrade.value?.tradeId === newLastTrade.tradeId)
+      return
+
+    const lastIndex = lastTrade.value
+      ? trades.value.findIndex((x) => x.tradeId === lastTrade.value.tradeId)
+      : trades.value.length
+
+    for (let i = lastIndex - 1; i >= 0; i--) {
+      const trade = trades.value[i]
+      const message = trade.realisedPNL ? 'Close' : 'Average'
+      const type = trade.realisedPNL ? 'success' : 'info'
+      notificationsStore.processMessage({
+        type,
+        title: 'New trade',
+        action: 'trade',
+        message: `[${trade.symbol}][${trade.side}] ${message} ${trade.realisedPNL.toFixed(2)}`,
+      })
+    }
+
+    lastTrade.value = newLastTrade
+    if (autoView.value) {
+      bingxChartStore.setSymbol(newLastTrade.symbol)
     }
   },
   { deep: true },

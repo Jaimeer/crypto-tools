@@ -23,7 +23,7 @@ onClickOutside(target, () => (viewData.value = false))
   <div
     v-if="viewData"
     ref="target"
-    class="absolute top-14 right-4 z-40 flex min-w-96 flex-col gap-3 rounded border border-slate-500 bg-slate-800 p-4 transition"
+    class="absolute top-14 right-4 z-40 flex max-h-2/3 min-w-96 flex-col gap-3 overflow-y-auto rounded border border-slate-500 bg-slate-800 p-4 transition"
   >
     <div
       v-for="notification in notificationsStore.notifications"
