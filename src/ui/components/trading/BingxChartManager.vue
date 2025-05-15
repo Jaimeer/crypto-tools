@@ -157,7 +157,6 @@ watch(
         const message = trade.realisedPNL ? 'Close' : 'Average'
         const type = trade.realisedPNL ? 'success' : 'info'
         notificationsStore.processMessage({
-          id: Date.now().toString(),
           type,
           title: 'New trade',
           action: 'trade',

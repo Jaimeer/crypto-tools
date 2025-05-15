@@ -199,7 +199,6 @@ export type SecurityToken = {
 }
 
 export type Notification = {
-  id: string
   title: string
   message: string
   action: string

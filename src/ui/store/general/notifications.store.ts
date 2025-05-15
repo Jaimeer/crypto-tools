@@ -1,7 +1,12 @@
 import { defineStore } from 'pinia'
+import { nanoid } from 'nanoid'
 import { Notification } from '../../../server/data.dto'
 
-type VisibleNotification = Notification & { show: boolean; date: Date }
+type VisibleNotification = Notification & {
+  id: string
+  show: boolean
+  date: Date
+}
 
 type State = {
   notifications: VisibleNotification[]
@@ -9,7 +14,7 @@ type State = {
   error: string | null
 }
 
-export const useNotificationsStore = defineStore('base-notifications', {
+export const useNotificationsStore = defineStore('notifications', {
   state: (): State => ({
     notifications: [
       // {
@@ -37,20 +42,22 @@ export const useNotificationsStore = defineStore('base-notifications', {
 
   actions: {
     processMessage(notification: Notification) {
+      const notificationId = nanoid()
       this.notifications.unshift({
         ...notification,
         show: true,
         date: new Date(),
+        id: notificationId,
       })
       if (this.notifications.length > 50) this.notifications.pop()
 
       setTimeout(() => {
-        this.removeNotification(notification.id)
+        this.removeNotification(notificationId)
       }, 2000)
     },
     removeNotification(id: string) {
       const index = this.notifications.findIndex(
-        (x: Notification) => x.id === id,
+        (x: VisibleNotification) => x.id === id,
       )
       if (index !== -1) {
         // Create a new notification object with show:false

@@ -13,7 +13,7 @@ export class NotificationService {
   sendNotification(message: Omit<Notification, 'id'>) {
     this.notifyClients({
       store: 'notifications',
-      notification: { ...message, id: Date.now().toString() },
+      notification: message,
     })
   }
 

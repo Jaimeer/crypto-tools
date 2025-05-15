@@ -10,15 +10,14 @@ const filteredNotifications = computed(() => {
   })
 })
 
-// const createSample = () => {
-//   notificationsStore.processMessage({
-//     id: Date.now().toString(),
-//     title: 'Sample Notification',
-//     message: 'This is a sample notification message.',
-//     type: 'info',
-//     action: 'Sample Action',
-//   })
-// }
+const createSample = () => {
+  notificationsStore.processMessage({
+    title: 'Sample Notification',
+    message: 'This is a sample notification message.',
+    type: 'info',
+    action: 'Sample Action',
+  })
+}
 </script>
 
 <template>
@@ -51,6 +50,6 @@ const filteredNotifications = computed(() => {
         X
       </div>
     </div>
-    <!-- <pre>{{ filteredNotifications }}</pre> -->
+    <!-- <pre class="bg-slate-800">{{ filteredNotifications }}</pre> -->
   </div>
 </template>
