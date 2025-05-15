@@ -4,6 +4,7 @@ import started from 'electron-squirrel-startup'
 import { BingxService } from './server/bingx/Bingx.service'
 import { BitkuaService } from './server/bitkua/Bitkua.service'
 import { BitgetService } from './server/bitget/Bitget.service'
+import { KucoinService } from './server/kucoin/Kucoin.service'
 import { Period } from './server/data.dto'
 import { BitkuaAction } from './server/bitkua/Bitkua.dto'
 import { LoggerService } from './utils/Logger'
@@ -18,6 +19,7 @@ const logger = new LoggerService('MainProcess')
 // Initialize BingX service
 let bingxService: BingxService | undefined
 let bitgetService: BitgetService | undefined
+let kucoinService: KucoinService | undefined
 let bitkuaService: BitkuaService | undefined
 
 ipcMain.handle(
@@ -53,6 +55,27 @@ ipcMain.handle(
     else bitgetService.setCredentials(apiKey, apiSecret, password)
 
     await bitgetService.startAutoRefresh()
+    return { success: true }
+  },
+)
+
+ipcMain.handle(
+  'set-kucoin-credentials',
+  async (
+    event,
+    {
+      apiKey,
+      apiSecret,
+      password,
+    }: { apiKey: string; apiSecret: string; password: string },
+  ) => {
+    logger.debug('Setting Kucoin credentials')
+
+    if (!kucoinService)
+      kucoinService = new KucoinService(apiKey, apiSecret, password)
+    else kucoinService.setCredentials(apiKey, apiSecret, password)
+
+    await kucoinService.startAutoRefresh()
     return { success: true }
   },
 )

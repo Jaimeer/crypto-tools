@@ -17,6 +17,11 @@ interface ElectronAPI {
     apiSecret: string,
     password: string,
   ) => Promise<{ success: boolean }>
+  setKucoinCredentials: (
+    apiKey: string,
+    apiSecret: string,
+    password: string,
+  ) => Promise<{ success: boolean }>
   setBitkuaCredentials: (
     username: string,
     token: string,
@@ -32,4 +37,4 @@ declare global {
   }
 }
 
-export {}
+export { }

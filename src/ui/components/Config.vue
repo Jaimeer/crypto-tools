@@ -3,10 +3,12 @@ import { ref } from 'vue'
 import { useBingxConfigStore } from '../store/bingx/bingxConfig.store'
 import { useBitkuaConfigStore } from '../store/bitkua/bitkuaConfig.store'
 import { useBitgetConfigStore } from '../store/bitget/bitgetConfig.store'
+import { useKucoinConfigStore } from '../store/kucoin/kucoinConfig.store'
 
 const bingxConfig = useBingxConfigStore()
 const bitkuaConfig = useBitkuaConfigStore()
 const bitgetConfig = useBitgetConfigStore()
+const kucoinConfig = useKucoinConfigStore()
 
 const inputBingxApiKey = ref(bingxConfig.apiKey)
 const inputBingxApiSecret = ref(bingxConfig.apiSecret)
@@ -14,6 +16,10 @@ const inputBingxApiSecret = ref(bingxConfig.apiSecret)
 const inputBitgetApiKey = ref(bitgetConfig.apiKey)
 const inputBitgetApiSecret = ref(bitgetConfig.apiSecret)
 const inputBitgetPassword = ref(bitgetConfig.password)
+
+const inputKucoinApiKey = ref(kucoinConfig.apiKey)
+const inputKucoinApiSecret = ref(kucoinConfig.apiSecret)
+const inputKucoinPassword = ref(kucoinConfig.password)
 
 const inputBitkuaUserName = ref(bitkuaConfig.username)
 const inputBitkuaToken = ref(bitkuaConfig.token)
@@ -29,7 +35,11 @@ const save = async () => {
     inputBitgetApiSecret.value,
     inputBitgetPassword.value,
   )
-
+  await kucoinConfig.setConfig(
+    inputKucoinApiKey.value,
+    inputKucoinApiSecret.value,
+    inputKucoinPassword.value,
+  )
   bingxConfig.toggleViewConfig()
 }
 </script>
@@ -93,7 +103,38 @@ const save = async () => {
           Api key only need read permissions
         </div>
       </div>
+      <div>
+        <div class="text-4xl">Kucoin Config</div>
 
+        <label for="kucoinApiKey" class="text-slate-400">API Key</label>
+        <input
+          id="kucoinApiKey"
+          v-model="inputKucoinApiKey"
+          type="text"
+          placeholder="API Key"
+          class="mb-2 w-full rounded border border-gray-300 p-2"
+        />
+        <label for="kucoinApiSecret" class="text-slate-400">API Secret</label>
+        <input
+          id="kucoinApiSecret"
+          v-model="inputKucoinApiSecret"
+          type="password"
+          placeholder="API Secret"
+          class="mb-2 w-full rounded border border-gray-300 p-2"
+        />
+        <label for="kucoinPassword" class="text-slate-400">Password</label>
+        <input
+          id="kucoinPassword"
+          v-model="inputKucoinPassword"
+          type="password"
+          placeholder="Password"
+          class="mb-2 w-full rounded border border-gray-300 p-2"
+        />
+
+        <div class="my-4 text-right text-slate-500 italic">
+          Api key only need read permissions
+        </div>
+      </div>
       <div>
         <div class="text-4xl">Bitkua Config</div>
 

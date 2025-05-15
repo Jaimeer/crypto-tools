@@ -21,6 +21,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
       apiSecret,
       password,
     }),
+  setKucoinCredentials: (apiKey: string, apiSecret: string, password: string) =>
+    ipcRenderer.invoke('set-kucoin-credentials', {
+      apiKey,
+      apiSecret,
+      password,
+    }),
   setBitkuaCredentials: (username: string, token: string) =>
     ipcRenderer.invoke('set-bitkua-credentials', { username, token }),
   sendBitkuaAction: (message: BitkuaAction) =>

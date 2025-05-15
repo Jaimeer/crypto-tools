@@ -6,6 +6,7 @@ import { computed } from 'vue'
 import md5 from 'md5'
 import { useDark } from '@vueuse/core'
 import { useBitgetConfigStore } from './ui/store/bitget/bitgetConfig.store'
+import { useKucoinConfigStore } from './ui/store/kucoin/kucoinConfig.store'
 
 const isDark = useDark()
 isDark.value = true
@@ -13,6 +14,7 @@ isDark.value = true
 const bingxConfig = useBingxConfigStore()
 const bitkuaConfig = useBitkuaConfigStore()
 const bitgetConfig = useBitgetConfigStore()
+const kucoinConfig = useKucoinConfigStore()
 
 const hashKey = computed(() => {
   const hash = md5(
@@ -47,6 +49,19 @@ if (bitgetConfig.apiKey && bitgetConfig.apiSecret && bitgetConfig.password) {
     console.log('Bitget service initialized successfully')
   } catch (error) {
     console.error('Failed to initialize Bitget service:', error)
+  }
+}
+
+if (kucoinConfig.apiKey && kucoinConfig.apiSecret && kucoinConfig.password) {
+  try {
+    window.electronAPI.setKucoinCredentials(
+      kucoinConfig.apiKey,
+      kucoinConfig.apiSecret,
+      kucoinConfig.password,
+    )
+    console.log('Kucoin service initialized successfully')
+  } catch (error) {
+    console.error('Failed to initialize Kucoin service:', error)
   }
 }
 

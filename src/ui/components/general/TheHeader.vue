@@ -3,7 +3,7 @@ import { Icon } from '@iconify/vue'
 import { useBingxConfigStore } from '../../store/bingx/bingxConfig.store'
 import { RouterLink } from 'vue-router'
 
-defineProps<{ page: 'bingx' | 'bitget' | 'charts' | 'bots' | 'data-market' }>()
+defineProps<{ page: 'bingx' | 'bitget' | 'kucoin' |'charts' | 'bots' | 'data-market' }>()
 const bingxConfig = useBingxConfigStore()
 
 const search = defineModel()
@@ -52,6 +52,16 @@ const search = defineModel()
         }"
       >
         Bitget
+      </RouterLink>
+      <RouterLink
+        to="/kucoin"
+        class="rounded bg-slate-500 px-4 py-1 transition hover:bg-slate-600"
+        :class="{
+          'bg-slate-500 text-white': page === 'kucoin',
+          'bg-slate-700 text-slate-400': page !== 'kucoin',
+        }"
+      >
+        Kucoin
       </RouterLink>
       <slot name="left" />
     </div>

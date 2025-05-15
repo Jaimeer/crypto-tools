@@ -23,5 +23,11 @@ export type NotifyMessage =
   | { store: 'bitget.positions'; positions: Position[] }
   | { store: 'bitget.contracts'; contracts: Contract[] }
   | { store: 'bitget.klines'; symbol: string; period: Period; klines: KLine[] }
+  | { store: 'kucoin.trades'; trades: Trade[] }
+  | { store: 'kucoin.transactions'; transactions: Transaction[] }
+  | { store: 'kucoin.balance'; balance: Balance }
+  | { store: 'kucoin.positions'; positions: Position[] }
+  | { store: 'kucoin.contracts'; contracts: Contract[] }
+  | { store: 'kucoin.klines'; symbol: string; period: Period; klines: KLine[] }
   | { store: 'bots'; bots: Bot[] }
   | { store: 'dataMarket'; dataMarket: DataMarket[] }
