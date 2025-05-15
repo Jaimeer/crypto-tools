@@ -7,7 +7,10 @@ const props = defineProps<{
 </script>
 
 <template>
-  <div class="flex w-fit items-center gap-0 font-bold whitespace-nowrap">
+  <div
+    v-if="value"
+    class="flex w-fit items-center gap-0 font-bold whitespace-nowrap"
+  >
     <div
       class="rounded-l border border-r-0 px-1 py-0.5 capitalize"
       :class="{
