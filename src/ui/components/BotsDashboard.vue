@@ -18,10 +18,15 @@ import { useBingxChartStore } from '../store/bingx/bingxChart.store'
 import { Bot } from '../../server/data.dto'
 import Exchange from './trading/Exchange.vue'
 import { useBitgetChartStore } from '../store/bitget/bitgetChart.store'
+import { useBitkuaDataMarketStore } from '../store/bitkua/bitkuaDataMarket.store'
+import Fomo from './trading/Fomo.vue'
+import Fud from './trading/Fud.vue'
+import Price from './trading/Price.vue'
 
 const bitkuaBotsStore = useBitkuaBotsStore()
 const bingxChartStore = useBingxChartStore()
 const bitgetChartStore = useBitgetChartStore()
+const bitkuaDataMarketStore = useBitkuaDataMarketStore()
 
 const search = ref('')
 const bots = computed(() => {
@@ -66,6 +71,10 @@ const loadSymbolChart = (bot: Bot) => {
         `loadSymbolChart not implemented for this ${bot.exchange} exchange`,
       )
   }
+}
+
+const dateMarketValue = (symbol: string) => {
+  return bitkuaDataMarketStore.dataMarket.find((x) => x.symbol === symbol)
 }
 </script>
 
@@ -124,6 +133,10 @@ const loadSymbolChart = (bot: Bot) => {
         'strategy',
         'status',
         'safe',
+        'fomo',
+        'fud',
+        'price',
+        'liq',
         'createdAt',
         'reset',
         'delete',
@@ -178,6 +191,24 @@ const loadSymbolChart = (bot: Bot) => {
         <td class="px-2 py-0.5">
           <BotSafe :bot="item" />
         </td>
+        <td class="px-2 py-0.5">
+          <Fomo :value="dateMarketValue(item.symbol)?.fomo" />
+        </td>
+        <td class="px-2 py-0.5">
+          <Fud :value="dateMarketValue(item.symbol)?.fud" />
+          <!-- <pre>
+            {{ dateMarketValue(item.symbol) }}
+          </pre> -->
+        </td>
+        <td class="px-2 py-0.5">
+          <Price :value="dateMarketValue(item.symbol)?.price" color="gray" />
+        </td>
+        <td class="px-2 py-0.5">
+          <Price :value="dateMarketValue(item.symbol)?.liqMax" color="green" />
+          -
+          <Price :value="dateMarketValue(item.symbol)?.liqMin" color="red" />
+        </td>
+
         <td class="flex items-center gap-1 px-2 py-0.5">
           <DateTime :value="item.createdAt" />
           <div

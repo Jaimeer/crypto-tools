@@ -44,24 +44,36 @@ export const useBingxKLinesStore = defineStore('bingx-klines', {
     processMessage(symbol: string, period: Period, klines: KLine[]) {
       const key = `${symbol}-${period}`
 
-      // console.log(this.klines)
-
       if (!this.klines[key] || this.klines[key].length === 0) {
-        this.klines[key] = klines
+        // Create a fresh reactive copy of the array
+        this.klines[key] = [...klines]
         return
       }
 
       const newData = klines[0]
+      if (!newData) return
+
       const oldData = this.klines[key][0] as KLine
-      // console.log({ newData, oldData, symbol, symbolState: this.klines[symbol] })
+
       if (oldData?.timestamp === newData?.timestamp) {
-        oldData.close = newData.close
-        oldData.high = newData.high
-        oldData.low = newData.low
-        oldData.open = newData.open
-        oldData.volume = newData.volume
+        // Replace the first element with a new object instead of modifying properties
+        const updatedKLines = [...this.klines[key]]
+        updatedKLines[0] = {
+          ...oldData,
+          close: newData.close,
+          high: newData.high,
+          low: newData.low,
+          open: newData.open,
+          volume: newData.volume,
+        }
+
+        // Replace the entire array to ensure reactivity
+        this.klines[key] = updatedKLines
       } else {
-        if (newData) this.klines[key].unshift(newData)
+        if (newData) {
+          // Add new data to beginning using a new array
+          this.klines[key] = [newData, ...this.klines[key]]
+        }
       }
     },
   },

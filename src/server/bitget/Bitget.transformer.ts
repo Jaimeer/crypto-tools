@@ -120,6 +120,7 @@ export const BitgetTransformer: ExchangeTransformer<
     })
   },
   positionsTransform(positions: FuturesPositionV2[]): Position[] {
+    if (!positions) return []
     return positions.map((position) => {
       const data: Position = {
         symbol: parseSymbol(position.symbol),

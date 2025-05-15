@@ -3,7 +3,9 @@ defineProps<{ value: number }>()
 </script>
 
 <template>
+  <div v-if="!value" class="text-slate-600">---</div>
   <div
+    v-else
     :class="{
       'text-slate-600': value <= 0,
       'text-green-600': value > 0 && value < 30,

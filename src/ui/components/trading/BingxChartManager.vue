@@ -11,11 +11,14 @@ import { useBitkuaBotsStore } from '../../store/bitkua/bitkuaBots.store'
 import { useBingxBalanceStore } from '../../store/bingx/bingxBalance.store'
 import { useBingxContractsStore } from '../../store/bingx/bingxContracts.store'
 import { useNotificationsStore } from '../../store/general/notifications.store'
+import { useBitkuaDataMarketStore } from '../../store/bitkua/bitkuaDataMarket.store'
 import KLineChart from './KLineChart.vue'
 import BotCreate from '../bitkua/BotCreate.vue'
 import PositionSummary from '../tables/PositionSummary.vue'
 import { subDays, subMonths, subYears } from 'date-fns'
 import Price from '../trading/Price.vue'
+import Fomo from './Fomo.vue'
+import Fud from './Fud.vue'
 
 const bingxChartStore = useBingxChartStore()
 const bingxKLinesStore = useBingxKLinesStore()
@@ -27,6 +30,7 @@ const BitkuaBotsStore = useBitkuaBotsStore()
 const bingxBalanceStore = useBingxBalanceStore()
 const bingxContractsStore = useBingxContractsStore()
 const notificationsStore = useNotificationsStore()
+const bitkuaDataMarketStore = useBitkuaDataMarketStore()
 
 const exchange = 'Bingx'
 
@@ -72,6 +76,12 @@ const contracts = computed(() => {
 
 const bots = computed(() => {
   return BitkuaBotsStore.bots.filter((x) => x.symbol === bingxChartStore.symbol)
+})
+
+const dateMarket = computed(() => {
+  return bitkuaDataMarketStore.dataMarket.find(
+    (x) => x.symbol === bingxChartStore.symbol,
+  )
 })
 
 const profits = computed(() => {
@@ -209,14 +219,26 @@ onUnmounted(() => {
           :exchange="exchange"
           :key="bingxChartStore.symbol"
         />
-        <div class="flex items-center gap-2">
-          <div
-            v-for="[key, value] in Object.entries(profits)"
-            :key="key"
-            class="text-sm"
-          >
+        <div class="flex items-center gap-2 text-sm">
+          <div v-for="[key, value] in Object.entries(profits)" :key="key">
             <div class="text-slate-400">{{ key }}</div>
             <Price :value="value" :decimals="2" />
+          </div>
+          <div>
+            <div class="text-slate-400">fomo</div>
+            <Fomo :value="dateMarket.fomo" />
+          </div>
+          <div>
+            <div class="text-slate-400">fud</div>
+            <Fud :value="dateMarket.fud" />
+          </div>
+          <div>
+            <div class="text-slate-400">liqMax</div>
+            <Price :value="dateMarket.liqMax" color="green" />
+          </div>
+          <div>
+            <div class="text-slate-400">liqMin</div>
+            <Price :value="dateMarket.liqMin" color="red" />
           </div>
         </div>
         <div class="flex items-center gap-2">

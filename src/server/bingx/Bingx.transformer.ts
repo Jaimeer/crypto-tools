@@ -87,6 +87,7 @@ export const BingxTransformer: ExchangeTransformer<
   },
 
   positionsTransform(positions: BingxPosition[]): Position[] {
+    if (!positions) return []
     return positions.map((position) => ({
       symbol: parseSymbol(position.symbol),
       positionId: position.positionId,

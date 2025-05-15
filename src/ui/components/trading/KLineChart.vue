@@ -3,16 +3,12 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { init, dispose, registerOverlay, registerIndicator } from 'klinecharts'
 import { vElementSize } from '@vueuse/components'
 import { addMonths, subDays, subHours } from 'date-fns'
-import { Icon } from '@iconify/vue'
 import { simpleAnnotationDown } from '../klinechart/simpleAnnotationDown.overlay'
 import { rectangle } from '../klinechart/rectangle.overlay'
 import { KLine, Period, Position, Trade } from '../../../server/data.dto'
 import { useBingxTransactionsStore } from '../../store/bingx/bingxTransactions.store'
 import { useBingxTradesStore } from '../../store/bingx/bingxTrades.store'
-import { useBingxPositionsStore } from '../../store/bingx/bingxPositions.store'
-import Price from './Price.vue'
-import Rescue from './Rescue.vue'
-import NumTrades from './NumTrades.vue'
+import { useBitkuaDataMarketStore } from '../../store/bitkua/bitkuaDataMarket.store'
 import { BitkuaActionUpdateStatus } from '../../../server/bitkua/Bitkua.dto'
 import { useBitkuaBotsStore } from '../../store/bitkua/bitkuaBots.store'
 import dominantKongIndicator from '../klinechart/dominantKong.indicator'
@@ -23,8 +19,8 @@ registerIndicator(dominantKongIndicator)
 
 const bingxTradesStore = useBingxTradesStore()
 const bingxTransactionsStore = useBingxTransactionsStore()
-const bingxPositionsStore = useBingxPositionsStore()
 const bitkuaBotsStore = useBitkuaBotsStore()
+const bitkuaDataMarketStore = useBitkuaDataMarketStore()
 
 const chart = ref()
 
@@ -39,6 +35,10 @@ const props = defineProps<{
   onlyChart?: boolean
   printDKIndicator?: boolean
 }>()
+
+const dateMarket = computed(() => {
+  return bitkuaDataMarketStore.dataMarket.find((x) => x.symbol === props.symbol)
+})
 
 const printData = (start: boolean) => {
   if (!chart.value || !props.klines.length) return
@@ -100,6 +100,7 @@ const filteredTrades = computed(() => {
 const draw = () => {
   chart.value.removeOverlay({ groupId: 'trades' })
   chart.value.removeOverlay({ groupId: 'positions' })
+  chart.value.removeOverlay({ groupId: 'liq' })
 
   // Buys & Sells
   if (!props.hideTrades && !props.onlyChart) {
@@ -243,6 +244,49 @@ const draw = () => {
       }
     }
   })
+
+  // dateMarket
+  if (dateMarket.value) {
+    const liqColor = '#ffa50088'
+    chart.value.createOverlay({
+      name: 'simpleTag',
+      groupId: 'liq',
+      points: [{ value: dateMarket.value.liqMax }],
+      lock: true,
+      extendData: dateMarket.value.liqMax,
+      styles: {
+        text: {
+          color: '#000',
+          backgroundColor: liqColor,
+        },
+        polygon: { color: liqColor },
+        line: {
+          style: 'dashed',
+          color: liqColor,
+          dashedValue: [2, 2],
+        },
+      },
+    })
+    chart.value.createOverlay({
+      name: 'simpleTag',
+      groupId: 'liq',
+      points: [{ value: dateMarket.value.liqMin }],
+      lock: true,
+      extendData: dateMarket.value.liqMin,
+      styles: {
+        text: {
+          color: '#000',
+          backgroundColor: liqColor,
+        },
+        polygon: { color: liqColor },
+        line: {
+          style: 'dashed',
+          color: liqColor,
+          dashedValue: [2, 2],
+        },
+      },
+    })
+  }
 }
 
 const calculateNewAvgOpenPrice = (
