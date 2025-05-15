@@ -113,7 +113,6 @@ const symbolRanking = computed(() => {
           :value="item.key"
           :exchange="exchange"
           :bots="bots"
-          :trades="trades"
           :positions="positions"
           :balance="balance"
           :contracts="contracts"

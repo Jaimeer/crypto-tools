@@ -1,41 +1,43 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { Bot, Position } from '../../../server/data.dto'
+import { Balance, Bot, Contract, Position } from '../../../server/data.dto'
 import DateTime from '../general/DateTime.vue'
 import Table from '../general/Table.vue'
-import PositionSide from './PositionSide.vue'
-import Price from './Price.vue'
-import Strategy from './Strategy.vue'
-import Rescue from './Rescue.vue'
-import { Icon } from '@iconify/vue'
+import PositionSide from '../trading/PositionSide.vue'
+import Price from '../trading/Price.vue'
+import Strategy from '../trading/Strategy.vue'
+import Symbol from '../trading/Symbol.vue'
+import Rescue from '../trading/Rescue.vue'
 import { BitkuaActionUpdateStatus } from 'src/server/bitkua/Bitkua.dto'
+import BotReset from '../bitkua/BotReset.vue'
+import BotDelete from '../bitkua/BotDelete.vue'
+import { computed } from 'vue'
 
 const props = defineProps<{
-  symbol: string
+  exchange: string
   positions: Position[]
   bots: Bot[]
+  balance: Balance
+  contracts: Contract[]
+  search: string
 }>()
 
 const status = ['active', 'stop', 'onlysell'] as const
 
-const bot = computed(() => {
-  return {
-    long: props.bots.find(
-      (x) =>
-        x.symbol.toLowerCase() === props.symbol.toLowerCase() &&
-        !x.strategy.includes('short'),
-    ),
-    short: props.bots.find(
-      (x) =>
-        x.symbol.toLowerCase() === props.symbol.toLowerCase() &&
-        x.strategy.includes('short'),
-    ),
-  }
+const filteredPositions = computed(() => {
+  return props.positions.filter((position) =>
+    position.symbol.toLowerCase().includes(props.search.toLowerCase()),
+  )
 })
 
 const positionBot = (position: Position) => {
   const side = position.positionSide === 'LONG' ? 'long' : 'short'
-  return bot.value[side]
+  const bot = props.bots.find(
+    (x) =>
+      x.symbol.toLowerCase() === position.symbol.toLowerCase() &&
+      ((side === 'long' && !x.strategy.startsWith('short')) ||
+        (side === 'short' && x.strategy.startsWith('short'))),
+  )
+  return bot
 }
 
 const sendAction = (
@@ -68,12 +70,21 @@ const sendAction = (
         // 'warnings',
         'rescue',
       ]"
-      :items="positions"
+      :items="filteredPositions"
       :disable-sort="true"
     >
       <template #default="{ item }">
         <td class="px-2 py-0.5">
-          <div>{{ item.symbol }}</div>
+          <div>
+            <Symbol
+              :value="item.symbol"
+              :exchange="exchange"
+              :bots="bots"
+              :positions="positions"
+              :balance="balance"
+              :contracts="contracts"
+            />
+          </div>
           <div class="flex items-center gap-1">
             <PositionSide :position-side="item.positionSide" />
             {{ item.isolated ? 'Isolated' : 'Cross' }}
@@ -82,17 +93,21 @@ const sendAction = (
         </td>
         <td class="px-2 py-0.5">
           <div>
-            <Price :value="item.positionAmt" color="gray" />
+            <Price :value="item.positionAmt" :decimals="2" color="gray" />
             {{ item.symbol.replace('USDT', '') }}
           </div>
           <div>
-            <Price :value="item.positionValue" color="gray" />
+            <Price :value="item.positionValue" :decimals="2" color="gray" />
             USDT
           </div>
         </td>
         <td class="px-2 py-0.5">
           <div class="flex flex-col">
-            <Price :value="item.unrealizedProfit" suffix=" USDT" />
+            <Price
+              :value="item.unrealizedProfit"
+              :decimals="2"
+              suffix=" USDT"
+            />
             <Price
               :value="item.pnlRatio * 100"
               :decimals="2"
@@ -154,11 +169,14 @@ const sendAction = (
                 'px-1 text-amber-600 hover:text-amber-400 disabled:bg-amber-900 disabled:text-amber-200':
                   status === 'onlysell',
               }"
+              v-tooltip="status"
               :disabled="positionBot(item).status === status"
               @click="sendAction(positionBot(item).id, status)"
             >
               {{ status.slice(0, 1).toUpperCase() }}
             </button>
+            <BotReset :bot="positionBot(item)" short-mode />
+            <BotDelete :bot="positionBot(item)" short-mode />
           </div>
         </td>
         <!-- <td class="px-2 py-0.5">
@@ -182,7 +200,7 @@ const sendAction = (
         <td class="px-2 py-0.5">
           <Rescue
             v-if="item.unrealizedProfit < 0"
-            :symbol="symbol"
+            :symbol="item.symbol"
             :side="item.positionSide === 'LONG' ? 'long' : 'short'"
             :allVisible="true"
             :gaps="[5, 10, 50]"

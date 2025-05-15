@@ -7,6 +7,9 @@ import md5 from 'md5'
 import { useDark } from '@vueuse/core'
 import { useBitgetConfigStore } from './ui/store/bitget/bitgetConfig.store'
 import { useKucoinConfigStore } from './ui/store/kucoin/kucoinConfig.store'
+import BitgetChartManager from './ui/components/trading/BitgetChartManager.vue'
+import BingxChartManager from './ui/components/trading/BingxChartManager.vue'
+import Notifications from './ui/components/general/Notifications.vue'
 
 const isDark = useDark()
 isDark.value = true
@@ -81,8 +84,11 @@ if (bitkuaConfig.username && bitkuaConfig.token) {
 <template>
   <div class="min-h-screen w-full bg-slate-900 text-slate-200">
     <Config v-if="bingxConfig.viewConfig" />
-    <div v-else :key="hashKey" class="h-screen w-full overflow-y-auto">
+    <div v-else :key="hashKey" class="relative h-screen w-full overflow-y-auto">
       <RouterView />
+      <BitgetChartManager />
+      <BingxChartManager />
+      <Notifications />
     </div>
   </div>
 </template>

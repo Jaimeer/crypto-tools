@@ -10,9 +10,7 @@ import { useBitkuaDataMarketStore } from '../store/bitkua/bitkuaDataMarket.store
 import { useBingxBalanceStore } from '../store/bingx/bingxBalance.store'
 import { useBingxContractsStore } from '../store/bingx/bingxContracts.store'
 import { useBingxPositionsStore } from '../store/bingx/bingxPositions.store'
-import { useBingxTradesStore } from '../store/bingx/bingxTrades.store'
 import { useBitkuaBotsStore } from '../store/bitkua/bitkuaBots.store'
-import BingxChartManager from './trading/BingxChartManager.vue'
 import { DataMarket } from 'src/server/data.dto'
 import Fud from './trading/Fud.vue'
 
@@ -20,7 +18,6 @@ const bitkuaDataMarketStore = useBitkuaDataMarketStore()
 const bingxBalanceStore = useBingxBalanceStore()
 const bitkuaBotsStore = useBitkuaBotsStore()
 const bingxPositionsStore = useBingxPositionsStore()
-const bingxTradesStore = useBingxTradesStore()
 const bingxContractsStore = useBingxContractsStore()
 
 const exchange = ref('Bingx')
@@ -51,10 +48,6 @@ const bots = computed(() => {
   )
 })
 
-const trades = computed(() => {
-  return bingxTradesStore.trades
-})
-
 const balance = computed(() => {
   return bingxBalanceStore.balance
 })
@@ -79,7 +72,7 @@ const ranking = (data: DataMarket) => {
   if (data.sma55_1d > 0 && smaRange && data.fud < 50) return 'SHORT SMA'
   if (data.fomo < 30 && data.fud > 70) return 'LONG'
   if (data.fomo > 200 && data.fud < 30) return 'SHORT'
-  if (data.ratioFvdMc > 4 && data.fud > 0 && data.fud < 50) return 'SHORT PVD'
+  if (data.ratioFvdMc > 4 && data.fud > 0 && data.fud < 50) return 'SHORT FVD'
   return '---'
 }
 </script>
@@ -125,7 +118,6 @@ const ranking = (data: DataMarket) => {
               :value="item.symbol"
               :exchange="item.exchange"
               :bots="bots"
-              :trades="trades"
               :positions="positions"
               :balance="balance"
               :contracts="contracts"
@@ -178,6 +170,5 @@ const ranking = (data: DataMarket) => {
         </tr>
       </template>
     </Table>
-    <BingxChartManager />
   </div>
 </template>

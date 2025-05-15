@@ -68,6 +68,7 @@
     "klinecharts": "^10.0.0-alpha5",
     "kucoin-universal-sdk": "^1.2.0",
     "md5": "^2.3.0",
+    "nanoid": "^5.1.5",
     "otplib": "^12.0.1",
     "picocolors": "^1.1.1",
     "pinia": "^3.0.1",

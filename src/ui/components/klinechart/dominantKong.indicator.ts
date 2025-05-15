@@ -283,7 +283,6 @@ const draw: IndicatorDrawCallback<
   unknown
 > = ({ ctx, chart, indicator, bounding, xAxis, yAxis }) => {
   const { result } = indicator
-
   // Draw SMA lines
   ctx.lineWidth = 2
   for (let i = 1; i < result.length; i++) {
@@ -369,7 +368,7 @@ const dominantKongIndicator: IndicatorTemplate<
 > = {
   name: 'DominantKongProTrader',
   shortName: 'DK Pro Trader',
-  precision: 2,
+  precision: 4,
   calcParams: [
     {
       period1: 5,

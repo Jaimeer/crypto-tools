@@ -51,6 +51,7 @@ const transactionsByDay = computed(() => {
   )
 
   trades.value.reduce((acc, trade) => {
+    console.log(trade)
     const date = format(new Date(trade.filledTime), 'yyyy-MM-dd')
     if (!acc[date]) {
       acc[date] = { num: 0, pnl: 0, all: 0, charges: 0, volume: 0 }

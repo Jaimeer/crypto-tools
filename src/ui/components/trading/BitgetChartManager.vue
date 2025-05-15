@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch, watchEffect } from 'vue'
 import { useMagicKeys } from '@vueuse/core'
-import { useBingxKLinesStore } from '../../store/bingx/bingxKLines.store'
-import { useBingxChartStore } from '../../store/bingx/bingxChart.store'
-import { useBingxPositionsStore } from '../../store/bingx/bingxPositions.store'
-import { useBingxTradesStore } from '../../store/bingx/bingxTrades.store'
-import { useBingxTransactionsStore } from '../../store/bingx/bingxTransactions.store'
-import { useBingxPreferencesStore } from '../../store/bingx/bingxPreferences.store'
+import { useBitgetKLinesStore } from '../../store/bitget/bitgetKLines.store'
+import { useBitgetChartStore } from '../../store/bitget/bitgetChart.store'
+import { useBitgetPositionsStore } from '../../store/bitget/bitgetPositions.store'
+import { useBitgetTradesStore } from '../../store/bitget/bitgetTrades.store'
+import { useBitgetTransactionsStore } from '../../store/bitget/bitgetTransactions.store'
+import { useBitgetPreferencesStore } from '../../store/bitget/bitgetPreferences.store'
 import { useBitkuaBotsStore } from '../../store/bitkua/bitkuaBots.store'
-import { useBingxBalanceStore } from '../../store/bingx/bingxBalance.store'
-import { useBingxContractsStore } from '../../store/bingx/bingxContracts.store'
+import { useBitgetBalanceStore } from '../../store/bitget/bitgetBalance.store'
+import { useBitgetContractsStore } from '../../store/bitget/bitgetContracts.store'
 import { useNotificationsStore } from '../../store/general/notifications.store'
 import { useBitkuaDataMarketStore } from '../../store/bitkua/bitkuaDataMarket.store'
 import KLineChart from './KLineChart.vue'
@@ -20,74 +20,76 @@ import Price from '../trading/Price.vue'
 import Fomo from './Fomo.vue'
 import Fud from './Fud.vue'
 
-const bingxChartStore = useBingxChartStore()
-const bingxKLinesStore = useBingxKLinesStore()
-const bingxPositionsStore = useBingxPositionsStore()
-const bingxTradesStore = useBingxTradesStore()
-const bingxTransactionsStore = useBingxTransactionsStore()
-const bingxPreferencesStore = useBingxPreferencesStore()
+const bitgetChartStore = useBitgetChartStore()
+const bitgetKLinesStore = useBitgetKLinesStore()
+const bitgetPositionsStore = useBitgetPositionsStore()
+const bitgetTradesStore = useBitgetTradesStore()
+const bitgetTransactionsStore = useBitgetTransactionsStore()
+const bitgetPreferencesStore = useBitgetPreferencesStore()
 const BitkuaBotsStore = useBitkuaBotsStore()
-const bingxBalanceStore = useBingxBalanceStore()
-const bingxContractsStore = useBingxContractsStore()
+const bitgetBalanceStore = useBitgetBalanceStore()
+const bitgetContractsStore = useBitgetContractsStore()
 const notificationsStore = useNotificationsStore()
 const bitkuaDataMarketStore = useBitkuaDataMarketStore()
 
-const exchange = 'Bingx'
+const exchange = 'Bitget'
 
 const { escape, arrowup, arrowright, arrowdown, arrowleft } = useMagicKeys()
 
 const autoView = ref(false)
 
 const positions = computed(() => {
-  return bingxPositionsStore.positions.filter(
-    (x) => x.symbol === bingxChartStore.symbol,
+  return bitgetPositionsStore.positions.filter(
+    (x) => x.symbol === bitgetChartStore.symbol,
   )
 })
 
 const transactions = computed(() => {
-  return bingxTransactionsStore.transactions.filter(
-    (x) => x.symbol === bingxChartStore.symbol,
+  return bitgetTransactionsStore.transactions.filter(
+    (x) => x.symbol === bitgetChartStore.symbol,
   )
 })
 
 const klines1h = computed(() => {
-  return bingxKLinesStore.kLine(bingxChartStore.symbol, '1h') ?? []
+  return bitgetKLinesStore.kLine(bitgetChartStore.symbol, '1h') ?? []
 })
 
 const klines4h = computed(() => {
-  return bingxKLinesStore.kLine(bingxChartStore.symbol, '4h') ?? []
+  return bitgetKLinesStore.kLine(bitgetChartStore.symbol, '4h') ?? []
 })
 
 const klines1d = computed(() => {
-  return bingxKLinesStore.kLine(bingxChartStore.symbol, '1d') ?? []
+  return bitgetKLinesStore.kLine(bitgetChartStore.symbol, '1d') ?? []
 })
 
 const balance = computed(() => {
-  return bingxBalanceStore.balance
+  return bitgetBalanceStore.balance
 })
 
 const trades = computed(() => {
-  return bingxTradesStore.trades
+  return bitgetTradesStore.trades
 })
 
 const contracts = computed(() => {
-  return bingxContractsStore.contracts
+  return bitgetContractsStore.contracts
 })
 
 const bots = computed(() => {
-  return BitkuaBotsStore.bots.filter((x) => x.symbol === bingxChartStore.symbol)
+  return BitkuaBotsStore.bots.filter(
+    (x) => x.symbol === bitgetChartStore.symbol,
+  )
 })
 
 const dateMarket = computed(() => {
   return bitkuaDataMarketStore.dataMarket.find(
-    (x) => x.symbol === bingxChartStore.symbol,
+    (x) => x.symbol === bitgetChartStore.symbol,
   )
 })
 
 const profits = computed(() => {
   const calculateProfit = (date: Date) =>
     transactions.value.reduce((acc, transaction) => {
-      if (transaction.symbol === bingxChartStore.symbol) {
+      if (transaction.symbol === bitgetChartStore.symbol) {
         if (transaction.time > date.getTime()) {
           return acc + transaction.income
         }
@@ -103,31 +105,31 @@ const profits = computed(() => {
 })
 
 watch(
-  () => bingxChartStore.symbol,
+  () => bitgetChartStore.symbol,
   (newSymbol, oldSymbol) => {
     if (newSymbol) {
       if (oldSymbol && newSymbol !== oldSymbol) {
-        bingxKLinesStore.unsubscribeKLines(oldSymbol, '1h')
-        bingxKLinesStore.unsubscribeKLines(oldSymbol, '4h')
-        bingxKLinesStore.unsubscribeKLines(oldSymbol, '1d')
+        bitgetKLinesStore.unsubscribeKLines(oldSymbol, '1h')
+        bitgetKLinesStore.unsubscribeKLines(oldSymbol, '4h')
+        bitgetKLinesStore.unsubscribeKLines(oldSymbol, '1d')
       }
 
-      bingxKLinesStore.fetchKLines(newSymbol, '1h')
-      bingxKLinesStore.fetchKLines(newSymbol, '4h')
-      bingxKLinesStore.fetchKLines(newSymbol, '1d')
+      bitgetKLinesStore.fetchKLines(newSymbol, '1h')
+      bitgetKLinesStore.fetchKLines(newSymbol, '4h')
+      bitgetKLinesStore.fetchKLines(newSymbol, '1d')
     } else {
-      if (oldSymbol) bingxKLinesStore.unsubscribeKLines(oldSymbol, '1h')
-      if (oldSymbol) bingxKLinesStore.unsubscribeKLines(oldSymbol, '4h')
-      if (oldSymbol) bingxKLinesStore.unsubscribeKLines(oldSymbol, '1d')
+      if (oldSymbol) bitgetKLinesStore.unsubscribeKLines(oldSymbol, '1h')
+      if (oldSymbol) bitgetKLinesStore.unsubscribeKLines(oldSymbol, '4h')
+      if (oldSymbol) bitgetKLinesStore.unsubscribeKLines(oldSymbol, '1d')
     }
   },
   { immediate: true },
 )
 
 const allSymbolsFiltered = computed(() => {
-  return bingxTransactionsStore.allSymbols.filter(
+  return bitgetTransactionsStore.allSymbols.filter(
     (symbol) =>
-      !bingxPreferencesStore.hidedSymbols
+      !bitgetPreferencesStore.hidedSymbols
         .map((x) => x.toLowerCase())
         .includes(symbol.toLowerCase()),
   )
@@ -135,22 +137,22 @@ const allSymbolsFiltered = computed(() => {
 
 const loadNextSymbol = () => {
   const index = allSymbolsFiltered.value.findIndex(
-    (x) => x === bingxChartStore.symbol,
+    (x) => x === bitgetChartStore.symbol,
   )
   const newIndex = (index + 1) % allSymbolsFiltered.value.length
   const newSymbol = allSymbolsFiltered.value[newIndex]
-  bingxChartStore.setSymbol(newSymbol)
+  bitgetChartStore.setSymbol(newSymbol)
 }
 
 const loadPrevSymbol = () => {
   const index = allSymbolsFiltered.value.findIndex(
-    (x) => x === bingxChartStore.symbol,
+    (x) => x === bitgetChartStore.symbol,
   )
   const newIndex =
     (index - 1 + allSymbolsFiltered.value.length) %
     allSymbolsFiltered.value.length
   const newSymbol = allSymbolsFiltered.value[newIndex]
-  bingxChartStore.setSymbol(newSymbol)
+  bitgetChartStore.setSymbol(newSymbol)
 }
 
 const lastTrade = ref(trades.value[0])
@@ -173,7 +175,7 @@ watch(
         const message = trade.realisedPNL ? 'Close' : 'Average'
         const type = trade.realisedPNL ? 'success' : 'info'
         notificationsStore.processMessage({
-          api: 'Bingx',
+          api: 'Bitget',
           action: `Trade created`,
           type,
           title: `Trade ${message}`,
@@ -188,15 +190,15 @@ watch(
 
     lastTrade.value = newLastTrade
     if (autoView.value) {
-      bingxChartStore.setSymbol(newLastTrade.symbol)
+      bitgetChartStore.setSymbol(newLastTrade.symbol)
     }
   },
   { deep: true },
 )
 
 watchEffect(() => {
-  if (bingxChartStore.symbol) {
-    if (escape.value) bingxChartStore.resetSymbol()
+  if (bitgetChartStore.symbol) {
+    if (escape.value) bitgetChartStore.resetSymbol()
     if (arrowup.value) loadPrevSymbol()
     if (arrowleft.value) loadPrevSymbol()
     if (arrowdown.value) loadNextSymbol()
@@ -205,19 +207,19 @@ watchEffect(() => {
 })
 
 onUnmounted(() => {
-  if (bingxChartStore.symbol) {
-    bingxKLinesStore.unsubscribeKLines(bingxChartStore.symbol, '1h')
-    bingxKLinesStore.unsubscribeKLines(bingxChartStore.symbol, '4h')
-    bingxKLinesStore.unsubscribeKLines(bingxChartStore.symbol, '1d')
+  if (bitgetChartStore.symbol) {
+    bitgetKLinesStore.unsubscribeKLines(bitgetChartStore.symbol, '1h')
+    bitgetKLinesStore.unsubscribeKLines(bitgetChartStore.symbol, '4h')
+    bitgetKLinesStore.unsubscribeKLines(bitgetChartStore.symbol, '1d')
   }
 })
 </script>
 
 <template>
   <div
-    v-if="bingxChartStore.symbol"
+    v-if="bitgetChartStore.symbol"
     class="fixed bottom-0 left-0 flex h-screen w-full flex-col justify-end bg-slate-900/50 transition"
-    @click="bingxChartStore.resetSymbol()"
+    @click="bitgetChartStore.resetSymbol()"
   >
     <div
       class="flex h-[94%] w-full flex-col items-center justify-center border-t-2 border-t-slate-800 bg-slate-900"
@@ -227,9 +229,9 @@ onUnmounted(() => {
         class="flex w-full items-center justify-between rounded-t border border-b-0 border-slate-600 bg-slate-900 p-2"
       >
         <BotCreate
-          :symbol="bingxChartStore.symbol"
+          :symbol="bitgetChartStore.symbol"
           :exchange="exchange"
-          :key="bingxChartStore.symbol"
+          :key="bitgetChartStore.symbol"
         />
         <div class="flex items-center gap-2 text-sm">
           <div v-for="[key, value] in Object.entries(profits)" :key="key">
@@ -266,7 +268,7 @@ onUnmounted(() => {
           </button>
           <div
             class="cursor-pointer px-2 text-slate-600 hover:text-slate-400"
-            @click="bingxChartStore.resetSymbol()"
+            @click="bitgetChartStore.resetSymbol()"
           >
             X
           </div>
@@ -278,17 +280,17 @@ onUnmounted(() => {
             v-if="!klines1h.length"
             class="flex h-full w-full items-center justify-center rounded border border-gray-600 p-4 text-slate-600"
           >
-            {{ bingxChartStore.symbol }} Fetching data 1h...
+            {{ bitgetChartStore.symbol }} Fetching data 1h...
           </div>
           <KLineChart
             v-else
-            :symbol="bingxChartStore.symbol"
+            :symbol="bitgetChartStore.symbol"
             period="1h"
             :hideTrades="false"
             :klines="klines1h"
-            :trades="trades.filter((x) => x.symbol === bingxChartStore.symbol)"
+            :trades="trades.filter((x) => x.symbol === bitgetChartStore.symbol)"
             :positions="
-              positions.filter((x) => x.symbol === bingxChartStore.symbol)
+              positions.filter((x) => x.symbol === bitgetChartStore.symbol)
             "
             size="large"
             printDKIndicator
@@ -300,19 +302,19 @@ onUnmounted(() => {
               v-if="!klines4h.length"
               class="flex h-full w-full items-center justify-center rounded border border-gray-600 p-4 text-slate-600"
             >
-              {{ bingxChartStore.symbol }} Fetching data 4h...
+              {{ bitgetChartStore.symbol }} Fetching data 4h...
             </div>
             <KLineChart
               v-else
-              :symbol="bingxChartStore.symbol"
+              :symbol="bitgetChartStore.symbol"
               period="4h"
               :hideTrades="false"
               :klines="klines4h"
               :trades="
-                trades.filter((x) => x.symbol === bingxChartStore.symbol)
+                trades.filter((x) => x.symbol === bitgetChartStore.symbol)
               "
               :positions="
-                positions.filter((x) => x.symbol === bingxChartStore.symbol)
+                positions.filter((x) => x.symbol === bitgetChartStore.symbol)
               "
               size="large"
               onlyChart
@@ -324,19 +326,19 @@ onUnmounted(() => {
               v-if="!klines1d.length"
               class="flex h-full w-full items-center justify-center rounded border border-gray-600 p-4 text-slate-600"
             >
-              {{ bingxChartStore.symbol }} Fetching data 1d...
+              {{ bitgetChartStore.symbol }} Fetching data 1d...
             </div>
             <KLineChart
               v-else
-              :symbol="bingxChartStore.symbol"
+              :symbol="bitgetChartStore.symbol"
               period="1d"
               :hideTrades="false"
               :klines="klines1d"
               :trades="
-                trades.filter((x) => x.symbol === bingxChartStore.symbol)
+                trades.filter((x) => x.symbol === bitgetChartStore.symbol)
               "
               :positions="
-                positions.filter((x) => x.symbol === bingxChartStore.symbol)
+                positions.filter((x) => x.symbol === bitgetChartStore.symbol)
               "
               size="large"
               onlyChart

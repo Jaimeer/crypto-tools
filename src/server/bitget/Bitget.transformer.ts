@@ -52,7 +52,7 @@ export const BitgetTransformer: ExchangeTransformer<
         commissionAsset: '',
         orderId: trade.orderId,
         tradeId: trade.tradeId,
-        filledTime: new Date(trade.cTime),
+        filledTime: new Date(parseInt(trade.cTime)),
         side: trade.side.toUpperCase() as 'BUY' | 'SELL',
         positionSide: trade.side.toUpperCase(),
         role: trade.tradeScope.toUpperCase(),
@@ -120,6 +120,7 @@ export const BitgetTransformer: ExchangeTransformer<
     })
   },
   positionsTransform(positions: FuturesPositionV2[]): Position[] {
+    if (!positions) return []
     return positions.map((position) => {
       const data: Position = {
         symbol: parseSymbol(position.symbol),

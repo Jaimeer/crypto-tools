@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import type {
   BitkuaActionCreateBot,
   BotExchange,
@@ -7,30 +7,21 @@ import type {
 import { useBingxContractsStore } from '../../../ui/store/bingx/bingxContracts.store'
 import { useBitgetContractsStore } from '../../../ui/store/bitget/bitgetContracts.store'
 import SearchAutocomplete from '../trading/SearchAutocomplete.vue'
+import { useBitkuaSecurityTokensStore } from '../../store/bitkua/bitkuaSecurityTokens.store'
+import { useBitkuaStrategiesStore } from '../../store/bitkua/bitkuaStrategies.store'
 
 const props = defineProps<{ symbol?: string; exchange?: BotExchange }>()
 
 const bingxContractsStore = useBingxContractsStore()
 const bitgetContractsStore = useBitgetContractsStore()
+const bitkuaSecurityTokensStore = useBitkuaSecurityTokensStore()
+const bitkuaStrategiesStore = useBitkuaStrategiesStore()
 
-const botStrategies = [
-  ,
-  'aiexpertavg',
-  'aiexpertavgplus',
-  'degen',
-  'infinity',
-  'karlosavg',
-  'ladominantkong',
-  'lamilagrosa',
-  'lamilagrosapro',
-  'liquidationpoint',
-  'liquiditypool',
-  'longalashitcoin',
-  'pmd',
-  'smartcandle',
-  'smartmoney',
-  'sniperagresive',
-]
+const botStrategies = computed(() => {
+  return bitkuaStrategiesStore.strategies
+    .filter((x) => x.positionside === 'LONG')
+    .map((x) => ({ ...x, name: x.name.replace('Long', '') }))
+})
 
 const botExchange = ['Bingx', 'Bitget'] as const
 const botStatus = ['active', 'stop'] as const
@@ -49,6 +40,14 @@ const exchangeSymbols = computed<
 const formData = reactive<BitkuaActionCreateBot>({
   action: 'createBot',
   exchange: props.exchange ?? 'Bingx',
+  tokenId:
+    bitkuaSecurityTokensStore.securityTokens.filter(
+      (x) => x.exchange === (props.exchange ?? 'Bingx'),
+    ).length === 1
+      ? bitkuaSecurityTokensStore.securityTokens.filter(
+          (x) => x.exchange === (props.exchange ?? 'Bingx'),
+        )[0].tokenId
+      : '',
   symbol: props.symbol ?? '',
   amount: undefined,
   strategy: 'lamilagrosapro',
@@ -57,6 +56,21 @@ const formData = reactive<BitkuaActionCreateBot>({
   long: false,
   short: false,
 })
+
+const availableSecurityTokes = computed(() => {
+  return bitkuaSecurityTokensStore.securityTokens.filter(
+    (x) => x.exchange === formData.exchange,
+  )
+})
+
+watch(
+  () => availableSecurityTokes.value,
+  () => {
+    if (availableSecurityTokes.value.length === 1)
+      formData.tokenId = availableSecurityTokes.value[0].tokenId
+  },
+  { deep: true, immediate: true },
+)
 
 const createBot = () => {
   const message: BitkuaActionCreateBot = { ...formData }
@@ -68,6 +82,7 @@ const createBot = () => {
 const isValid = computed(() => {
   if (!formData.symbol) return false
   if (!formData.amount) return false
+  if (!formData.tokenId) return false
   if (!formData.strategy) return false
   if (!formData.status) return false
   if (!formData.exchange) return false
@@ -79,7 +94,7 @@ const isValid = computed(() => {
 </script>
 
 <template>
-  <form class="flex w-full items-center gap-2" @submit.prevent="createBot">
+  <form class="flex items-center gap-2" @submit.prevent="createBot">
     <select
       v-model="formData.exchange"
       class="rounded border border-slate-600 bg-slate-700 px-2 py-0.5 text-slate-200 focus:border-slate-500 focus:outline-none disabled:opacity-50"
@@ -91,6 +106,19 @@ const isValid = computed(() => {
         :value="exchange"
       >
         {{ exchange }}
+      </option>
+    </select>
+    <select
+      v-model="formData.tokenId"
+      class="rounded border border-slate-600 bg-slate-700 px-2 py-0.5 text-slate-200 focus:border-slate-500 focus:outline-none disabled:opacity-50"
+      :disabled="availableSecurityTokes.length === 1"
+    >
+      <option
+        v-for="securityToken in availableSecurityTokes"
+        :key="securityToken.securityToken"
+        :value="securityToken.tokenId"
+      >
+        {{ securityToken.securityToken }}
       </option>
     </select>
 
@@ -105,16 +133,17 @@ const isValid = computed(() => {
       :disabled="!!props.symbol"
     />
 
+    <!-- <pre>{{ bitkuaStrategiesStore }}</pre> -->
     <select
       v-model="formData.strategy"
       class="rounded border border-slate-600 bg-slate-700 px-2 py-0.5 text-slate-200 focus:border-slate-500 focus:outline-none"
     >
       <option
-        v-for="strategy in botStrategies.toSorted((a, b) => a.localeCompare(b))"
-        :key="strategy"
-        :value="strategy"
+        v-for="strategy in botStrategies"
+        :key="strategy.name"
+        :value="strategy.slug"
       >
-        {{ strategy }}
+        {{ strategy.name }}
       </option>
     </select>
     <input
@@ -174,5 +203,6 @@ const isValid = computed(() => {
     >
       Create Bot
     </button>
+    <!-- <pre>{{ formData }}</pre> -->
   </form>
 </template>

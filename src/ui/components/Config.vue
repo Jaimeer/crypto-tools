@@ -4,6 +4,7 @@ import { useBingxConfigStore } from '../store/bingx/bingxConfig.store'
 import { useBitkuaConfigStore } from '../store/bitkua/bitkuaConfig.store'
 import { useBitgetConfigStore } from '../store/bitget/bitgetConfig.store'
 import { useKucoinConfigStore } from '../store/kucoin/kucoinConfig.store'
+import ButtonReferral from './bitkua/ButtonReferral.vue'
 
 const bingxConfig = useBingxConfigStore()
 const bitkuaConfig = useBitkuaConfigStore()
@@ -47,6 +48,32 @@ const save = async () => {
 <template>
   <div class="flex h-screen flex-col items-center justify-center gap-4 p-4">
     <form class="">
+      <div>
+        <div class="text-4xl">Bitkua Config</div>
+
+        <label for="username" class="text-slate-400">UserName</label>
+        <input
+          id="username"
+          v-model="inputBitkuaUserName"
+          type="text"
+          placeholder="UserName"
+          class="mb-2 w-full rounded border border-gray-300 p-2"
+        />
+        <label for="token" class="text-slate-400">Token</label>
+        <input
+          id="token"
+          v-model="inputBitkuaToken"
+          type="password"
+          placeholder="Token"
+          class="mb-2 w-full rounded border border-gray-300 p-2"
+        />
+        <div class="flex justify-end">
+          <ButtonReferral />
+        </div>
+      </div>
+
+      <div class="my-8 text-right text-slate-500 italic"></div>
+
       <div>
         <div class="text-4xl">BingX Config</div>
 
@@ -106,6 +133,7 @@ const save = async () => {
       <div>
         <div class="text-4xl">Kucoin Config</div>
 
+        <<<<<<< HEAD
         <label for="kucoinApiKey" class="text-slate-400">API Key</label>
         <input
           id="kucoinApiKey"
@@ -158,6 +186,7 @@ const save = async () => {
 
       <div class="my-8 text-right text-slate-500 italic"></div>
 
+      ======= >>>>>>> develop
       <button
         type="submit"
         class="w-full rounded bg-blue-500 p-2 text-white hover:cursor-pointer hover:opacity-90"

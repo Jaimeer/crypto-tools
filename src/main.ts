@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import started from 'electron-squirrel-startup'
 import { BingxService } from './server/bingx/Bingx.service'
 import { BitkuaService } from './server/bitkua/Bitkua.service'
@@ -98,6 +98,10 @@ ipcMain.handle('send-bitkua-action', async (event, message: BitkuaAction) => {
     await bitkuaService.processAction(message)
     return { success: true }
   }
+})
+
+ipcMain.handle('open-url', async (event, url: string) => {
+  shell.openExternal(url)
 })
 
 // Set up IPC handlers

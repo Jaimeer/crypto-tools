@@ -2,11 +2,24 @@
 import { Icon } from '@iconify/vue'
 import { useBingxConfigStore } from '../../store/bingx/bingxConfig.store'
 import { RouterLink } from 'vue-router'
+import ButtonReferral from '../bitkua/ButtonReferral.vue'
+import NotificationsHistory from './NotificationsHistory.vue'
+import { watchDebounced } from '@vueuse/core'
+import { ref } from 'vue'
 
 defineProps<{ page: 'bingx' | 'bitget' | 'kucoin' |'charts' | 'bots' | 'data-market' }>()
 const bingxConfig = useBingxConfigStore()
 
 const search = defineModel()
+const localSearch = ref('')
+
+watchDebounced(
+  localSearch,
+  () => {
+    search.value = localSearch.value
+  },
+  { debounce: 200 },
+)
 </script>
 
 <template>
@@ -69,7 +82,8 @@ const search = defineModel()
       <div class="flex items-center gap-2">
         <slot name="pre-search" />
         <input
-          v-model="search"
+          id="search"
+          v-model="localSearch"
           type="text"
           placeholder="Search..."
           class="w-96 rounded border border-slate-600 bg-slate-700 px-2 py-1 text-slate-200 focus:border-slate-500 focus:outline-none"
@@ -86,18 +100,14 @@ const search = defineModel()
     </div>
     <div class="flex items-center gap-2">
       <slot name="right" />
+      <ButtonReferral />
       <button
         @click="bingxConfig.toggleViewConfig"
-        class="rounded bg-amber-500 px-4 py-1 text-white transition hover:bg-amber-600"
+        class="cursor-pointer rounded bg-amber-500 px-4 py-1 text-white transition hover:bg-amber-600"
       >
-        <span>Config</span>
+        <Icon icon="mdi:cog" class="h-6 w-6 text-white" />
       </button>
-      <!-- <a
-        href="https://app.bitkua.com?reference=jaime_odh"
-        class="rounded bg-amber-500 px-4 py-1 text-white transition hover:bg-amber-600"
-      >
-        <span>Register in Bitkua</span>
-      </a> -->
+      <NotificationsHistory />
     </div>
   </div>
 </template>

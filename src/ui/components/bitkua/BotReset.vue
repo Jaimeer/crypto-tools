@@ -4,6 +4,7 @@ import { Bot } from '../../../server/data.dto'
 
 const props = defineProps<{
   bot: Bot
+  shortMode?: boolean
 }>()
 
 const sendAction = (botId: string) => {
@@ -11,7 +12,6 @@ const sendAction = (botId: string) => {
     action: 'reset',
     botId,
     symbol: props.bot.symbol,
-    positionSide: props.bot.positionSide,
   }
   window.electronAPI.sendBitkuaAction(message)
 }
@@ -19,9 +19,10 @@ const sendAction = (botId: string) => {
 
 <template>
   <div
-    class="cursor-pointer rounded px-2 py-0.5 font-bold text-yellow-600 hover:text-yellow-800"
+    class="cursor-pointer rounded px-1 font-bold text-purple-600 hover:text-purple-800"
+    v-tooltip="shortMode ? 'reset' : ''"
     @click="sendAction(bot.id)"
   >
-    reset
+    {{ shortMode ? 'R' : 'reset' }}
   </div>
 </template>

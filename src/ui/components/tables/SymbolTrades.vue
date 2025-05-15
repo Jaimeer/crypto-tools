@@ -14,6 +14,7 @@ import {
   Trade,
   Transaction,
 } from '../../../server/data.dto'
+import Strategy from '../trading/Strategy.vue'
 
 const props = defineProps<{
   exchange: string
@@ -203,7 +204,7 @@ const tradesInfo = computed(() => {
     //   side,
     //   bot,
     // });
-    data[symbol][side].amount = bot?.count ?? 0
+    data[symbol][side].amount = bot?.amount ?? 0
     data[symbol][side].botId = bot?.id || ''
     data[symbol][side].strategy = bot?.strategy || ''
     data[symbol][side].status = bot?.status || ''
@@ -230,58 +231,6 @@ const position = (symbol: string, side: string) => {
     (position) =>
       position.symbol === symbol &&
       position.positionSide === side.toUpperCase(),
-  )
-}
-
-const strategyName = (strategy: string) => {
-  if (!strategy) return '---'
-  return (
-    {
-      ladominantkong: 'HFT Long Dominant Kong Infinity F-∞',
-      shortladominantkong: 'HFT Short Dominant Kong F-12',
-      shortalashitcoin: 'HFT Short A La Shitcoin F-12',
-      longalashitcoin: 'HFT Long A La Shitcoin F-13',
-      liquiditypool: 'HFT Long Liquidity Pool F-120',
-      shortliquiditypool: 'HFT Short Liquidity Pool F-120',
-      aiexpertavg: 'HFT Long AI Expert F-14',
-      shortaiexpertavg: 'HFT Short AI Expert F-12',
-      aiexpertavgplus: 'HFT Long AI Expert Plus F-15',
-      shortaiexpertavgplus: 'HFT Short AI Expert Plus F-15',
-      lamilagrosa: 'HFT Long La Milagrosa F-15',
-      shortlamilagrosa: 'HFT Short La Milagrosa F-15',
-      lamilagrosapro: 'HFT Long La Milagrosa Pro F-15',
-      shortlamilagrosapro: 'HFT Short La Milagrosa Pro F-15',
-      pmd: 'HFT Long PMD F-15',
-      shortpmd: 'HFT Short PMD F-15',
-      degen: 'HFT Long Degen F-15',
-      shortdegen: 'HFT Short Degen F-15',
-    }[strategy] ?? strategy
-  )
-}
-
-const strategyNameShort = (strategy: string) => {
-  if (!strategy) return '---'
-  return (
-    {
-      ladominantkong: 'DOM',
-      shortladominantkong: 'DOM',
-      shortalashitcoin: 'LSH',
-      longalashitcoin: 'LSH',
-      liquiditypool: 'LLP',
-      shortliquiditypool: 'LLP',
-      aiexpertavg: 'AIE',
-      shortaiexpertavg: 'AIE',
-      aiexpertavgplus: 'AIP',
-      shortaiexpertavgplus: 'AIP',
-      lamilagrosa: 'LMG',
-      shortlamilagrosa: 'LMG',
-      lamilagrosapro: 'LMP',
-      shortlamilagrosapro: 'LMP',
-      pmd: 'PMD',
-      shortpmd: 'PMD',
-      degen: 'DGN',
-      shortdegen: 'DGN',
-    }[strategy] ?? strategy
   )
 }
 
@@ -320,7 +269,6 @@ const sendAction = (botId: string, status: 'active' | 'stop' | 'onlysell') => {
           :value="item.key"
           :exchange="exchange"
           :bots="bots"
-          :trades="trades"
           :positions="positions"
           :balance="balance"
           :contracts="contracts"
@@ -418,7 +366,7 @@ const sendAction = (botId: string, status: 'active' | 'stop' | 'onlysell') => {
             </template>
             <div v-else class="text-slate-600">---</div>
           </div>
-          <div v-else>
+          <div v-else class="flex items-center gap-1">
             <span class="text-slate-600">{{ item[side].botId }}</span>
             <span
               :class="{
@@ -426,9 +374,9 @@ const sendAction = (botId: string, status: 'active' | 'stop' | 'onlysell') => {
                 'text-slate-600 line-through': item[side].status === 'stop',
                 'text-amber-600': item[side].status === 'onlysell',
               }"
-              v-tooltip="strategyName(item[side].strategy)"
-              >{{ strategyNameShort(item[side].strategy) }}</span
             >
+              <Strategy :strategy="item[side].strategy" />
+            </span>
             <span class="text-blue-400">[{{ item[side].amount }}]</span>
             <span
               :class="{

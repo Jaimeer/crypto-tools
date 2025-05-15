@@ -131,6 +131,7 @@ export type ListenKey = {
 
 export type BitkuaBot = {
   id: number
+  security_token: string
   symbol: string
   amount: number
   active: string
@@ -143,8 +144,16 @@ export type BitkuaBot = {
   safe: 'yes' | 'no'
 }
 
+export type BitkuaStrategy = {
+  id: number
+  slug: string
+  name: string
+  positionside: 'SHORT' | 'LONG'
+}
+
 export type Bot = {
   id: string
+  securityToken: string
   symbol: string
   amount: number
   status: string
@@ -154,6 +163,13 @@ export type Bot = {
   count: number
   safe: boolean
   createdAt: Date
+}
+
+export type Strategy = {
+  id: string
+  slug: string
+  name: string
+  positionside: 'SHORT' | 'LONG'
 }
 
 export type DataMarket = {
@@ -174,4 +190,19 @@ export type DataMarket = {
   fomo: number
   fud: number
   ratioFvdMc: number
+}
+
+export type SecurityToken = {
+  tokenId: string
+  securityToken: string
+  exchange: string
+}
+
+export type Notification = {
+  api: string
+  action: string
+  type: 'info' | 'warning' | 'error' | 'success'
+  title: string
+  message: string
+  metadata?: Record<string, string>
 }

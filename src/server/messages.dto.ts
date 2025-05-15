@@ -6,8 +6,11 @@ import {
   KLine,
   Period,
   Position,
+  SecurityToken,
+  Strategy,
   Trade,
   Transaction,
+  Notification,
 } from './data.dto'
 
 export type NotifyMessage =
@@ -31,3 +34,6 @@ export type NotifyMessage =
   | { store: 'kucoin.klines'; symbol: string; period: Period; klines: KLine[] }
   | { store: 'bots'; bots: Bot[] }
   | { store: 'dataMarket'; dataMarket: DataMarket[] }
+  | { store: 'securityTokens'; securityTokens: SecurityToken[] }
+  | { store: 'strategies'; strategies: Strategy[] }
+  | { store: 'notifications'; notification: Notification }
