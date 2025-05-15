@@ -9,10 +9,26 @@ const filteredNotifications = computed(() => {
     return notification.show
   })
 })
+
+// const createSample = () => {
+//   notificationsStore.processMessage({
+//     id: Date.now().toString(),
+//     title: 'Sample Notification',
+//     message: 'This is a sample notification message.',
+//     type: 'info',
+//     action: 'Sample Action',
+//   })
+// }
 </script>
 
 <template>
   <div class="fixed top-4 right-0 z-40 flex flex-col gap-3">
+    <!-- <div
+      class="cursor-pointer rounded bg-red-600 px-4 py-2 hover:bg-red-800"
+      @click="createSample"
+    >
+      createSample
+    </div> -->
     <div
       v-for="notification in filteredNotifications"
       :key="notification.id"

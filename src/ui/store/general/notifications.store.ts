@@ -45,17 +45,27 @@ export const useNotificationsStore = defineStore('base-notifications', {
       if (this.notifications.length > 50) this.notifications.pop()
 
       setTimeout(() => {
-        const index = this.notifications.findIndex(
-          (x: Notification) => x.id === notification.id,
-        )
-        if (index !== -1) this.notifications[index].show = false
+        this.removeNotification(notification.id)
       }, 2000)
     },
     removeNotification(id: string) {
       const index = this.notifications.findIndex(
         (x: Notification) => x.id === id,
       )
-      if (index !== -1) this.notifications[index].show = false
+      if (index !== -1) {
+        // Create a new notification object with show:false
+        const updatedNotification = {
+          ...this.notifications[index],
+          show: false,
+        }
+
+        // Replace the entire array with an updated copy
+        this.notifications = [
+          ...this.notifications.slice(0, index),
+          updatedNotification,
+          ...this.notifications.slice(index + 1),
+        ]
+      }
     },
   },
 })
