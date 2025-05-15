@@ -4,23 +4,23 @@ import { BitkuaAction } from '../../../server/bitkua/Bitkua.dto'
 
 type State = {
   username: RemovableRef<string>
-  token: RemovableRef<string>
+  password: RemovableRef<string>
 }
 
 export const useBitkuaConfigStore = defineStore('bitkua.config', {
   state: (): State => ({
     username: useStorage('bitkua.username', ''),
-    token: useStorage('bitkua.token', ''),
+    password: useStorage('bitkua.token', ''),
   }),
 
   getters: {},
 
   actions: {
-    async setConfig(username: string, token: string) {
+    async setConfig(username: string, password: string) {
       this.username = username
-      this.token = token
+      this.password = password
 
-      await window.electronAPI.setBitkuaCredentials(username, token)
+      await window.electronAPI.setBitkuaCredentials(username, password)
     },
     async sendAction(message: BitkuaAction) {
       await window.electronAPI.sendBitkuaAction(message)

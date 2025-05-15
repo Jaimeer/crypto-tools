@@ -23,13 +23,13 @@ const inputKucoinApiSecret = ref(kucoinConfig.apiSecret)
 const inputKucoinPassword = ref(kucoinConfig.password)
 
 const inputBitkuaUserName = ref(bitkuaConfig.username)
-const inputBitkuaToken = ref(bitkuaConfig.token)
+const inputBitkuaPassword = ref(bitkuaConfig.password)
 
 const save = async () => {
   await bingxConfig.setConfig(inputBingxApiKey.value, inputBingxApiSecret.value)
   await bitkuaConfig.setConfig(
     inputBitkuaUserName.value,
-    inputBitkuaToken.value,
+    inputBitkuaPassword.value,
   )
   await bitgetConfig.setConfig(
     inputBitgetApiKey.value,
@@ -46,9 +46,9 @@ const save = async () => {
 </script>
 
 <template>
-  <div class="flex h-screen flex-col items-center justify-center gap-4 p-4">
-    <form class="">
-      <div>
+  <div class="h-full overflow-y-auto p-4">
+    <form class="flex w-full flex-col items-center justify-center gap-4">
+      <div class="w-2xl">
         <div class="text-4xl">Bitkua Config</div>
 
         <label for="username" class="text-slate-400">UserName</label>
@@ -59,12 +59,12 @@ const save = async () => {
           placeholder="UserName"
           class="mb-2 w-full rounded border border-gray-300 p-2"
         />
-        <label for="token" class="text-slate-400">Token</label>
+        <label for="password" class="text-slate-400">Password</label>
         <input
-          id="token"
-          v-model="inputBitkuaToken"
+          id="password"
+          v-model="inputBitkuaPassword"
           type="password"
-          placeholder="Token"
+          placeholder="Password"
           class="mb-2 w-full rounded border border-gray-300 p-2"
         />
         <div class="flex justify-end">
@@ -72,9 +72,9 @@ const save = async () => {
         </div>
       </div>
 
-      <div class="my-8 text-right text-slate-500 italic"></div>
+      <!-- <div class="my-8 text-right text-slate-500 italic"></div> -->
 
-      <div>
+      <div class="w-2xl">
         <div class="text-4xl">BingX Config</div>
 
         <label for="bingxApiKey" class="text-slate-400">API Key</label>
@@ -98,7 +98,7 @@ const save = async () => {
         </div>
       </div>
 
-      <div>
+      <div class="w-2xl">
         <div class="text-4xl">Bitget Config</div>
 
         <label for="bitgetApiKey" class="text-slate-400">API Key</label>
@@ -130,10 +130,10 @@ const save = async () => {
           Api key only need read permissions
         </div>
       </div>
-      <div>
+
+      <div class="w-2xl">
         <div class="text-4xl">Kucoin Config</div>
 
-        <<<<<<< HEAD
         <label for="kucoinApiKey" class="text-slate-400">API Key</label>
         <input
           id="kucoinApiKey"
@@ -163,33 +163,10 @@ const save = async () => {
           Api key only need read permissions
         </div>
       </div>
-      <div>
-        <div class="text-4xl">Bitkua Config</div>
 
-        <label for="username" class="text-slate-400">UserName</label>
-        <input
-          id="username"
-          v-model="inputBitkuaUserName"
-          type="text"
-          placeholder="UserName"
-          class="mb-2 w-full rounded border border-gray-300 p-2"
-        />
-        <label for="token" class="text-slate-400">Token</label>
-        <input
-          id="token"
-          v-model="inputBitkuaToken"
-          type="password"
-          placeholder="Token"
-          class="mb-2 w-full rounded border border-gray-300 p-2"
-        />
-      </div>
-
-      <div class="my-8 text-right text-slate-500 italic"></div>
-
-      ======= >>>>>>> develop
       <button
         type="submit"
-        class="w-full rounded bg-blue-500 p-2 text-white hover:cursor-pointer hover:opacity-90"
+        class="w-2xl rounded bg-blue-500 p-2 text-white hover:cursor-pointer hover:opacity-90"
         @click.prevent="save"
       >
         Save
