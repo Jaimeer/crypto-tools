@@ -10,6 +10,7 @@ type VisibleNotification = Notification & {
 
 type State = {
   notifications: VisibleNotification[]
+  pendingNotifications: number
   loading: boolean
   error: string | null
 }
@@ -36,11 +37,15 @@ export const useNotificationsStore = defineStore('notifications', {
       //   type: 'error',
       // },
     ],
+    pendingNotifications: 0,
     loading: false,
     error: null,
   }),
 
   actions: {
+    cleanPendingNotifications() {
+      this.pendingNotifications = 0
+    },
     processMessage(notification: Notification) {
       const notificationId = nanoid()
       this.notifications.unshift({
@@ -51,9 +56,11 @@ export const useNotificationsStore = defineStore('notifications', {
       })
       if (this.notifications.length > 50) this.notifications.pop()
 
+      this.pendingNotifications++
+
       setTimeout(() => {
         this.removeNotification(notificationId)
-      }, 2000)
+      }, 5000)
     },
     removeNotification(id: string) {
       const index = this.notifications.findIndex(

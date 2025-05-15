@@ -414,10 +414,11 @@ onMounted(async () => {
     },
   })
 
-  if (props.printDKIndicator)
+  if (props.printDKIndicator && true) {
     chart.value.createIndicator('DominantKongProTrader', false, {
       id: 'candle_pane',
     })
+  }
   printData(true)
 })
 

@@ -2,6 +2,7 @@
 const props = defineProps<{
   value: string
 }>()
+const validValues = ['bitget', 'bingx']
 </script>
 
 <template>
@@ -10,6 +11,7 @@ const props = defineProps<{
     :class="{
       'bg-[#00e0ff] text-slate-50': value.toLowerCase() === 'bitget',
       'bg-[#2a66ff] text-slate-50': value.toLowerCase() === 'bingx',
+      'bg-slate-600 text-slate-50': !validValues.includes(value.toLowerCase()),
     }"
   >
     {{ value }}

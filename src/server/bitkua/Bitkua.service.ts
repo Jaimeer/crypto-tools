@@ -130,10 +130,11 @@ export class BitkuaService {
       if (!responseData.success || !responseData.data) {
         console.warn(response.data)
         this.notification.sendNotification({
-          type: 'error',
-          title: 'BingX',
+          api: 'Bitkua',
           action,
-          message: `Error fetching: ${responseData.data.toString()}`,
+          type: 'error',
+          title: 'Connection error',
+          message: responseData.data.toString(),
         })
         return
       }
@@ -145,10 +146,11 @@ export class BitkuaService {
     } catch (error) {
       console.error(`Error fetching ${action}:`, error.message)
       this.notification.sendNotification({
-        type: 'error',
-        title: 'BingX',
+        api: 'Bitkua',
         action,
-        message: `Error fetching: ${error.message}`,
+        type: 'error',
+        title: 'Connection error',
+        message: error.message,
       })
     }
   }
@@ -260,11 +262,12 @@ export class BitkuaService {
     },
     botId?: string,
   ) {
-    let prefix = ''
-    if (data.symbol) prefix += `[${data.symbol}]`
-    if (data.exchange) prefix += `[${data.exchange}]`
-    if (data.estrategia) prefix += `[${data.estrategia}]`
-    if (data.positionside) prefix += `[${data.positionside}]`
+    const metadata = {
+      symbol: data.symbol,
+      exchange: data.exchange,
+      strategy: data.estrategia,
+      positionside: data.positionside,
+    }
 
     try {
       const response = await this.client.request<{
@@ -281,28 +284,34 @@ export class BitkuaService {
           `Bitkua error ${data.action}: ${response.data.data.toString()}`,
         )
         this.notification.sendNotification({
-          type: 'error',
-          title: 'BingX',
+          api: 'Bitkua',
           action: data.action,
-          message: `${prefix} Error: ${response.data.toString()}`.trim(),
+          type: 'error',
+          title: 'Connection error',
+          message: response.data.toString(),
+          metadata,
         })
       } else {
         this.logger.debug(`Bot ${data.action} successfully: ${botId}`)
         this.notification.sendNotification({
-          type: 'success',
-          title: 'BingX',
+          api: 'Bitkua',
           action: data.action,
-          message: `${prefix} Successfully`.trim(),
+          type: 'success',
+          title: 'Action executed',
+          message: `Done`,
+          metadata,
         })
       }
       this.startAutoRefresh()
     } catch (error) {
       console.error(`Error ${data.action}:`, error.message)
       this.notification.sendNotification({
-        type: 'error',
-        title: 'BingX',
+        api: 'Bitkua',
         action: data.action,
-        message: `${prefix} Error: ${error.message}`.trim(),
+        type: 'error',
+        title: 'Connection error',
+        message: error.message,
+        metadata,
       })
     }
   }

@@ -199,8 +199,10 @@ export type SecurityToken = {
 }
 
 export type Notification = {
-  title: string
-  message: string
+  api: string
   action: string
   type: 'info' | 'warning' | 'error' | 'success'
+  title: string
+  message: string
+  metadata?: Record<string, string>
 }

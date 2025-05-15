@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useNotificationsStore } from '../../store/general/notifications.store'
+import SampleNotifications from './SampleNotifications.vue'
+import KeyValue from './KeyValue.vue'
 
 const notificationsStore = useNotificationsStore()
 
@@ -9,25 +11,10 @@ const filteredNotifications = computed(() => {
     return notification.show
   })
 })
-
-const createSample = () => {
-  notificationsStore.processMessage({
-    title: 'Sample Notification',
-    message: 'This is a sample notification message.',
-    type: 'info',
-    action: 'Sample Action',
-  })
-}
 </script>
 
 <template>
-  <div class="fixed top-4 right-0 z-40 flex flex-col gap-3">
-    <!-- <div
-      class="cursor-pointer rounded bg-red-600 px-4 py-2 hover:bg-red-800"
-      @click="createSample"
-    >
-      createSample
-    </div> -->
+  <div class="fixed top-10 right-0 z-40 flex flex-col gap-3">
     <div
       v-for="notification in filteredNotifications"
       :key="notification.id"
@@ -40,8 +27,24 @@ const createSample = () => {
       }"
     >
       <div class="flex flex-col">
-        <div class="text-sm font-bold">{{ notification.title }}</div>
+        <div class="text-sm font-bold">
+          [{{ notification.api }}]
+          {{ notification.action }}
+        </div>
+        <div class="text-sm">{{ notification.title }}</div>
         <div class="text-xs">{{ notification.message }}</div>
+        <div
+          v-if="notification.metadata"
+          class="mt-1 flex flex-wrap items-center gap-1 text-xs"
+        >
+          <KeyValue
+            v-for="[key, value] in Object.entries(notification.metadata)"
+            :key="key"
+            :keyValue="key"
+            :value="value"
+            color="blue"
+          />
+        </div>
       </div>
       <div
         class="cursor-pointer text-sm text-slate-900 hover:opacity-80"
@@ -51,5 +54,6 @@ const createSample = () => {
       </div>
     </div>
     <!-- <pre class="bg-slate-800">{{ filteredNotifications }}</pre> -->
+    <!-- <SampleNotifications /> -->
   </div>
 </template>
