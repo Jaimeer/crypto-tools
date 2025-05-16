@@ -66,9 +66,9 @@ watch(viewData, () => {
             </div>
             <div class="flex items-center gap-1 text-[10px]">
               <Tag
-                :value="notification.action"
+                :value="notification.action.replace('_', ' ')"
                 color="violet"
-                class="text-[10px]"
+                class="text-[10px] capitalize"
               />
               <Exchange :value="notification.api" />
             </div>

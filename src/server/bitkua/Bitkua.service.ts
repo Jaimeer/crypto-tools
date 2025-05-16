@@ -266,7 +266,7 @@ export class BitkuaService {
       symbol: data.symbol,
       exchange: data.exchange,
       strategy: data.estrategia,
-      positionside: data.positionside,
+      side: data.positionside,
     }
 
     try {

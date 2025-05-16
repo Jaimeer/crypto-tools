@@ -154,6 +154,7 @@ const loadPrevSymbol = () => {
 }
 
 const lastTrade = ref(trades.value[0])
+console.log(trades.value)
 watch(
   () => trades.value,
   () => {
@@ -172,6 +173,7 @@ watch(
         const trade = trades.value[i]
         const message = trade.realisedPNL ? 'Close' : 'Average'
         const type = trade.realisedPNL ? 'success' : 'info'
+
         notificationsStore.processMessage({
           api: 'Bingx',
           action: `Trade created`,
@@ -180,8 +182,10 @@ watch(
           message: ``,
           metadata: {
             symbol: trade.symbol,
-            side: trade.side,
-            amount: trade.realisedPNL.toFixed(2),
+            side: trade.positionSide,
+            amount: trade.quoteQty.toFixed(2),
+            price: trade.price.toFixed(4),
+            won: trade.realisedPNL ? trade.realisedPNL.toFixed(2) : undefined,
           },
         })
       }

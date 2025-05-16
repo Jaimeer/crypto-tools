@@ -182,8 +182,10 @@ watch(
           message: ``,
           metadata: {
             symbol: trade.symbol,
-            side: trade.side,
-            amount: trade.realisedPNL.toFixed(2),
+            side: trade.positionSide,
+            amount: trade.quoteQty.toFixed(2),
+            price: trade.price.toFixed(4),
+            won: trade.realisedPNL?.toFixed(2) ?? undefined,
           },
         })
       }
