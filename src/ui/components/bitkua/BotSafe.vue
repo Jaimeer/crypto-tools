@@ -25,6 +25,6 @@ const sendAction = (botId: string, safe: boolean) => {
     }"
     @click="sendAction(bot.id, !bot.safe)"
   >
-    {{ bot.safe ? 'active' : 'disabled' }}
+    safe
   </div>
 </template>

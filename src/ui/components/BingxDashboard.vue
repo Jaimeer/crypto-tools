@@ -22,6 +22,7 @@ import {
   ListboxOptions,
   ListboxOption,
 } from '@headlessui/vue'
+import { Icon } from '@iconify/vue'
 
 const exchange = 'bingx'
 const bingxTransactionsStore = useBingxTransactionsStore()
@@ -33,6 +34,7 @@ const bingxContractsStore = useBingxContractsStore()
 const bingxPreferencesStore = useBingxPreferencesStore()
 
 const search = ref('')
+const advancedView = ref(false)
 
 const transactions = computed(() => {
   return bingxTransactionsStore.transactions.filter((x) => x.symbol)
@@ -87,6 +89,16 @@ watch(selectedSymbols, () => {
   <div class="p-4">
     <TheHeader :page="exchange" v-model="search">
       <template #right>
+        <div
+          class="cursor-pointer rounded px-4 py-1 text-white transition"
+          :class="{
+            'bg-lime-600 hover:bg-lime-800': advancedView,
+            'bg-slate-700 hover:bg-slate-700': !advancedView,
+          }"
+          @click="advancedView = !advancedView"
+        >
+          <Icon icon="game-icons:two-coins" class="h-6 w-6 text-white" />
+        </div>
         <Listbox v-model="selectedSymbols" multiple>
           <ListboxButton
             class="rounded bg-violet-500 px-4 py-1 text-white transition hover:bg-violet-600"
@@ -179,6 +191,7 @@ watch(selectedSymbols, () => {
         :contracts="contracts"
       />
       <SymbolTrades
+        v-if="advancedView"
         :exchange="exchange"
         :trades="trades"
         :positions="positions"
@@ -191,6 +204,7 @@ watch(selectedSymbols, () => {
         :search="search"
       />
       <SymbolTransactions
+        v-if="advancedView"
         date-format="yyyy-MM-dd"
         :exchange="exchange"
         :positions="positions"

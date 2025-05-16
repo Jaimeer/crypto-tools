@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import Symbol from '../trading/Symbol.vue'
 
 const props = defineProps<{
   keyValue: string
@@ -35,7 +36,12 @@ const _color = computed(() => {
         'border-green-800 bg-slate-600 text-white': _color === 'green',
       }"
     >
-      {{ value }}
+      <template v-if="keyValue === 'symbol'">
+        {{ value }}
+      </template>
+      <template v-else>
+        {{ value }}
+      </template>
     </div>
   </div>
 </template>

@@ -102,7 +102,7 @@ const ranking = (data: DataMarket) => {
         'lowerRange',
         'liqMax',
         'liqMin',
-        'ratioFvdMc',
+        'FVD',
       ]"
       :items="dataMarkets"
       fullHeight

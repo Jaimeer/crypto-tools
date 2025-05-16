@@ -11,6 +11,10 @@ import { BitkuaActionUpdateStatus } from 'src/server/bitkua/Bitkua.dto'
 import BotReset from '../bitkua/BotReset.vue'
 import BotDelete from '../bitkua/BotDelete.vue'
 import { computed } from 'vue'
+import BotAmount from '../bitkua/BotAmount.vue'
+import BotCount from '../bitkua/BotCount.vue'
+import BotStrategy from '../bitkua/BotStrategy.vue'
+import BotSafe from '../bitkua/BotSafe.vue'
 
 const props = defineProps<{
   exchange: string
@@ -138,23 +142,10 @@ const sendAction = (
         </td>
         <td class="px-2 py-0.5">
           <div v-if="positionBot(item)" class="flex items-center gap-1">
-            <div class="text-blue-400">[{{ positionBot(item)?.amount }}]</div>
-            <div
-              :class="{
-                'text-slate-400': positionBot(item).count === 0,
-                'text-lime-400':
-                  positionBot(item).count > 0 && positionBot(item).count < 14,
-                'text-red-400': positionBot(item).count >= 13,
-              }"
-            >
-              [{{ positionBot(item).count }}]
-            </div>
-            <div class="text-slate-400">
-              <Strategy :strategy="positionBot(item).strategy" />
-            </div>
-            <div class="py.0.5 rounded bg-green-500 px-2 text-white">
-              {{ positionBot(item).safe ? 'safe' : '' }}
-            </div>
+            <BotAmount :bot="positionBot(item)" />
+            <BotCount :bot="positionBot(item)" />
+            <BotStrategy :bot="positionBot(item)" />
+            <BotSafe :bot="positionBot(item)" />
           </div>
         </td>
         <td class="px-2 py-0.5">
