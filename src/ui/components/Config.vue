@@ -36,9 +36,9 @@ const save = async () => {
 </script>
 
 <template>
-  <div class="flex h-screen flex-col items-center justify-center gap-4 p-4">
-    <form class="">
-      <div>
+  <div class="h-full overflow-y-auto p-4">
+    <form class="flex w-full flex-col items-center justify-center gap-4">
+      <div class="w-2xl">
         <div class="text-4xl">Bitkua Config</div>
 
         <label for="username" class="text-slate-400">UserName</label>
@@ -62,9 +62,9 @@ const save = async () => {
         </div>
       </div>
 
-      <div class="my-8 text-right text-slate-500 italic"></div>
+      <!-- <div class="my-8 text-right text-slate-500 italic"></div> -->
 
-      <div>
+      <div class="w-2xl">
         <div class="text-4xl">BingX Config</div>
 
         <label for="bingxApiKey" class="text-slate-400">API Key</label>
@@ -88,7 +88,7 @@ const save = async () => {
         </div>
       </div>
 
-      <div>
+      <div class="w-2xl">
         <div class="text-4xl">Bitget Config</div>
 
         <label for="bitgetApiKey" class="text-slate-400">API Key</label>
@@ -123,7 +123,7 @@ const save = async () => {
 
       <button
         type="submit"
-        class="w-full rounded bg-blue-500 p-2 text-white hover:cursor-pointer hover:opacity-90"
+        class="w-2xl rounded bg-blue-500 p-2 text-white hover:cursor-pointer hover:opacity-90"
         @click.prevent="save"
       >
         Save

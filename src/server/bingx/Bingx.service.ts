@@ -10,7 +10,7 @@ import {
 } from '../data.dto'
 import { v4 as uuidv4 } from 'uuid'
 import { BingxRestClient } from './BingxRest.client'
-import { BingxWebSocket } from './BingxWebSocket.client'
+// import { BingxWebSocket } from './BingxWebSocket.client'
 import { KLineDataEvent, WebSocketMessage } from './Bingx.ws.dto'
 import { CacheService } from '../Cache.service'
 import { NotifyMessage } from '../messages.dto'
@@ -27,7 +27,7 @@ const activeIntervals: Set<NodeJS.Timeout> = new Set()
 export class BingxService implements ExchangeService {
   private readonly logger: LoggerService
   private readonly restClient: BingxRestClient
-  private readonly wsClient: BingxWebSocket
+  // private readonly wsClient: BingxWebSocket
   private readonly cacheService: BingxCacheService
   private klineSymbol: string | undefined
   private originalData: {
@@ -66,11 +66,12 @@ export class BingxService implements ExchangeService {
     if (!this.restClient) {
       this.restClient = new BingxRestClient(apiKey, apiSecret)
     }
-    if (!this.wsClient)
-      this.wsClient = new BingxWebSocket(
-        this.restClient,
-        this.handleWebSocketMessage.bind(this),
-      )
+    // if (!this.wsClient) {
+    // this.wsClient = new BingxWebSocket(
+    //   this.restClient,
+    //   this.handleWebSocketMessage.bind(this),
+    // )
+    // }
     this.cacheService = new BingxCacheService(new CacheService())
     if (apiKey && apiSecret) {
       this.cacheService.setHashCode(this.restClient.hashCode)
@@ -79,7 +80,7 @@ export class BingxService implements ExchangeService {
 
   setCredentials(apiKey: string, apiSecret: string) {
     this.restClient.setCredentials(apiKey, apiSecret)
-    this.wsClient.updateListenKey()
+    // this.wsClient.updateListenKey()
     this.cacheService.setHashCode(this.restClient.hashCode)
   }
 
@@ -103,7 +104,7 @@ export class BingxService implements ExchangeService {
   }
 
   stopWebSocket() {
-    this.wsClient.stop()
+    // this.wsClient.stop()
   }
 
   stopAutoRefresh() {
@@ -184,20 +185,30 @@ export class BingxService implements ExchangeService {
     period: Period,
     intervalMs = 1000,
   ) {
-    const kLines = await this.restClient.fetchKLines(symbol, period)
-    this.data.kLines[symbol].data = BingxTransformer.klineTransform(kLines)
+    try {
+      const kLines = await this.restClient.fetchKLines(symbol, period)
+      this.data.kLines[symbol].data = BingxTransformer.klineTransform(kLines)
 
-    this.notifyClients({
-      store: 'bingx.klines',
-      symbol,
-      period,
-      klines: this.data.kLines[symbol].data,
-    })
+      this.notifyClients({
+        store: 'bingx.klines',
+        symbol,
+        period,
+        klines: this.data.kLines[symbol].data,
+      })
 
-    setTimeout(async () => {
-      if (symbol !== this.klineSymbol) return
-      await this.refreshKlines(symbol, period)
-    }, intervalMs)
+      setTimeout(async () => {
+        if (symbol !== this.klineSymbol) return
+        await this.refreshKlines(symbol, period)
+      }, intervalMs)
+    } catch (error) {
+      this.data.kLines[symbol].data = []
+      this.notifyClients({
+        store: 'bingx.klines',
+        symbol,
+        period,
+        klines: this.data.kLines[symbol].data,
+      })
+    }
   }
 
   async loadSymbolKLines(symbol: string, period: Period) {

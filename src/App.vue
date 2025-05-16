@@ -67,7 +67,7 @@ if (bitkuaConfig.username && bitkuaConfig.token) {
 </script>
 
 <template>
-  <div class="min-h-screen w-full bg-slate-900 text-slate-200">
+  <div class="h-screen w-full bg-slate-900 text-slate-200">
     <Config v-if="bingxConfig.viewConfig" />
     <div v-else :key="hashKey" class="relative h-screen w-full overflow-y-auto">
       <RouterView />

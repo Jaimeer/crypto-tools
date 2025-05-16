@@ -28,7 +28,7 @@ watch(viewData, () => {
     <Icon icon="mdi:bell-outline" class="h-6 w-6 text-white" />
     <div
       v-if="notificationsStore.pendingNotifications > 0"
-      class="absolute -top-2 -right-2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs"
+      class="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs"
     >
       {{ notificationsStore.pendingNotifications }}
     </div>

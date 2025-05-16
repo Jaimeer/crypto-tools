@@ -138,6 +138,7 @@ export class BingxRestClient
           console.error(
             `BingX API error: ${obj.msg} (${obj.code}) - ${API.method} ${url}`,
           )
+          if (obj.code === 109400) throw new Error('Bingx contract not exists')
           return
         }
 

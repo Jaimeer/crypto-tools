@@ -33,6 +33,7 @@ const positionBot = (position: Position) => {
   const side = position.positionSide === 'LONG' ? 'long' : 'short'
   const bot = props.bots.find(
     (x) =>
+      x.exchange === props.exchange &&
       x.symbol.toLowerCase() === position.symbol.toLowerCase() &&
       ((side === 'long' && !x.strategy.startsWith('short')) ||
         (side === 'short' && x.strategy.startsWith('short'))),
