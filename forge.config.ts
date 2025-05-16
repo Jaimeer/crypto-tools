@@ -20,8 +20,8 @@ const config: ForgeConfig = {
   rebuildConfig: {},
   makers: [
     new MakerSquirrel({
-      setupExe: 'crypto-tools-setup.exe',
-      setupMsi: 'crypto-tools-setup.msi',
+      setupExe: 'dk-bot-setup.exe',
+      setupMsi: 'dk-bot-setup.msi',
       noMsi: false, // Ensure MSI generation is enabled
       setupIcon: icoPath,
     }),
@@ -79,7 +79,7 @@ const config: ForgeConfig = {
       config: {
         repository: {
           owner: 'Jaimeer',
-          name: 'crypto-tools',
+          name: 'dk-bot',
         },
         prerelease: true,
       },

@@ -1,6 +1,6 @@
 {
   "name": "dk-bot-dashboard",
-  "productName": "DK BOT Dashboard",
+  "productName": "DK BOT",
   "version": "0.0.4",
   "description": "DK BOT Dashboard is an advanced trading assistant for Bitkua that enables real-time monitoring and operations across multiple cryptocurrency exchanges",
   "main": ".vite/build/main.js",
