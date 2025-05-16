@@ -32,10 +32,11 @@ export class BitgetCacheService {
   }
 
   async loadBitgetTransactions(): Promise<CachedData<FuturesAccountBillV2> | null> {
-    const data = await this.cacheService.readCache<FuturesAccountBillV2>(
+    let data = await this.cacheService.readCache<FuturesAccountBillV2>(
       this.transactionFileName,
     )
 
+    if (!data) data = { data: [], lastUpdated: Date.now() }
     // Clean duplicates
     const uniqueKeys = new Set<string>()
     const dataWithoutDuplicates = data.data.filter((transaction) => {
@@ -61,10 +62,11 @@ export class BitgetCacheService {
   }
 
   async loadBitgetTrades(): Promise<CachedData<FuturesOrderFillV2> | null> {
-    const data = await this.cacheService.readCache<FuturesOrderFillV2>(
+    let data = await this.cacheService.readCache<FuturesOrderFillV2>(
       this.tradeFileName,
     )
 
+    if (!data) data = { data: [], lastUpdated: Date.now() }
     // Clean duplicates
     const uniqueKeys = new Set<string>()
     const dataWithoutDuplicates = data.data.filter((transaction) => {

@@ -49,7 +49,15 @@ export class CacheService {
 
   async readCache<T>(fileName: string): Promise<CachedData<T> | null> {
     const filePath = path.join(this.cacheDir, fileName)
+
     try {
+      try {
+        await fs.access(filePath)
+      } catch {
+        this.logger.debug(`Cache file ${filePath} does not exist`)
+        return null
+      }
+
       const data = await fs.readFile(filePath, 'utf8')
       return JSON.parse(
         await CompressLib.decompressString(data),

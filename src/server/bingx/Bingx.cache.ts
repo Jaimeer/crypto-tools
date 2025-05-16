@@ -30,10 +30,10 @@ export class BingxCacheService {
   }
 
   async loadBingxTransactions(): Promise<CachedData<BingxTransaction> | null> {
-    const data = await this.cacheService.readCache<BingxTransaction>(
+    let data = await this.cacheService.readCache<BingxTransaction>(
       this.transactionFileName,
     )
-
+    if (!data) data = { data: [], lastUpdated: Date.now() }
     // Clean duplicates using a Set for O(1) lookups
     const uniqueKeys = new Set<string>()
     const dataWithoutDuplicates = data.data.filter((transaction) => {
@@ -59,10 +59,9 @@ export class BingxCacheService {
   }
 
   async loadBingxTrades(): Promise<CachedData<BingxTrade> | null> {
-    const data = await this.cacheService.readCache<BingxTrade>(
-      this.tradeFileName,
-    )
+    let data = await this.cacheService.readCache<BingxTrade>(this.tradeFileName)
 
+    if (!data) data = { data: [], lastUpdated: Date.now() }
     // Clean duplicates
     const uniqueKeys = new Set<string>()
     const dataWithoutDuplicates = data.data.filter((transaction) => {
